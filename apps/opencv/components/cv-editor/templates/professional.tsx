@@ -1,8 +1,9 @@
 "use client";
 
-import { Plus, Trash2, Upload, X as XIcon, Github, Globe, Linkedin, BookOpen, Award } from "lucide-react";
+import { Plus, Trash2, Upload, X as XIcon } from "lucide-react";
 import type { CVData } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
+import { Icon, getSocialIconName } from "@/lib/icons";
 
 interface ProfessionalTemplateProps {
   data: CVData;
@@ -47,12 +48,6 @@ function DeleteButton({ onDelete }: { onDelete: () => void }) {
   );
 }
 
-const platformIcons: Record<string, React.ReactNode> = {
-  GitHub: <Github size={16} />,
-  Portfolio: <Globe size={16} />,
-  LinkedIn: <Linkedin size={16} />,
-  Medium: <BookOpen size={16} />,
-};
 
 export function ProfessionalTemplate({
   data,
@@ -109,7 +104,7 @@ export function ProfessionalTemplate({
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-gray-600">
               <span className="flex items-center gap-1">
-                <span className="text-pink-600">&#9742;</span>
+                <Icon name="phone" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.phone}
                   onChange={(v) => onUpdate("personalInfo.phone", v)}
@@ -118,7 +113,7 @@ export function ProfessionalTemplate({
                 />
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-pink-600">@</span>
+                <Icon name="email" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.email}
                   onChange={(v) => onUpdate("personalInfo.email", v)}
@@ -127,7 +122,7 @@ export function ProfessionalTemplate({
                 />
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-pink-600">&#128279;</span>
+                <Icon name="link" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.website}
                   onChange={(v) => onUpdate("personalInfo.website", v)}
@@ -136,7 +131,7 @@ export function ProfessionalTemplate({
                 />
               </span>
               <span className="flex items-center gap-1">
-                <span className="text-pink-600">&#9679;</span>
+                <Icon name="location" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.location}
                   onChange={(v) => onUpdate("personalInfo.location", v)}
@@ -240,7 +235,7 @@ export function ProfessionalTemplate({
                   </div>
                   <div className="flex gap-4 text-xs text-gray-500 mt-0.5">
                     <span className="flex items-center gap-1">
-                      &#128197;
+                      <Icon name="calendar" className="text-gray-400" />
                       <InlineEditor
                         value={exp.startDate}
                         onChange={(v) => onUpdate(`experience.${exp.id}.startDate`, v)}
@@ -256,7 +251,7 @@ export function ProfessionalTemplate({
                       />
                     </span>
                     <span className="flex items-center gap-1">
-                      &#9679;
+                      <Icon name="location" className="text-gray-400" />
                       <InlineEditor
                         value={exp.location}
                         onChange={(v) => onUpdate(`experience.${exp.id}.location`, v)}
@@ -374,7 +369,7 @@ export function ProfessionalTemplate({
                   </div>
                   <div className="text-xs text-gray-500 mt-0.5">
                     <span className="flex items-center gap-1">
-                      &#128197;
+                      <Icon name="calendar" className="text-gray-400" />
                       <InlineEditor
                         value={edu.startDate}
                         onChange={(v) => onUpdate(`education.${edu.id}.startDate`, v)}
@@ -406,7 +401,7 @@ export function ProfessionalTemplate({
             <div className="space-y-3">
               {data.awards.map((award) => (
                 <div key={award.id} className="group/item relative flex gap-2">
-                  <Award size={16} className="text-pink-600 mt-0.5 flex-shrink-0" />
+                  <Icon name="award" className="text-pink-600 mt-0.5" size={16} />
                   <div className="flex-1">
                     <div className="absolute -left-5 top-0">
                       <DeleteButton onDelete={() => onDeleteAward(award.id)} />
@@ -445,9 +440,7 @@ export function ProfessionalTemplate({
               <div className="space-y-2">
                 {data.socialLinks.map((link) => (
                   <div key={link.id} className="group/item flex items-center gap-2">
-                    <span className="text-gray-600">
-                      {platformIcons[link.platform] || <Globe size={16} />}
-                    </span>
+                    <Icon name={getSocialIconName(link.platform)} className="text-gray-600" size={16} />
                     <div className="flex-1">
                       <div className="font-bold text-gray-900 text-xs">
                         <InlineEditor

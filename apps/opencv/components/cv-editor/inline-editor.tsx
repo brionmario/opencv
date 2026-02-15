@@ -19,6 +19,7 @@ import {
   type EditorState,
   type LexicalEditor,
 } from "lexical";
+import { FloatingToolbar } from "./floating-toolbar";
 
 function SetInitialValuePlugin({ value }: { value: string }) {
   const [editor] = useLexicalComposerContext();
@@ -106,6 +107,7 @@ export function InlineEditor({
         bold: "font-bold",
         italic: "italic",
         underline: "underline",
+        strikethrough: "line-through",
       },
       list: {
         ul: "list-disc list-inside space-y-1",
@@ -162,6 +164,7 @@ export function InlineEditor({
         <OnChangePlugin onChange={handleChange} />
         <HistoryPlugin />
         {richText && <ListPlugin />}
+        {richText && <FloatingToolbar />}
         <SetInitialValuePlugin value={value} />
         <ExternalValuePlugin value={value} lastInternalValue={lastInternalValue} />
       </div>
