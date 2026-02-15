@@ -67,14 +67,6 @@ jobs:
         env:
           NEXT_OUTPUT: export
 
-      - name: 📦 Export Static Site
-        id: export
-        run: |
-          cd apps/opencv
-          pnpm next export
-        env:
-          NEXT_OUTPUT: export
-
       - name: ⚙️ Setup Pages
         id: setup-pages
         uses: actions/configure-pages@v5
