@@ -1,9 +1,16 @@
 {
+  "private": true,
   "name": "@brionmario/opencv-workspace",
   "version": "0.0.0",
   "license": "MIT",
-  "scripts": {},
-  "private": true,
+  "scripts": {
+    "build": "nx run-many --target=build --all",
+    "clean": "nx run-many --target=clean --all",
+    "lint": "nx run-many --target=lint --all --parallel",
+    "lint:fix": "nx run-many --target=fix:lint --all --parallel",
+    "test": "nx run-many --target=test --all --parallel",
+    "typecheck": "nx run-many --target=typecheck --all --parallel"
+  },
   "dependencies": {},
   "devDependencies": {
     "@nx/js": "22.5.0",
