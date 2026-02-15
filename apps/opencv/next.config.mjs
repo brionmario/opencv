@@ -6,6 +6,7 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  output: process.env.NEXT_OUTPUT || 'export',
 }
 
 export default nextConfig
