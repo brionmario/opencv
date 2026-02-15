@@ -1,5 +1,5 @@
 {
-  "name": "@org/source",
+  "name": "@brionmario/opencv-workspace",
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {},
@@ -16,6 +16,7 @@
     "typescript": "~5.9.2"
   },
   "workspaces": [
+    "apps/*",
     "packages/*"
   ]
 }
