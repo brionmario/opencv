@@ -66,6 +66,7 @@ jobs:
           pnpm build
         env:
           NEXT_OUTPUT: export
+          NEXT_PUBLIC_BASE_PATH=/${{ github.event.inputs.basePath }}
 
       - name: ⚙️ Setup Pages
         id: setup-pages
