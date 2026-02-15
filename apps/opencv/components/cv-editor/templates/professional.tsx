@@ -16,6 +16,8 @@ interface ProfessionalTemplateProps {
   onDeleteSkill: (id: string) => void;
   onAddAward: () => void;
   onDeleteAward: (id: string) => void;
+  onAddPublication: () => void;
+  onDeletePublication: (id: string) => void;
   onAddSocialLink: () => void;
   onDeleteSocialLink: (id: string) => void;
   onAddLanguage: () => void;
@@ -60,6 +62,8 @@ export function ProfessionalTemplate({
   onDeleteSkill,
   onAddAward,
   onDeleteAward,
+  onAddPublication,
+  onDeletePublication,
   onAddSocialLink,
   onDeleteSocialLink,
   onAddLanguage,
@@ -427,6 +431,73 @@ export function ProfessionalTemplate({
               ))}
             </div>
           </div>
+
+          {/* Publications */}
+          {data.publications && data.publications.length > 0 && (
+            <div className="group">
+              <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
+                <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
+                  Publications
+                </h2>
+                <SectionActions onAdd={onAddPublication} label="publication" />
+              </div>
+              <div className="space-y-3">
+                {data.publications.map((pub) => (
+                  <div key={pub.id} className="group/item relative flex gap-2">
+                    <Icon name="book" className="text-pink-600 mt-0.5" size={16} />
+                    <div className="flex-1">
+                      <div className="absolute -left-5 top-0">
+                        <DeleteButton onDelete={() => onDeletePublication(pub.id)} />
+                      </div>
+                      <h4 className="font-bold text-gray-900 text-sm">
+                        <InlineEditor
+                          value={pub.title}
+                          onChange={(v) => onUpdate(`publications.${pub.id}.title`, v)}
+                          placeholder="Publication Title"
+                          className="font-bold text-gray-900 text-sm"
+                        />
+                      </h4>
+                      <div className="text-xs text-gray-600">
+                        <InlineEditor
+                          value={pub.publisher}
+                          onChange={(v) => onUpdate(`publications.${pub.id}.publisher`, v)}
+                          placeholder="Publisher"
+                          className="text-xs text-gray-600"
+                        />
+                        {" • "}
+                        <InlineEditor
+                          value={pub.date}
+                          onChange={(v) => onUpdate(`publications.${pub.id}.date`, v)}
+                          placeholder="Date"
+                          className="text-xs text-gray-600"
+                        />
+                      </div>
+                      {pub.description && (
+                        <div className="text-xs text-gray-600 mt-1">
+                          <InlineEditor
+                            value={pub.description}
+                            onChange={(v) => onUpdate(`publications.${pub.id}.description`, v)}
+                            placeholder="Description..."
+                            className="text-xs text-gray-600"
+                          />
+                        </div>
+                      )}
+                      {pub.link && (
+                        <div className="text-xs text-blue-600 mt-1">
+                          <InlineEditor
+                            value={pub.link}
+                            onChange={(v) => onUpdate(`publications.${pub.id}.link`, v)}
+                            placeholder="Link..."
+                            className="text-xs text-blue-600"
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Find Me Online */}
           {data.socialLinks && data.socialLinks.length > 0 && (

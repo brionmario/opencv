@@ -15,6 +15,8 @@ interface ClassicWysiwygTemplateProps {
   onDeleteSkill: (id: string) => void;
   onAddAward: () => void;
   onDeleteAward: (id: string) => void;
+  onAddPublication: () => void;
+  onDeletePublication: (id: string) => void;
   onAddSocialLink: () => void;
   onDeleteSocialLink: (id: string) => void;
   onAddLanguage: () => void;
@@ -55,6 +57,8 @@ export function ClassicWysiwygTemplate({
   onDeleteSkill,
   onAddLanguage,
   onDeleteLanguage,
+  onAddPublication,
+  onDeletePublication,
 }: ClassicWysiwygTemplateProps) {
   const handleHighlightAdd = (expId: string, highlights: string[]) => {
     onUpdate(`experience.${expId}.highlights`, [...highlights, ""]);
@@ -314,6 +318,58 @@ export function ClassicWysiwygTemplate({
                 </div>
               ))}
             </div>
+
+        {/* Publications */}
+        {data.publications && data.publications.length > 0 && (
+          <div className="mb-8 group">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-300">
+              <h2 className="font-serif text-xl font-bold text-gray-900 uppercase tracking-wide">PUBLICATIONS</h2>
+              <SectionActions onAdd={onAddPublication} />
+            </div>
+            <div className="space-y-4">
+              {data.publications.map((pub) => (
+                <div key={pub.id} className="group/item relative">
+                  <div className="absolute -left-5 top-0">
+                    <DeleteButton onDelete={() => onDeletePublication(pub.id)} />
+                  </div>
+                  <h3 className="font-serif text-lg font-bold text-gray-900">
+                    <InlineEditor
+                      value={pub.title}
+                      onChange={(v) => onUpdate(`publications.${pub.id}.title`, v)}
+                      placeholder="Publication Title"
+                      className="font-serif text-lg font-bold text-gray-900"
+                    />
+                  </h3>
+                  <div className="text-gray-700 font-semibold mb-1">
+                    <InlineEditor
+                      value={pub.publisher}
+                      onChange={(v) => onUpdate(`publications.${pub.id}.publisher`, v)}
+                      placeholder="Publisher"
+                      className="text-gray-700 font-semibold"
+                    />
+                    {" • "}
+                    <InlineEditor
+                      value={pub.date}
+                      onChange={(v) => onUpdate(`publications.${pub.id}.date`, v)}
+                      placeholder="Date"
+                      className="text-gray-700 font-semibold"
+                    />
+                  </div>
+                  {pub.description && (
+                    <div className="text-gray-700 text-sm">
+                      <InlineEditor
+                        value={pub.description}
+                        onChange={(v) => onUpdate(`publications.${pub.id}.description`, v)}
+                        placeholder="Description..."
+                        className="text-gray-700 text-sm"
+                      />
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
           </div>
         )}
       </div>

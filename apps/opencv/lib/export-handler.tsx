@@ -67,6 +67,20 @@ export function exportToMarkdown(data: CVData, filename: string) {
     md += "\n";
   }
 
+
+  if (data.publications && data.publications.length > 0) {
+    md += `## Publications\n\n`;
+    data.publications.forEach((pub) => {
+      md += `- **${pub.title}**`;
+      if (pub.publisher) md += `, ${pub.publisher}`;
+      if (pub.date) md += ` (${pub.date})`;
+      if (pub.link) md += ` [Link](${pub.link})`;
+      if (pub.description) md += ` - ${pub.description}`;
+      md += "\n";
+    });
+    md += "\n";
+  }
+
   if (data.socialLinks && data.socialLinks.length > 0) {
     md += `## Links\n\n`;
     data.socialLinks.forEach((link) => {
@@ -74,6 +88,7 @@ export function exportToMarkdown(data: CVData, filename: string) {
     });
     md += "\n";
   }
+  // ...existing code...
 
   if (data.languages.length > 0) {
     md += `## Languages\n\n`;
@@ -90,6 +105,24 @@ export function exportToMarkdown(data: CVData, filename: string) {
 
 
 function generateCleanHTML(data: CVData): string {
+    // Publications HTML for export
+    let publicationsHtml = "";
+    if (data.publications && data.publications.length > 0) {
+      publicationsHtml = data.publications
+        .map(
+          (pub) => `
+            <div class="publication">
+              <div class="publication-title"><strong>${escapeHtml(pub.title)}</strong></div>
+              <div class="publication-meta">
+                ${pub.publisher ? `<span>${escapeHtml(pub.publisher)}</span>` : ""}
+                ${pub.date ? `<span>${escapeHtml(pub.date)}</span>` : ""}
+                ${pub.link ? `<a href="${escapeHtml(pub.link)}" target="_blank">Link</a>` : ""}
+              </div>
+              ${pub.description ? `<div class="publication-desc">${sanitizeAndRenderHtml(pub.description)}</div>` : ""}
+            </div>`
+        )
+        .join("");
+    }
   const avatarHtml = data.personalInfo.avatar
     ? `<img src="${data.personalInfo.avatar}" class="avatar" />`
     : "";
@@ -109,12 +142,12 @@ function generateCleanHTML(data: CVData): string {
             <span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${escapeHtml(exp.startDate)} - ${exp.currentlyWorking ? "Present" : escapeHtml(exp.endDate)}</span>
             ${exp.location ? `<span class="meta-item">${getIconSvg("location", "#9ca3af")} ${escapeHtml(exp.location)}</span>` : ""}
           </div>
-          ${exp.description ? `<p class="description">${escapeHtml(exp.description)}</p>` : ""}
+          ${exp.description ? `<p class="description">${sanitizeAndRenderHtml(exp.description)}</p>` : ""}
           ${
             exp.highlights.filter(Boolean).length > 0
               ? `<ul>${exp.highlights
                   .filter(Boolean)
-                  .map((h) => `<li>${escapeHtml(h)}</li>`)
+                  .map((h) => `<li>${sanitizeAndRenderHtml(h)}</li>`)
                   .join("")}</ul>`
               : ""
           }
@@ -142,7 +175,7 @@ function generateCleanHTML(data: CVData): string {
           <div class="achievement-icon">${getIconSvg("award", "#db2777")}</div>
           <div class="achievement-content">
             <strong>${escapeHtml(award.title)}</strong>
-            ${award.description ? `<p>${escapeHtml(award.description)}</p>` : ""}
+            ${award.description ? `<p>${sanitizeAndRenderHtml(award.description)}</p>` : ""}
           </div>
         </div>`
     )
@@ -311,6 +344,10 @@ function generateCleanHTML(data: CVData): string {
     .description { font-size: 10.5px; color: #374151; margin-top: 4px; line-height: 1.5; }
     ul { margin-left: 14px; margin-top: 5px; }
     li { font-size: 10.5px; color: #374151; margin-bottom: 2px; line-height: 1.45; }
+    strong { font-weight: 700; color: #111827; }
+    em { font-style: italic; color: inherit; }
+    a { color: #db2777; text-decoration: underline; }
+    a:hover { color: #be185d; }
     /* Skills */
     .skills-grid {
       display: flex;
@@ -375,6 +412,7 @@ function generateCleanHTML(data: CVData): string {
       }
       .page::after { display: none; }
       .page-break-indicator { display: none; }
+      a { color: #db2777; text-decoration: underline; }
     }
   </style>
 </head>
@@ -396,13 +434,14 @@ function generateCleanHTML(data: CVData): string {
 
     <div class="two-col">
       <div class="col-left">
-        ${data.personalInfo.summary ? `<h2>Summary</h2><p class="summary">${escapeHtml(data.personalInfo.summary)}</p>` : ""}
+        ${data.personalInfo.summary ? `<h2>Summary</h2><p class="summary">${sanitizeAndRenderHtml(data.personalInfo.summary)}</p>` : ""}
+        ${data.education.length > 0 ? `<h2>Education</h2>${educationHtml}` : ""}
         ${data.experience.length > 0 ? `<h2>Experience</h2>${experienceHtml}` : ""}
       </div>
       <div class="col-right">
         ${data.skills.length > 0 ? `<h2>Skills</h2><div class="skills-grid">${skillsHtml}</div>` : ""}
-        ${data.education.length > 0 ? `<h2>Education</h2>${educationHtml}` : ""}
         ${data.awards.length > 0 ? `<h2>Key Achievements</h2>${awardsHtml}` : ""}
+        ${publicationsHtml ? `<h2>Publications</h2>${publicationsHtml}` : ""}
         ${(data.socialLinks || []).length > 0 ? `<h2>Find Me Online</h2>${socialLinksHtml}` : ""}
         ${data.languages.length > 0 ? `<h2>Languages</h2>${languagesHtml}` : ""}
       </div>
@@ -420,6 +459,101 @@ function escapeHtml(str: string): string {
     .replace(/>/g, "&gt;")
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&#039;");
+}
+
+/**
+ * Sanitizes and renders HTML content for display in CV templates.
+ * 
+ * This function is designed to work with WYSIWYG editors like Lexical.
+ * It allows safe HTML formatting tags while preventing XSS attacks.
+ * Also supports markdown syntax as a fallback for backward compatibility.
+ * 
+ * Allowed tags: <strong>, <em>, <b>, <i>, <u>, <br>, <sup>, <sub>, <a>
+ * Anchor tags: Only http://, https://, and mailto: protocols are allowed
+ * 
+ * Security:
+ * - Strips dangerous tags (script, iframe, style)
+ * - Removes event handlers (onclick, onload, etc.)
+ * - Removes attributes from allowed tags (except href/target for <a>)
+ * - Plain text content is automatically escaped
+ * 
+ * @param str - The HTML or markdown string to sanitize
+ * @returns Sanitized HTML safe for rendering
+ */
+function sanitizeAndRenderHtml(str: string): string {
+  if (!str) return "";
+  
+  // Check if content has markdown syntax (**, *, __, _)
+  const hasMarkdown = /(\*\*|__|\*|_)/.test(str);
+  const hasHtmlTags = /<[^>]+>/.test(str);
+  
+  // If it has markdown but no HTML, convert markdown to HTML first
+  if (hasMarkdown && !hasHtmlTags) {
+    // Convert markdown to HTML
+    // Bold: **text** or __text__ (process first to avoid conflicts)
+    str = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    str = str.replace(/__(.+?)__/g, '<strong>$1</strong>');
+    
+    // Italic: *text* or _text_ (process after bold to avoid conflicts)
+    // Match single * or _ not preceded/followed by another
+    str = str.replace(/([^*]|^)\*([^*]+?)\*([^*]|$)/g, '$1<em>$2</em>$3');
+    str = str.replace(/([^_]|^)_([^_]+?)_([^_]|$)/g, '$1<em>$2</em>$3');
+  }
+  
+  // Now process HTML
+  const stillHasHtmlTags = /<[^>]+>/.test(str);
+  
+  if (!stillHasHtmlTags) {
+    // Plain text - escape it
+    return escapeHtml(str);
+  }
+  
+  // Basic HTML sanitization - allow only specific formatting tags
+  // Remove any potentially dangerous tags/attributes
+  let sanitized = str
+    .replace(/<script[^>]*>.*?<\/script>/gi, '')
+    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
+    .replace(/on\w+="[^"]*"/gi, '')
+    .replace(/on\w+='[^']*'/gi, '')
+    .replace(/<\s*style[^>]*>.*?<\/style>/gi, '');
+  
+  // Allow only safe formatting tags: strong, b, em, i, u, br, a
+  // Remove all other tags by escaping them
+  const allowedTags = ['strong', 'em', 'b', 'i', 'u', 'br', 'sup', 'sub', 'a'];
+  const tagPattern = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
+  
+  sanitized = sanitized.replace(tagPattern, (match, tagName) => {
+    if (allowedTags.includes(tagName.toLowerCase())) {
+      // Closing tags - keep as is
+      if (match.startsWith('</')) {
+        return `</${tagName}>`;
+      }
+      
+      // Special handling for anchor tags - preserve href and target attributes
+      if (tagName.toLowerCase() === 'a') {
+        const hrefMatch = match.match(/href=(["'])([^"']*)\1/i);
+        const targetMatch = match.match(/target=(["'])([^"']*)\1/i);
+        
+        if (hrefMatch) {
+          const href = hrefMatch[2];
+          // Sanitize href - only allow http, https, and mailto protocols
+          if (/^(https?:\/\/|mailto:)/i.test(href)) {
+            const targetAttr = targetMatch ? ` target="${escapeHtml(targetMatch[2])}"` : '';
+            return `<a href="${escapeHtml(href)}"${targetAttr}>`;
+          }
+        }
+        // If no valid href, strip the tag
+        return '';
+      }
+      
+      // Other tags - remove attributes
+      return `<${tagName}>`;
+    }
+    // Escape disallowed tags
+    return escapeHtml(match);
+  });
+  
+  return sanitized;
 }
 
 export function exportToHTML(_htmlContent: string, data: CVData, filename: string) {

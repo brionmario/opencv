@@ -15,6 +15,8 @@ interface MinimalWysiwygTemplateProps {
   onDeleteSkill: (id: string) => void;
   onAddAward: () => void;
   onDeleteAward: (id: string) => void;
+  onAddPublication: () => void;
+  onDeletePublication: (id: string) => void;
   onAddSocialLink: () => void;
   onDeleteSocialLink: (id: string) => void;
   onAddLanguage: () => void;
@@ -55,6 +57,8 @@ export function MinimalWysiwygTemplate({
   onDeleteSkill,
   onAddLanguage,
   onDeleteLanguage,
+  onAddPublication,
+  onDeletePublication,
 }: MinimalWysiwygTemplateProps) {
   return (
     <div className="bg-gray-50 p-8 font-sans" style={{ width: "8.5in", minHeight: "11in" }}>
@@ -252,7 +256,7 @@ export function MinimalWysiwygTemplate({
 
         {/* Languages */}
         {data.languages.length > 0 && (
-          <div className="group">
+          <div className="mb-12 group">
             <div className="flex items-center justify-between mb-6">
               <h2 className="font-serif font-bold text-gray-900 text-sm uppercase tracking-widest">Languages</h2>
               <SectionActions onAdd={onAddLanguage} />
@@ -262,6 +266,58 @@ export function MinimalWysiwygTemplate({
                 <div key={lang.name} className="group/item flex items-center gap-2">
                   <p className="text-xs font-semibold text-gray-900">{lang.name}</p>
                   <DeleteButton onDelete={() => onDeleteLanguage(lang.name)} />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Publications */}
+        {data.publications && data.publications.length > 0 && (
+          <div className="group">
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="font-serif font-bold text-gray-900 text-sm uppercase tracking-widest">Publications</h2>
+              <SectionActions onAdd={onAddPublication} />
+            </div>
+            <div className="space-y-6">
+              {data.publications.map((pub) => (
+                <div key={pub.id} className="group/item relative">
+                  <div className="absolute -left-5 top-0">
+                    <DeleteButton onDelete={() => onDeletePublication(pub.id)} />
+                  </div>
+                  <h3 className="font-serif font-bold text-gray-900 text-sm">
+                    <InlineEditor
+                      value={pub.title}
+                      onChange={(v) => onUpdate(`publications.${pub.id}.title`, v)}
+                      placeholder="Publication Title"
+                      className="font-serif font-bold text-gray-900 text-sm"
+                    />
+                  </h3>
+                  <div className="text-xs text-gray-600">
+                    <InlineEditor
+                      value={pub.publisher}
+                      onChange={(v) => onUpdate(`publications.${pub.id}.publisher`, v)}
+                      placeholder="Publisher"
+                      className="text-xs text-gray-600"
+                    />
+                    {" • "}
+                    <InlineEditor
+                      value={pub.date}
+                      onChange={(v) => onUpdate(`publications.${pub.id}.date`, v)}
+                      placeholder="Date"
+                      className="text-xs text-gray-600"
+                    />
+                  </div>
+                  {pub.description && (
+                    <div className="text-xs text-gray-700 mt-1 leading-relaxed">
+                      <InlineEditor
+                        value={pub.description}
+                        onChange={(v) => onUpdate(`publications.${pub.id}.description`, v)}
+                        placeholder="Description..."
+                        className="text-xs text-gray-700 leading-relaxed"
+                      />
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
