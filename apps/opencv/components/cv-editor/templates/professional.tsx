@@ -270,6 +270,7 @@ export function ProfessionalTemplate({
                         value={exp.description}
                         onChange={(v) => onUpdate(`experience.${exp.id}.description`, v)}
                         placeholder="Description..."
+                        richText
                         className="text-sm text-gray-700"
                       />
                     </div>
@@ -284,6 +285,7 @@ export function ProfessionalTemplate({
                             value={highlight}
                             onChange={(v) => handleHighlightUpdate(exp.id, exp.highlights, idx, v)}
                             placeholder="Highlight..."
+                            richText
                             className="text-sm text-gray-700"
                           />
                         </div>

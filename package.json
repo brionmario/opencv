@@ -6,6 +6,7 @@
   "scripts": {
     "build": "nx run-many --target=build --all",
     "clean": "nx run-many --target=clean --all",
+    "dev": "nx run-many --target=dev --all",
     "lint": "nx run-many --target=lint --all --parallel",
     "lint:fix": "nx run-many --target=fix:lint --all --parallel",
     "test": "nx run-many --target=test --all --parallel",

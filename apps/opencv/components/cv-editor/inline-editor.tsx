@@ -12,6 +12,7 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
 import { HeadingNode } from "@lexical/rich-text";
+import { $generateNodesFromDOM, $generateHtmlFromNodes } from "@lexical/html";
 import {
   $getRoot,
   $createParagraphNode,
@@ -21,7 +22,33 @@ import {
 } from "lexical";
 import { FloatingToolbar } from "./floating-toolbar";
 
-function SetInitialValuePlugin({ value }: { value: string }) {
+function hasHtmlTags(str: string): boolean {
+  return /<[^>]+>/.test(str);
+}
+
+function wrapInParagraph(html: string): string {
+  const trimmed = html.trim();
+  if (/^<(p|div|ul|ol|h[1-6])\b/i.test(trimmed)) return trimmed;
+  return `<p>${html}</p>`;
+}
+
+function stripParagraphWrapper(html: string): string {
+  // Strip single wrapping <p> to keep inline HTML format
+  const match = html.match(/^<p[^>]*>([\s\S]*?)<\/p>$/);
+  if (match) return match[1].trim();
+  return html;
+}
+
+function initEditorWithHtml(editor: LexicalEditor, value: string) {
+  const parser = new DOMParser();
+  const dom = parser.parseFromString(wrapInParagraph(value), "text/html");
+  const nodes = $generateNodesFromDOM(editor, dom);
+  const root = $getRoot();
+  root.clear();
+  nodes.forEach((node) => root.append(node));
+}
+
+function SetInitialValuePlugin({ value, richText }: { value: string; richText: boolean }) {
   const [editor] = useLexicalComposerContext();
   const initialized = useRef(false);
 
@@ -31,14 +58,16 @@ function SetInitialValuePlugin({ value }: { value: string }) {
 
     editor.update(() => {
       const root = $getRoot();
-      if (root.getTextContent() !== value && value) {
+      if (richText && value && hasHtmlTags(value)) {
+        initEditorWithHtml(editor, value);
+      } else if (root.getTextContent() !== value && value) {
         root.clear();
         const paragraph = $createParagraphNode();
         paragraph.append($createTextNode(value));
         root.append(paragraph);
       }
     });
-  }, [editor, value]);
+  }, [editor, value, richText]);
 
   return null;
 }
@@ -46,24 +75,30 @@ function SetInitialValuePlugin({ value }: { value: string }) {
 function ExternalValuePlugin({
   value,
   lastInternalValue,
+  richText,
 }: {
   value: string;
   lastInternalValue: React.MutableRefObject<string>;
+  richText: boolean;
 }) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
     if (value !== lastInternalValue.current) {
       editor.update(() => {
-        const root = $getRoot();
-        root.clear();
-        const paragraph = $createParagraphNode();
-        paragraph.append($createTextNode(value));
-        root.append(paragraph);
+        if (richText && value && hasHtmlTags(value)) {
+          initEditorWithHtml(editor, value);
+        } else {
+          const root = $getRoot();
+          root.clear();
+          const paragraph = $createParagraphNode();
+          paragraph.append($createTextNode(value));
+          root.append(paragraph);
+        }
       });
       lastInternalValue.current = value;
     }
-  }, [editor, value, lastInternalValue]);
+  }, [editor, value, lastInternalValue, richText]);
 
   return null;
 }
@@ -88,15 +123,22 @@ export function InlineEditor({
   const lastInternalValue = useRef(value);
 
   const handleChange = useCallback(
-    (editorState: EditorState, _editor: LexicalEditor) => {
-      editorState.read(() => {
-        const root = $getRoot();
-        const text = root.getTextContent();
-        lastInternalValue.current = text;
-        onChange(text);
-      });
+    (editorState: EditorState, editor: LexicalEditor) => {
+      if (richText) {
+        const html = editor.getEditorState().read(() => $generateHtmlFromNodes(editor, null));
+        const inlineHtml = stripParagraphWrapper(html);
+        lastInternalValue.current = inlineHtml;
+        onChange(inlineHtml);
+      } else {
+        editorState.read(() => {
+          const root = $getRoot();
+          const text = root.getTextContent();
+          lastInternalValue.current = text;
+          onChange(text);
+        });
+      }
     },
-    [onChange]
+    [onChange, richText]
   );
 
   const initialConfig = {
@@ -165,8 +207,8 @@ export function InlineEditor({
         <HistoryPlugin />
         {richText && <ListPlugin />}
         {richText && <FloatingToolbar />}
-        <SetInitialValuePlugin value={value} />
-        <ExternalValuePlugin value={value} lastInternalValue={lastInternalValue} />
+        <SetInitialValuePlugin value={value} richText={richText} />
+        <ExternalValuePlugin value={value} lastInternalValue={lastInternalValue} richText={richText} />
       </div>
     </LexicalComposer>
   );
