@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useCVData } from "@/hooks/use-cv-data";
 import { exportToJSON, exportToMarkdown, exportToHTML, exportToPDF } from "@/lib/export-handler";
 import { LinkedInImport } from "./linkedin-import";
@@ -22,6 +22,7 @@ export function CVBuilder() {
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
+  const isFirstLayoutSaveRef = useRef(true);
 
   const {
     data,
@@ -50,24 +51,33 @@ export function CVBuilder() {
     updateSavepointLabel,
   } = useCVData();
 
-  // Check if user has saved data on mount
+  // Check if user has saved data on mount; URL takes priority over localStorage
   useEffect(() => {
-    const saved = localStorage.getItem("cvBuilderData");
+    const urlParams = new URLSearchParams(window.location.search);
+    const urlLayout = urlParams.get('layout');
     const savedLayout = localStorage.getItem("cvBuilderLayout");
-    if (saved) {
-      setIsInitialized(true);
-      if (savedLayout) {
-        setSelectedLayout(savedLayout as LayoutType);
-      }
-    } else {
+    const layout = urlLayout || savedLayout;
+    if (layout) {
+      setSelectedLayout(layout as LayoutType);
+    }
+
+    const hasSavedData = !!urlParams.get('data') || !!localStorage.getItem("cvBuilderData");
+    if (!hasSavedData) {
       setShowTemplatePicker(true);
     }
     setIsInitialized(true);
   }, []);
 
-  // Save layout preference
+  // Save layout preference to localStorage and URL
   useEffect(() => {
+    if (isFirstLayoutSaveRef.current) {
+      isFirstLayoutSaveRef.current = false;
+      return;
+    }
     localStorage.setItem("cvBuilderLayout", selectedLayout);
+    const url = new URL(window.location.href);
+    url.searchParams.set('layout', selectedLayout);
+    window.history.replaceState(null, '', url.toString());
   }, [selectedLayout]);
 
   const handleTemplateSelect = (template: StarterTemplate) => {

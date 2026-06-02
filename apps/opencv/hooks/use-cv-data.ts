@@ -4,6 +4,40 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import type { CVData, ExperienceEntry, EducationEntry, SkillEntry, ProjectEntry, CertificationEntry, AwardEntry, ReferenceEntry, VolunteeringEntry, StrengthEntry, InterestEntry, PublicationEntry, SocialLinkEntry } from "@/lib/cv-builder-types";
 import { saveVersion, loadVersionHistory, restoreVersion, deleteVersion, renameVersion, type CVVersion } from "@/lib/cv-versioning";
 
+function encodeDataForUrl(data: CVData): string {
+  try {
+    const json = JSON.stringify(data);
+    const bytes = new TextEncoder().encode(json);
+    const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join('');
+    return btoa(binary);
+  } catch {
+    return '';
+  }
+}
+
+function decodeDataFromUrl(encoded: string): CVData | null {
+  try {
+    const binary = atob(encoded);
+    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
+    const json = new TextDecoder().decode(bytes);
+    return JSON.parse(json) as CVData;
+  } catch {
+    return null;
+  }
+}
+
+function setUrlParam(key: string, value: string): void {
+  const url = new URL(window.location.href);
+  url.searchParams.set(key, value);
+  window.history.replaceState(null, '', url.toString());
+}
+
+function removeUrlParam(key: string): void {
+  const url = new URL(window.location.href);
+  url.searchParams.delete(key);
+  window.history.replaceState(null, '', url.toString());
+}
+
 const DEFAULT_CV_DATA: CVData = {
   personalInfo: {
     fullName: "Your Name",
@@ -33,9 +67,21 @@ export function useCVData() {
   const [data, setData] = useState<CVData>(DEFAULT_CV_DATA);
   const [versions, setVersions] = useState<CVVersion[]>([]);
   const autoSaveTimerRef = useRef<NodeJS.Timeout>();
+  const isFirstSaveRef = useRef(true);
 
-  // Load from localStorage on mount
+  // Load from URL (priority) or localStorage on mount
   useEffect(() => {
+    const urlParam = new URLSearchParams(window.location.search).get('data');
+    if (urlParam) {
+      const decoded = decodeDataFromUrl(urlParam);
+      if (decoded) {
+        setData(decoded);
+        const history = loadVersionHistory();
+        setVersions(history.versions);
+        return;
+      }
+    }
+
     const saved = localStorage.getItem("cvBuilderData");
     if (saved) {
       try {
@@ -44,15 +90,26 @@ export function useCVData() {
         console.error("Failed to load CV data:", err);
       }
     }
-    
+
     // Load version history
     const history = loadVersionHistory();
     setVersions(history.versions);
   }, []);
 
-  // Save to localStorage whenever data changes
+  // Save to localStorage and URL whenever data changes
   useEffect(() => {
+    // Skip the first render to avoid overwriting URL before the load effect reads it
+    if (isFirstSaveRef.current) {
+      isFirstSaveRef.current = false;
+      return;
+    }
+
     localStorage.setItem("cvBuilderData", JSON.stringify(data));
+
+    const encoded = encodeDataForUrl(data);
+    if (encoded) {
+      setUrlParam('data', encoded);
+    }
 
     // Auto-save version every 30 seconds of inactivity
     if (autoSaveTimerRef.current) {
@@ -207,6 +264,7 @@ export function useCVData() {
   const resetData = useCallback(() => {
     setData(DEFAULT_CV_DATA);
     localStorage.removeItem("cvBuilderData");
+    removeUrlParam('data');
   }, []);
 
   const importData = useCallback((importedData: CVData) => {
