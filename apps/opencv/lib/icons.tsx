@@ -91,3 +91,27 @@ export const socialPlatformIcons: Record<string, IconName> = {
 export function getSocialIconName(platform: string): IconName {
   return socialPlatformIcons[platform] || "globe";
 }
+
+// Predefined icon options shown in the icon picker
+export const ICON_PICKER_OPTIONS: { key: IconName; label: string }[] = [
+  { key: "github", label: "GitHub" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "medium", label: "Medium" },
+  { key: "researchgate", label: "ResearchGate" },
+  { key: "globe", label: "Globe" },
+];
+
+// Returns the resolved icon name or a custom URL for a social link entry.
+// Returns { type: "icon", name } for predefined icons, or { type: "url", url } for custom images.
+export function resolveSocialLinkIcon(
+  icon: string | undefined,
+  platform: string
+): { type: "icon"; name: IconName } | { type: "url"; url: string } {
+  if (icon) {
+    if (icon.startsWith("http://") || icon.startsWith("https://")) {
+      return { type: "url", url: icon };
+    }
+    return { type: "icon", name: icon as IconName };
+  }
+  return { type: "icon", name: getSocialIconName(platform) };
+}

@@ -125,27 +125,44 @@
 }
 
 /* Lexical Inline Editor Styles */
+
+/*
+ * inline-grid places .inline-editor-content and .inline-editor-placeholder
+ * in the same grid cell (grid-area: 1/1) so they overlay each other.
+ * The container auto-sizes to the widest of the two, so the empty editor
+ * is as wide as the placeholder text.
+ */
 .inline-editor-container {
-  display: inline;
+  display: inline-grid;
+  align-items: start;
+  position: relative;
+  max-width: 100%;
+}
+
+.inline-editor-container.block {
+  display: grid;
+  width: 100%;
+}
+
+.inline-editor-content,
+.inline-editor-placeholder {
+  grid-area: 1/1;
 }
 
 .inline-editor-content {
-  display: inline;
+  display: block;
   min-width: 1em;
-}
-
-.inline-editor-content:empty::before {
-  content: attr(data-placeholder);
-  color: #9ca3af;
+  min-height: 1lh;
 }
 
 .inline-editor-paragraph {
   margin: 0;
-  display: inline;
 }
 
-.inline-editor-content [data-lexical-editor] {
-  outline: none;
+.inline-editor-placeholder {
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
 }
 
 @media print {

@@ -1,5 +1,5 @@
 import type { CVData } from "@/lib/cv-builder-types";
-import { getIconSvg, getSocialIconSvg } from "@/lib/icons";
+import { getIconSvg, getSocialIconSvg, resolveSocialLinkIcon } from "@/lib/icons";
 
 export function exportToJSON(data: CVData, filename: string) {
   const json = JSON.stringify(data, null, 2);
@@ -182,16 +182,21 @@ function generateCleanHTML(data: CVData): string {
     .join("");
 
   const socialLinksHtml = (data.socialLinks || [])
-    .map(
-      (link) => `
+    .map((link) => {
+      const resolved = resolveSocialLinkIcon(link.icon, link.platform);
+      const iconHtml =
+        resolved.type === "url"
+          ? `<img src="${escapeHtml(resolved.url)}" style="width:16px;height:16px;object-fit:contain;" alt="" />`
+          : getSocialIconSvg(resolved.name, "#374151");
+      return `
         <div class="social-link">
-          <span class="social-icon">${getSocialIconSvg(link.platform, "#374151")}</span>
+          <span class="social-icon">${iconHtml}</span>
           <div class="social-text">
             <strong>${escapeHtml(link.platform)}</strong>
             <span>${escapeHtml(link.url)}</span>
           </div>
-        </div>`
-    )
+        </div>`;
+    })
     .join("");
 
   const labels = ["Beginner", "Elementary", "Intermediate", "Proficient", "Fluent"];

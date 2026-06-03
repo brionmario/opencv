@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, Plus, Trash2, X as XIcon } from "lucide-react";
+import { ChevronDown, Trash2, X as XIcon } from "lucide-react";
+import { AddItemButton } from "../../cv-editor/editable-card";
 import type { VolunteeringEntry, StrengthEntry, InterestEntry, PublicationEntry } from "@/lib/cv-builder-types";
 
 interface VolunteeringSectionProps {
@@ -36,7 +37,7 @@ export function VolunteeringSection({
       {expanded && (
         <div className="p-4 border-t space-y-4">
           {volunteering.map((vol) => (
-            <div key={vol.id} className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div key={vol.id} className="p-4 border border-gray-200 rounded-lg space-y-3 hover:border-teal-400 transition-colors">
               <div className="flex justify-between items-start gap-3">
                 <input
                   type="text"
@@ -89,12 +90,7 @@ export function VolunteeringSection({
               />
             </div>
           ))}
-          <button
-            onClick={onAdd}
-            className="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-gray-600 hover:text-blue-600"
-          >
-            <Plus size={16} /> Add Volunteering
-          </button>
+          <AddItemButton onAdd={onAdd} label="volunteering" />
         </div>
       )}
     </div>
@@ -134,7 +130,7 @@ export function StrengthsSection({
       {expanded && (
         <div className="p-4 border-t space-y-4">
           {strengths.map((strength) => (
-            <div key={strength.id} className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div key={strength.id} className="p-4 border border-gray-200 rounded-lg space-y-3 hover:border-teal-400 transition-colors">
               <div className="flex justify-between items-start gap-3">
                 <input
                   type="text"
@@ -159,12 +155,7 @@ export function StrengthsSection({
               />
             </div>
           ))}
-          <button
-            onClick={onAdd}
-            className="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-gray-600 hover:text-blue-600"
-          >
-            <Plus size={16} /> Add Strength
-          </button>
+          <AddItemButton onAdd={onAdd} label="strength" />
         </div>
       )}
     </div>
@@ -287,7 +278,7 @@ export function PublicationsSection({
       {expanded && (
         <div className="p-4 border-t space-y-4">
           {publications.map((pub) => (
-            <div key={pub.id} className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div key={pub.id} className="p-4 border border-gray-200 rounded-lg space-y-3 hover:border-teal-400 transition-colors">
               <div className="flex justify-between items-start gap-3">
                 <input
                   type="text"
@@ -332,12 +323,7 @@ export function PublicationsSection({
               />
             </div>
           ))}
-          <button
-            onClick={onAdd}
-            className="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-gray-600 hover:text-blue-600"
-          >
-            <Plus size={16} /> Add Publication
-          </button>
+          <AddItemButton onAdd={onAdd} label="publication" />
         </div>
       )}
     </div>

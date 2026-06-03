@@ -134,6 +134,7 @@ export interface SocialLinkEntry {
   id: string;
   platform: string;
   url: string;
+  icon?: string; // predefined IconName key OR a custom image URL starting with "http"
 }
 
 export interface CVData {

@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, Plus, Trash2 } from "lucide-react";
+import { ChevronDown, Trash2 } from "lucide-react";
+import { AddItemButton } from "../../cv-editor/editable-card";
 import type { AwardEntry } from "@/lib/cv-builder-types";
 
 interface AwardsSectionProps {
@@ -36,7 +37,7 @@ export function AwardsSection({
       {expanded && (
         <div className="p-4 border-t space-y-4">
           {awards.map((award) => (
-            <div key={award.id} className="p-4 bg-gray-50 rounded-lg space-y-3">
+            <div key={award.id} className="p-4 border border-gray-200 rounded-lg space-y-3 hover:border-teal-400 transition-colors">
               <div className="flex justify-between items-start gap-3">
                 <input
                   type="text"
@@ -74,12 +75,7 @@ export function AwardsSection({
               />
             </div>
           ))}
-          <button
-            onClick={onAdd}
-            className="w-full py-2 px-4 border-2 border-dashed border-gray-300 rounded-lg hover:border-blue-500 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2 text-gray-600 hover:text-blue-600"
-          >
-            <Plus size={16} /> Add Award
-          </button>
+          <AddItemButton onAdd={onAdd} label="award" />
         </div>
       )}
     </div>

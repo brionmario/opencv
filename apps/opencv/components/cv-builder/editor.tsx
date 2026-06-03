@@ -188,7 +188,7 @@ export function CVEditor({ data, onPersonalInfoChange, ...handlers }: EditorProp
         {expandedSections.experience && (
           <div className="p-4 border-t space-y-4">
             {data.experience.map((exp, idx) => (
-              <div key={exp.id} className="p-4 bg-gray-50 rounded-lg space-y-3">
+              <div key={exp.id} className="p-4 border border-gray-200 rounded-lg space-y-3 hover:border-teal-400 transition-colors">
                 <div className="flex justify-between items-start">
                   <h3 className="font-serif font-bold">{exp.jobTitle || "Job Title"}</h3>
                   <button
@@ -347,7 +347,7 @@ export function CVEditor({ data, onPersonalInfoChange, ...handlers }: EditorProp
         {expandedSections.education && (
           <div className="p-4 border-t space-y-4">
             {data.education.map((edu) => (
-              <div key={edu.id} className="p-4 bg-gray-50 rounded-lg space-y-3">
+              <div key={edu.id} className="p-4 border border-gray-200 rounded-lg space-y-3 hover:border-teal-400 transition-colors">
                 <div className="flex justify-between items-start">
                   <h3 className="font-serif font-bold">{edu.degree || "Degree"}</h3>
                   <button

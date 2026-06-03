@@ -1,9 +1,11 @@
 "use client";
 
-import { Plus, Trash2, Upload, X as XIcon } from "lucide-react";
+import { useState } from "react";
+import { Upload, X as XIcon, Plus } from "lucide-react";
 import type { CVData } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
-import { Icon, getSocialIconName } from "@/lib/icons";
+import { EditableCard, AddItemButton } from "../editable-card";
+import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 
 interface ProfessionalTemplateProps {
   data: CVData;
@@ -25,32 +27,6 @@ interface ProfessionalTemplateProps {
   onPhotoUpload: (dataUrl: string) => void;
 }
 
-function SectionActions({ onAdd, label }: { onAdd: () => void; label: string }) {
-  return (
-    <button
-      onClick={onAdd}
-      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-      title={`Add ${label}`}
-    >
-      <Plus size={14} />
-      Add
-    </button>
-  );
-}
-
-function DeleteButton({ onDelete }: { onDelete: () => void }) {
-  return (
-    <button
-      onClick={onDelete}
-      className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-      title="Remove"
-    >
-      <Trash2 size={12} />
-    </button>
-  );
-}
-
-
 export function ProfessionalTemplate({
   data,
   onUpdate,
@@ -70,6 +46,8 @@ export function ProfessionalTemplate({
   onDeleteLanguage,
   onPhotoUpload,
 }: ProfessionalTemplateProps) {
+  const [iconPickerOpenId, setIconPickerOpenId] = useState<string | null>(null);
+  const [customIconUrl, setCustomIconUrl] = useState("");
   const handleHighlightAdd = (expId: string, highlights: string[]) => {
     onUpdate(`experience.${expId}.highlights`, [...highlights, ""]);
   };
@@ -147,9 +125,9 @@ export function ProfessionalTemplate({
           </div>
 
           {/* Photo */}
-          <div className="ml-6 flex-shrink-0">
+          <div className="ml-6 shrink-0">
             {data.personalInfo.avatar ? (
-              <div className="relative group">
+              <div className="relative group/photo">
                 <img
                   src={data.personalInfo.avatar}
                   alt="Profile"
@@ -157,7 +135,7 @@ export function ProfessionalTemplate({
                 />
                 <button
                   onClick={() => onUpdate("personalInfo.avatar", undefined)}
-                  className="absolute -top-1 -right-1 bg-red-500 text-white p-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
+                  className="absolute -top-1 -right-1 bg-red-500 text-white p-0.5 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity print:hidden"
                 >
                   <XIcon size={12} />
                 </button>
@@ -206,20 +184,14 @@ export function ProfessionalTemplate({
           </div>
 
           {/* Experience */}
-          <div className="group">
-            <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
-              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                Experience
-              </h2>
-              <SectionActions onAdd={onAddExperience} label="experience" />
+          <div>
+            <div className="mb-2 pb-1 border-b-2 border-pink-600">
+              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Experience</h2>
             </div>
-            <div className="space-y-5">
+            <div className="space-y-3 mt-3">
               {data.experience.map((exp) => (
-                <div key={exp.id} className="group/item relative">
-                  <div className="absolute -left-5 top-0">
-                    <DeleteButton onDelete={() => onDeleteExperience(exp.id)} />
-                  </div>
-                  <div className="flex justify-between items-start">
+                <EditableCard key={exp.id} onDelete={() => onDeleteExperience(exp.id)}>
+                  <div className="flex justify-between items-start pr-4">
                     <h3 className="font-bold text-gray-900">
                       <InlineEditor
                         value={exp.jobTitle}
@@ -275,7 +247,6 @@ export function ProfessionalTemplate({
                       />
                     </div>
                   )}
-                  {/* Highlights */}
                   <ul className="mt-2 space-y-1">
                     {exp.highlights.map((highlight, idx) => (
                       <li key={idx} className="flex items-start gap-2 group/highlight">
@@ -300,27 +271,25 @@ export function ProfessionalTemplate({
                   </ul>
                   <button
                     onClick={() => handleHighlightAdd(exp.id, exp.highlights)}
-                    className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 mt-1 opacity-0 group-hover/item:opacity-100 transition-opacity print:hidden"
+                    className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 mt-1 opacity-0 group-hover/card:opacity-100 transition-opacity print:hidden"
                   >
                     <Plus size={12} /> Add highlight
                   </button>
-                </div>
+                </EditableCard>
               ))}
             </div>
+            <AddItemButton onAdd={onAddExperience} label="experience" />
           </div>
         </div>
 
         {/* Right Column - 40% */}
         <div className="w-[42%] space-y-6">
           {/* Skills */}
-          <div className="group">
-            <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
-              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                Skills
-              </h2>
-              <SectionActions onAdd={onAddSkill} label="skill" />
+          <div>
+            <div className="mb-2 pb-1 border-b-2 border-pink-600">
+              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Skills</h2>
             </div>
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-2 mt-2">
               {data.skills.map((skill) => (
                 <span
                   key={skill.id}
@@ -341,22 +310,17 @@ export function ProfessionalTemplate({
                 </span>
               ))}
             </div>
+            <AddItemButton onAdd={onAddSkill} label="skill" />
           </div>
 
           {/* Education */}
-          <div className="group">
-            <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
-              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                Education
-              </h2>
-              <SectionActions onAdd={onAddEducation} label="education" />
+          <div>
+            <div className="mb-2 pb-1 border-b-2 border-pink-600">
+              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Education</h2>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 mt-2">
               {data.education.map((edu) => (
-                <div key={edu.id} className="group/item relative">
-                  <div className="absolute -left-5 top-0">
-                    <DeleteButton onDelete={() => onDeleteEducation(edu.id)} />
-                  </div>
+                <EditableCard key={edu.id} onDelete={() => onDeleteEducation(edu.id)}>
                   <h3 className="font-bold text-gray-900 text-sm">
                     <InlineEditor
                       value={edu.degree}
@@ -391,167 +355,222 @@ export function ProfessionalTemplate({
                       />
                     </span>
                   </div>
-                </div>
+                </EditableCard>
               ))}
             </div>
+            <AddItemButton onAdd={onAddEducation} label="education" />
           </div>
 
           {/* Key Achievements */}
-          <div className="group">
-            <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
-              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                Key Achievements
-              </h2>
-              <SectionActions onAdd={onAddAward} label="achievement" />
+          <div>
+            <div className="mb-2 pb-1 border-b-2 border-pink-600">
+              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Key Achievements</h2>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-3 mt-2">
               {data.awards.map((award) => (
-                <div key={award.id} className="group/item relative flex gap-2">
-                  <Icon name="award" className="text-pink-600 mt-0.5" size={16} />
-                  <div className="flex-1">
-                    <div className="absolute -left-5 top-0">
-                      <DeleteButton onDelete={() => onDeleteAward(award.id)} />
-                    </div>
-                    <h4 className="font-bold text-gray-900 text-sm">
-                      <InlineEditor
-                        value={award.title}
-                        onChange={(v) => onUpdate(`awards.${award.id}.title`, v)}
-                        placeholder="Achievement Title"
-                        className="font-bold text-gray-900 text-sm"
-                      />
-                    </h4>
-                    <div className="text-xs text-gray-600">
-                      <InlineEditor
-                        value={award.description || ""}
-                        onChange={(v) => onUpdate(`awards.${award.id}.description`, v)}
-                        placeholder="Description..."
-                        className="text-xs text-gray-600"
-                      />
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Publications */}
-          {data.publications && data.publications.length > 0 && (
-            <div className="group">
-              <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
-                <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                  Publications
-                </h2>
-                <SectionActions onAdd={onAddPublication} label="publication" />
-              </div>
-              <div className="space-y-3">
-                {data.publications.map((pub) => (
-                  <div key={pub.id} className="group/item relative flex gap-2">
-                    <Icon name="book" className="text-pink-600 mt-0.5" size={16} />
+                <EditableCard key={award.id} onDelete={() => onDeleteAward(award.id)}>
+                  <div className="flex gap-2">
+                    <Icon name="award" className="text-pink-600 mt-0.5 shrink-0" size={16} />
                     <div className="flex-1">
-                      <div className="absolute -left-5 top-0">
-                        <DeleteButton onDelete={() => onDeletePublication(pub.id)} />
-                      </div>
                       <h4 className="font-bold text-gray-900 text-sm">
                         <InlineEditor
-                          value={pub.title}
-                          onChange={(v) => onUpdate(`publications.${pub.id}.title`, v)}
-                          placeholder="Publication Title"
+                          value={award.title}
+                          onChange={(v) => onUpdate(`awards.${award.id}.title`, v)}
+                          placeholder="Achievement Title"
                           className="font-bold text-gray-900 text-sm"
                         />
                       </h4>
                       <div className="text-xs text-gray-600">
                         <InlineEditor
-                          value={pub.publisher}
-                          onChange={(v) => onUpdate(`publications.${pub.id}.publisher`, v)}
-                          placeholder="Publisher"
-                          className="text-xs text-gray-600"
-                        />
-                        {" • "}
-                        <InlineEditor
-                          value={pub.date}
-                          onChange={(v) => onUpdate(`publications.${pub.id}.date`, v)}
-                          placeholder="Date"
+                          value={award.description || ""}
+                          onChange={(v) => onUpdate(`awards.${award.id}.description`, v)}
+                          placeholder="Description..."
                           className="text-xs text-gray-600"
                         />
                       </div>
-                      {pub.description && (
-                        <div className="text-xs text-gray-600 mt-1">
+                    </div>
+                  </div>
+                </EditableCard>
+              ))}
+            </div>
+            <AddItemButton onAdd={onAddAward} label="achievement" />
+          </div>
+
+          {/* Publications */}
+          {data.publications && data.publications.length > 0 && (
+            <div>
+              <div className="mb-2 pb-1 border-b-2 border-pink-600">
+                <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Publications</h2>
+              </div>
+              <div className="space-y-3 mt-2">
+                {data.publications.map((pub) => (
+                  <EditableCard key={pub.id} onDelete={() => onDeletePublication(pub.id)}>
+                    <div className="flex gap-2">
+                      <Icon name="link" className="text-pink-600 mt-0.5 shrink-0" size={16} />
+                      <div className="flex-1">
+                        <h4 className="font-bold text-gray-900 text-sm">
                           <InlineEditor
-                            value={pub.description}
-                            onChange={(v) => onUpdate(`publications.${pub.id}.description`, v)}
-                            placeholder="Description..."
+                            value={pub.title}
+                            onChange={(v) => onUpdate(`publications.${pub.id}.title`, v)}
+                            placeholder="Publication Title"
+                            className="font-bold text-gray-900 text-sm"
+                          />
+                        </h4>
+                        <div className="text-xs text-gray-600">
+                          <InlineEditor
+                            value={pub.publisher}
+                            onChange={(v) => onUpdate(`publications.${pub.id}.publisher`, v)}
+                            placeholder="Publisher"
+                            className="text-xs text-gray-600"
+                          />
+                          {" • "}
+                          <InlineEditor
+                            value={pub.date}
+                            onChange={(v) => onUpdate(`publications.${pub.id}.date`, v)}
+                            placeholder="Date"
                             className="text-xs text-gray-600"
                           />
                         </div>
-                      )}
-                      {pub.link && (
-                        <div className="text-xs text-blue-600 mt-1">
+                        {pub.description && (
+                          <div className="text-xs text-gray-600 mt-1">
+                            <InlineEditor
+                              value={pub.description}
+                              onChange={(v) => onUpdate(`publications.${pub.id}.description`, v)}
+                              placeholder="Description..."
+                              className="text-xs text-gray-600"
+                            />
+                          </div>
+                        )}
+                        <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
+                          <Icon name="link" size={10} className="text-gray-400 shrink-0" />
                           <InlineEditor
-                            value={pub.link}
+                            value={pub.link || ""}
                             onChange={(v) => onUpdate(`publications.${pub.id}.link`, v)}
-                            placeholder="Link..."
+                            placeholder="Add URL..."
                             className="text-xs text-blue-600"
                           />
                         </div>
-                      )}
+                      </div>
                     </div>
-                  </div>
+                  </EditableCard>
                 ))}
               </div>
+              <AddItemButton onAdd={onAddPublication} label="publication" />
             </div>
           )}
 
           {/* Find Me Online */}
           {data.socialLinks && data.socialLinks.length > 0 && (
-            <div className="group">
-              <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
-                <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                  Find Me Online
-                </h2>
-                <SectionActions onAdd={onAddSocialLink} label="link" />
+            <div>
+              <div className="mb-2 pb-1 border-b-2 border-pink-600">
+                <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Find Me Online</h2>
               </div>
-              <div className="space-y-2">
-                {data.socialLinks.map((link) => (
-                  <div key={link.id} className="group/item flex items-center gap-2">
-                    <Icon name={getSocialIconName(link.platform)} className="text-gray-600" size={16} />
-                    <div className="flex-1">
-                      <div className="font-bold text-gray-900 text-xs">
-                        <InlineEditor
-                          value={link.platform}
-                          onChange={(v) => onUpdate(`socialLinks.${link.id}.platform`, v)}
-                          placeholder="Platform"
-                          className="font-bold text-gray-900 text-xs"
-                        />
+              <div className="space-y-2 mt-2">
+                {data.socialLinks.map((link) => {
+                  const resolved = resolveSocialLinkIcon(link.icon, link.platform);
+                  return (
+                    <EditableCard key={link.id} onDelete={() => onDeleteSocialLink(link.id)}>
+                      <div className="flex items-center gap-2">
+                        {/* Icon — click to open picker */}
+                        <div className="relative shrink-0">
+                          <button
+                            onClick={() => {
+                              setCustomIconUrl("");
+                              setIconPickerOpenId(iconPickerOpenId === link.id ? null : link.id);
+                            }}
+                            title="Change icon"
+                            className="p-1 rounded hover:bg-gray-100 transition-colors print:hidden"
+                          >
+                            {resolved.type === "url" ? (
+                              <img src={resolved.url} className="w-4 h-4 object-contain" alt="" />
+                            ) : (
+                              <Icon name={resolved.name} className="text-gray-600" size={16} />
+                            )}
+                          </button>
+                          {iconPickerOpenId === link.id && (
+                            <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg p-3 z-20 w-56 print:hidden">
+                              <p className="text-xs text-gray-500 mb-2 font-medium">Choose icon</p>
+                              <div className="flex flex-wrap gap-1.5 mb-3">
+                                {ICON_PICKER_OPTIONS.map(({ key, label }) => (
+                                  <button
+                                    key={key}
+                                    title={label}
+                                    onClick={() => {
+                                      onUpdate(`socialLinks.${link.id}.icon`, key);
+                                      setIconPickerOpenId(null);
+                                    }}
+                                    className={`p-1.5 rounded hover:bg-gray-100 transition-colors border ${
+                                      (link.icon || "") === key ? "border-blue-400 bg-blue-50" : "border-transparent"
+                                    }`}
+                                  >
+                                    <Icon name={key} size={16} className="text-gray-700" />
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="border-t border-gray-100 pt-2">
+                                <p className="text-xs text-gray-500 mb-1">Custom image URL</p>
+                                <input
+                                  type="url"
+                                  placeholder="https://..."
+                                  value={customIconUrl}
+                                  onChange={(e) => setCustomIconUrl(e.target.value)}
+                                  onKeyDown={(e) => {
+                                    if (e.key === "Enter" && customIconUrl.startsWith("http")) {
+                                      onUpdate(`socialLinks.${link.id}.icon`, customIconUrl);
+                                      setIconPickerOpenId(null);
+                                    }
+                                    if (e.key === "Escape") setIconPickerOpenId(null);
+                                  }}
+                                  className="w-full text-xs px-2 py-1.5 border rounded focus:outline-none focus:ring-1 focus:ring-blue-400"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <div className="font-bold text-gray-900 text-xs">
+                            <InlineEditor
+                              value={link.platform}
+                              onChange={(v) => onUpdate(`socialLinks.${link.id}.platform`, v)}
+                              placeholder="Platform"
+                              className="font-bold text-gray-900 text-xs"
+                            />
+                          </div>
+                          <div className="text-xs text-gray-500">
+                            <InlineEditor
+                              value={link.url}
+                              onChange={(v) => onUpdate(`socialLinks.${link.id}.url`, v)}
+                              placeholder="https://..."
+                              className="text-xs text-gray-500"
+                            />
+                          </div>
+                        </div>
                       </div>
-                      <div className="text-xs text-gray-500">
-                        <InlineEditor
-                          value={link.url}
-                          onChange={(v) => onUpdate(`socialLinks.${link.id}.url`, v)}
-                          placeholder="https://..."
-                          className="text-xs text-gray-500"
-                        />
-                      </div>
-                    </div>
-                    <DeleteButton onDelete={() => onDeleteSocialLink(link.id)} />
-                  </div>
-                ))}
+                    </EditableCard>
+                  );
+                })}
               </div>
+              <AddItemButton onAdd={onAddSocialLink} label="link" />
             </div>
           )}
 
           {/* Languages */}
-          <div className="group">
-            <div className="flex items-center justify-between mb-2 pb-1 border-b-2 border-pink-600">
-              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">
-                Languages
-              </h2>
-              <SectionActions onAdd={onAddLanguage} label="language" />
+          <div>
+            <div className="mb-2 pb-1 border-b-2 border-pink-600">
+              <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Languages</h2>
             </div>
-            <div className="space-y-2">
-              {data.languages.map((lang) => (
-                <div key={lang.name} className="group/item flex items-center justify-between">
+            <div className="space-y-2 mt-2">
+              {data.languages.map((lang, langIdx) => (
+                <div key={langIdx} className="group/lang flex items-center justify-between">
                   <div>
-                    <p className="font-bold text-gray-900 text-sm">{lang.name}</p>
+                    <div className="font-bold text-gray-900 text-sm">
+                      <InlineEditor
+                        value={lang.name}
+                        onChange={(v) => onUpdate(`languages.${lang.name}.name`, v)}
+                        placeholder="Language"
+                        className="font-bold text-gray-900 text-sm"
+                      />
+                    </div>
                     <p className="text-xs text-gray-500">
                       {["Beginner", "Elementary", "Intermediate", "Proficient", "Fluent"][lang.proficiency - 1]}
                     </p>
@@ -563,18 +582,26 @@ export function ProfessionalTemplate({
                         .map((_, i) => (
                           <button
                             key={i}
-                            onClick={() => onUpdate(`languages.${lang.name}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)}
+                            onClick={() =>
+                              onUpdate(`languages.${lang.name}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)
+                            }
                             className={`w-3.5 h-3.5 rounded-full transition-colors ${
                               i < lang.proficiency ? "bg-blue-600" : "bg-gray-300"
                             } hover:bg-blue-400 print:pointer-events-none`}
                           />
                         ))}
                     </div>
-                    <DeleteButton onDelete={() => onDeleteLanguage(lang.name)} />
+                    <button
+                      onClick={() => onDeleteLanguage(lang.name)}
+                      className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover/lang:opacity-100 transition-opacity print:hidden"
+                    >
+                      <XIcon size={12} />
+                    </button>
                   </div>
                 </div>
               ))}
             </div>
+            <AddItemButton onAdd={onAddLanguage} label="language" />
           </div>
         </div>
       </div>

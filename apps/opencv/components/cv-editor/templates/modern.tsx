@@ -1,8 +1,10 @@
 "use client";
 
-import { Plus, Trash2, Upload, X as XIcon } from "lucide-react";
+import { Trash2, X as XIcon, Plus } from "lucide-react";
 import type { CVData } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
+import { EditableCard, AddItemButton } from "../editable-card";
+import { Icon } from "@/lib/icons";
 
 interface ModernWysiwygTemplateProps {
   data: CVData;
@@ -22,28 +24,6 @@ interface ModernWysiwygTemplateProps {
   onAddLanguage: () => void;
   onDeleteLanguage: (name: string) => void;
   onPhotoUpload: (dataUrl: string) => void;
-}
-
-function SectionActions({ onAdd, label }: { onAdd: () => void; label: string }) {
-  return (
-    <button
-      onClick={onAdd}
-      className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-    >
-      <Plus size={14} /> Add
-    </button>
-  );
-}
-
-function DeleteButton({ onDelete }: { onDelete: () => void }) {
-  return (
-    <button
-      onClick={onDelete}
-      className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-    >
-      <Trash2 size={12} />
-    </button>
-  );
 }
 
 export function ModernWysiwygTemplate({
@@ -140,18 +120,14 @@ export function ModernWysiwygTemplate({
           {/* Main Content */}
           <div className="col-span-2 space-y-8">
             {/* Experience */}
-            <div className="group">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-900">
+            <div>
+              <div className="mb-4 pb-2 border-b-2 border-gray-900">
                 <h2 className="font-serif text-2xl font-bold text-gray-900">EXPERIENCE</h2>
-                <SectionActions onAdd={onAddExperience} label="experience" />
               </div>
-              <div className="space-y-6">
+              <div className="space-y-3">
                 {data.experience.map((exp) => (
-                  <div key={exp.id} className="group/item relative">
-                    <div className="absolute -left-5 top-0">
-                      <DeleteButton onDelete={() => onDeleteExperience(exp.id)} />
-                    </div>
-                    <div className="flex justify-between items-start mb-1">
+                  <EditableCard key={exp.id} onDelete={() => onDeleteExperience(exp.id)}>
+                    <div className="flex justify-between items-start mb-1 pr-4">
                       <h3 className="font-serif text-lg font-bold text-gray-900">
                         <InlineEditor
                           value={exp.jobTitle}
@@ -160,7 +136,7 @@ export function ModernWysiwygTemplate({
                           className="font-serif text-lg font-bold text-gray-900"
                         />
                       </h3>
-                      <div className="text-sm text-gray-600 flex gap-1 items-center flex-shrink-0">
+                      <div className="text-sm text-gray-600 flex gap-1 items-center shrink-0">
                         <InlineEditor
                           value={exp.startDate}
                           onChange={(v) => onUpdate(`experience.${exp.id}.startDate`, v)}
@@ -217,28 +193,25 @@ export function ModernWysiwygTemplate({
                     </ul>
                     <button
                       onClick={() => handleHighlightAdd(exp.id, exp.highlights)}
-                      className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 mt-1 opacity-0 group-hover/item:opacity-100 transition-opacity print:hidden"
+                      className="flex items-center gap-1 text-xs text-blue-500 hover:text-blue-700 mt-1 opacity-0 group-hover/card:opacity-100 transition-opacity print:hidden"
                     >
                       <Plus size={12} /> Add highlight
                     </button>
-                  </div>
+                  </EditableCard>
                 ))}
               </div>
+              <AddItemButton onAdd={onAddExperience} label="experience" />
             </div>
 
             {/* Education */}
-            <div className="group">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-900">
+            <div>
+              <div className="mb-4 pb-2 border-b-2 border-gray-900">
                 <h2 className="font-serif text-2xl font-bold text-gray-900">EDUCATION</h2>
-                <SectionActions onAdd={onAddEducation} label="education" />
               </div>
-              <div className="space-y-4">
+              <div className="space-y-3">
                 {data.education.map((edu) => (
-                  <div key={edu.id} className="group/item relative">
-                    <div className="absolute -left-5 top-0">
-                      <DeleteButton onDelete={() => onDeleteEducation(edu.id)} />
-                    </div>
-                    <div className="flex justify-between items-start mb-1">
+                  <EditableCard key={edu.id} onDelete={() => onDeleteEducation(edu.id)}>
+                    <div className="flex justify-between items-start mb-1 pr-4">
                       <h3 className="font-serif font-bold text-gray-900">
                         <InlineEditor
                           value={edu.degree}
@@ -247,7 +220,7 @@ export function ModernWysiwygTemplate({
                           className="font-serif font-bold text-gray-900"
                         />
                       </h3>
-                      <div className="text-sm text-gray-600 flex gap-1 items-center flex-shrink-0">
+                      <div className="text-sm text-gray-600 flex gap-1 items-center shrink-0">
                         <InlineEditor
                           value={edu.startDate}
                           onChange={(v) => onUpdate(`education.${edu.id}.startDate`, v)}
@@ -271,19 +244,19 @@ export function ModernWysiwygTemplate({
                         className="text-blue-600 font-medium"
                       />
                     </div>
-                  </div>
+                  </EditableCard>
                 ))}
               </div>
+              <AddItemButton onAdd={onAddEducation} label="education" />
             </div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
             {/* Skills */}
-            <div className="group">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-900">
+            <div>
+              <div className="mb-4 pb-2 border-b-2 border-gray-900">
                 <h2 className="font-serif text-lg font-bold text-gray-900">SKILLS</h2>
-                <SectionActions onAdd={onAddSkill} label="skill" />
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {data.skills.map((skill) => (
@@ -306,18 +279,25 @@ export function ModernWysiwygTemplate({
                   </span>
                 ))}
               </div>
+              <AddItemButton onAdd={onAddSkill} label="skill" />
             </div>
 
             {/* Languages */}
-            <div className="group">
-              <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-900">
+            <div>
+              <div className="mb-4 pb-2 border-b-2 border-gray-900">
                 <h2 className="font-serif text-lg font-bold text-gray-900">LANGUAGES</h2>
-                <SectionActions onAdd={onAddLanguage} label="language" />
               </div>
               <div className="space-y-2">
-                {data.languages.map((lang) => (
-                  <div key={lang.name} className="group/item">
-                    <p className="font-medium text-gray-900 text-sm mb-1">{lang.name}</p>
+                {data.languages.map((lang, langIdx) => (
+                  <div key={langIdx} className="group/lang">
+                    <div className="font-medium text-gray-900 text-sm mb-1">
+                      <InlineEditor
+                        value={lang.name}
+                        onChange={(v) => onUpdate(`languages.${lang.name}.name`, v)}
+                        placeholder="Language"
+                        className="font-medium text-gray-900 text-sm"
+                      />
+                    </div>
                     <div className="flex items-center gap-2">
                       <div className="flex gap-1">
                         {Array(5)
@@ -325,33 +305,37 @@ export function ModernWysiwygTemplate({
                           .map((_, i) => (
                             <button
                               key={i}
-                              onClick={() => onUpdate(`languages.${lang.name}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)}
+                              onClick={() =>
+                                onUpdate(`languages.${lang.name}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)
+                              }
                               className={`h-1.5 w-1.5 rounded-full transition-colors ${
                                 i < lang.proficiency ? "bg-blue-600" : "bg-gray-300"
                               } hover:bg-blue-400`}
                             />
                           ))}
                       </div>
-                      <DeleteButton onDelete={() => onDeleteLanguage(lang.name)} />
+                      <button
+                        onClick={() => onDeleteLanguage(lang.name)}
+                        className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover/lang:opacity-100 transition-opacity print:hidden"
+                      >
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
+              <AddItemButton onAdd={onAddLanguage} label="language" />
             </div>
 
             {/* Publications */}
             {data.publications && data.publications.length > 0 && (
-              <div className="group">
-                <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-gray-900">
+              <div>
+                <div className="mb-4 pb-2 border-b-2 border-gray-900">
                   <h2 className="font-serif text-lg font-bold text-gray-900">PUBLICATIONS</h2>
-                  <SectionActions onAdd={onAddPublication} label="publication" />
                 </div>
                 <div className="space-y-3">
                   {data.publications.map((pub) => (
-                    <div key={pub.id} className="group/item relative text-sm">
-                      <div className="absolute -left-5 top-0">
-                        <DeleteButton onDelete={() => onDeletePublication(pub.id)} />
-                      </div>
+                    <EditableCard key={pub.id} onDelete={() => onDeletePublication(pub.id)}>
                       <h4 className="font-bold text-gray-900 text-sm">
                         <InlineEditor
                           value={pub.title}
@@ -376,9 +360,19 @@ export function ModernWysiwygTemplate({
                           className="text-xs text-gray-500"
                         />
                       </div>
-                    </div>
+                      <div className="flex items-center gap-1 text-xs mt-1">
+                        <Icon name="link" size={10} className="text-gray-400 shrink-0" />
+                        <InlineEditor
+                          value={pub.link || ""}
+                          onChange={(v) => onUpdate(`publications.${pub.id}.link`, v)}
+                          placeholder="Add URL..."
+                          className="text-xs text-blue-600"
+                        />
+                      </div>
+                    </EditableCard>
                   ))}
                 </div>
+                <AddItemButton onAdd={onAddPublication} label="publication" />
               </div>
             )}
           </div>

@@ -1,8 +1,10 @@
 "use client";
 
-import { Plus, Trash2, X as XIcon } from "lucide-react";
+import { X as XIcon } from "lucide-react";
 import type { CVData } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
+import { EditableCard, AddItemButton } from "../editable-card";
+import { Icon } from "@/lib/icons";
 
 interface MinimalWysiwygTemplateProps {
   data: CVData;
@@ -22,28 +24,6 @@ interface MinimalWysiwygTemplateProps {
   onAddLanguage: () => void;
   onDeleteLanguage: (name: string) => void;
   onPhotoUpload: (dataUrl: string) => void;
-}
-
-function SectionActions({ onAdd }: { onAdd: () => void }) {
-  return (
-    <button
-      onClick={onAdd}
-      className="flex items-center gap-1 text-xs text-gray-500 hover:text-gray-700 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-    >
-      <Plus size={14} /> Add
-    </button>
-  );
-}
-
-function DeleteButton({ onDelete }: { onDelete: () => void }) {
-  return (
-    <button
-      onClick={onDelete}
-      className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100 transition-opacity print:hidden"
-    >
-      <Trash2 size={12} />
-    </button>
-  );
 }
 
 export function MinimalWysiwygTemplate({
@@ -116,18 +96,14 @@ export function MinimalWysiwygTemplate({
         </div>
 
         {/* Experience */}
-        <div className="mb-12 group">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mb-12">
+          <div className="mb-6">
             <h2 className="font-serif font-bold text-gray-900 text-sm uppercase tracking-widest">Experience</h2>
-            <SectionActions onAdd={onAddExperience} />
           </div>
-          <div className="space-y-8">
+          <div className="space-y-3">
             {data.experience.map((exp) => (
-              <div key={exp.id} className="group/item relative">
-                <div className="absolute -left-5 top-0">
-                  <DeleteButton onDelete={() => onDeleteExperience(exp.id)} />
-                </div>
-                <div className="flex justify-between items-baseline mb-1">
+              <EditableCard key={exp.id} onDelete={() => onDeleteExperience(exp.id)}>
+                <div className="flex justify-between items-baseline mb-1 pr-4">
                   <h3 className="font-serif font-bold text-gray-900 text-sm">
                     <InlineEditor
                       value={exp.jobTitle}
@@ -136,7 +112,7 @@ export function MinimalWysiwygTemplate({
                       className="font-serif font-bold text-gray-900 text-sm"
                     />
                   </h3>
-                  <div className="text-xs text-gray-500 flex gap-1 items-center flex-shrink-0">
+                  <div className="text-xs text-gray-500 flex gap-1 items-center shrink-0">
                     <InlineEditor
                       value={exp.startDate}
                       onChange={(v) => onUpdate(`experience.${exp.id}.startDate`, v)}
@@ -170,24 +146,21 @@ export function MinimalWysiwygTemplate({
                     />
                   </div>
                 )}
-              </div>
+              </EditableCard>
             ))}
           </div>
+          <AddItemButton onAdd={onAddExperience} label="experience" />
         </div>
 
         {/* Education */}
-        <div className="mb-12 group">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mb-12">
+          <div className="mb-6">
             <h2 className="font-serif font-bold text-gray-900 text-sm uppercase tracking-widest">Education</h2>
-            <SectionActions onAdd={onAddEducation} />
           </div>
-          <div className="space-y-6">
+          <div className="space-y-3">
             {data.education.map((edu) => (
-              <div key={edu.id} className="group/item relative">
-                <div className="absolute -left-5 top-0">
-                  <DeleteButton onDelete={() => onDeleteEducation(edu.id)} />
-                </div>
-                <div className="flex justify-between items-baseline mb-1">
+              <EditableCard key={edu.id} onDelete={() => onDeleteEducation(edu.id)}>
+                <div className="flex justify-between items-baseline mb-1 pr-4">
                   <h3 className="font-serif font-bold text-gray-900 text-sm">
                     <InlineEditor
                       value={edu.degree}
@@ -196,7 +169,7 @@ export function MinimalWysiwygTemplate({
                       className="font-serif font-bold text-gray-900 text-sm"
                     />
                   </h3>
-                  <div className="text-xs text-gray-500 flex gap-1 items-center flex-shrink-0">
+                  <div className="text-xs text-gray-500 flex gap-1 items-center shrink-0">
                     <InlineEditor
                       value={edu.startDate}
                       onChange={(v) => onUpdate(`education.${edu.id}.startDate`, v)}
@@ -220,16 +193,16 @@ export function MinimalWysiwygTemplate({
                     className="text-xs text-gray-600"
                   />
                 </div>
-              </div>
+              </EditableCard>
             ))}
           </div>
+          <AddItemButton onAdd={onAddEducation} label="education" />
         </div>
 
         {/* Skills */}
-        <div className="mb-12 group">
-          <div className="flex items-center justify-between mb-6">
+        <div className="mb-12">
+          <div className="mb-6">
             <h2 className="font-serif font-bold text-gray-900 text-sm uppercase tracking-widest">Skills</h2>
-            <SectionActions onAdd={onAddSkill} />
           </div>
           <div className="flex flex-wrap gap-2">
             {data.skills.map((skill) => (
@@ -252,39 +225,48 @@ export function MinimalWysiwygTemplate({
               </span>
             ))}
           </div>
+          <AddItemButton onAdd={onAddSkill} label="skill" />
         </div>
 
         {/* Languages */}
         {data.languages.length > 0 && (
-          <div className="mb-12 group">
-            <div className="flex items-center justify-between mb-6">
+          <div className="mb-12">
+            <div className="mb-6">
               <h2 className="font-serif font-bold text-gray-900 text-sm uppercase tracking-widest">Languages</h2>
-              <SectionActions onAdd={onAddLanguage} />
             </div>
             <div className="flex gap-6">
-              {data.languages.map((lang) => (
-                <div key={lang.name} className="group/item flex items-center gap-2">
-                  <p className="text-xs font-semibold text-gray-900">{lang.name}</p>
-                  <DeleteButton onDelete={() => onDeleteLanguage(lang.name)} />
+              {data.languages.map((lang, langIdx) => (
+                <div key={langIdx} className="group/lang flex items-center gap-2">
+                  <div className="text-xs font-semibold text-gray-900">
+                    <InlineEditor
+                      value={lang.name}
+                      onChange={(v) => onUpdate(`languages.${lang.name}.name`, v)}
+                      placeholder="Language"
+                      className="text-xs font-semibold text-gray-900"
+                    />
+                  </div>
+                  <button
+                    onClick={() => onDeleteLanguage(lang.name)}
+                    className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover/lang:opacity-100 transition-opacity print:hidden"
+                  >
+                    <XIcon size={10} />
+                  </button>
                 </div>
               ))}
             </div>
+            <AddItemButton onAdd={onAddLanguage} label="language" />
           </div>
         )}
 
         {/* Publications */}
         {data.publications && data.publications.length > 0 && (
-          <div className="group">
-            <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="mb-6">
               <h2 className="font-serif font-bold text-gray-900 text-sm uppercase tracking-widest">Publications</h2>
-              <SectionActions onAdd={onAddPublication} />
             </div>
-            <div className="space-y-6">
+            <div className="space-y-3">
               {data.publications.map((pub) => (
-                <div key={pub.id} className="group/item relative">
-                  <div className="absolute -left-5 top-0">
-                    <DeleteButton onDelete={() => onDeletePublication(pub.id)} />
-                  </div>
+                <EditableCard key={pub.id} onDelete={() => onDeletePublication(pub.id)}>
                   <h3 className="font-serif font-bold text-gray-900 text-sm">
                     <InlineEditor
                       value={pub.title}
@@ -318,9 +300,19 @@ export function MinimalWysiwygTemplate({
                       />
                     </div>
                   )}
-                </div>
+                  <div className="flex items-center gap-1 text-xs mt-1">
+                    <Icon name="link" size={10} className="text-gray-400 shrink-0" />
+                    <InlineEditor
+                      value={pub.link || ""}
+                      onChange={(v) => onUpdate(`publications.${pub.id}.link`, v)}
+                      placeholder="Add URL..."
+                      className="text-xs text-blue-600"
+                    />
+                  </div>
+                </EditableCard>
               ))}
             </div>
+            <AddItemButton onAdd={onAddPublication} label="publication" />
           </div>
         )}
       </div>

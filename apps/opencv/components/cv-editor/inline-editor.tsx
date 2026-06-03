@@ -12,13 +12,17 @@ import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
 import { HeadingNode } from "@lexical/rich-text";
-import { $generateNodesFromDOM, $generateHtmlFromNodes } from "@lexical/html";
+import { $generateNodesFromDOM } from "@lexical/html";
+import { $isLinkNode } from "@lexical/link";
 import {
   $getRoot,
   $createParagraphNode,
   $createTextNode,
+  $isTextNode,
+  $isElementNode,
   type EditorState,
   type LexicalEditor,
+  type LexicalNode,
 } from "lexical";
 import { FloatingToolbar } from "./floating-toolbar";
 
@@ -32,10 +36,32 @@ function wrapInParagraph(html: string): string {
   return `<p>${html}</p>`;
 }
 
-function stripParagraphWrapper(html: string): string {
-  // Strip single wrapping <p> to keep inline HTML format
-  const match = html.match(/^<p[^>]*>([\s\S]*?)<\/p>$/);
-  if (match) return match[1].trim();
+function escapeHtml(text: string): string {
+  return text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function serializeToCleanHtml(nodes: LexicalNode[]): string {
+  let html = "";
+  for (const node of nodes) {
+    if ($isTextNode(node)) {
+      let text = escapeHtml(node.getTextContent());
+      const fmt = node.getFormat();
+      if (fmt & 1) text = `<strong>${text}</strong>`;
+      if (fmt & 2) text = `<em>${text}</em>`;
+      if (fmt & 8) text = `<u>${text}</u>`;
+      html += text;
+    } else if ($isLinkNode(node)) {
+      const href = node.getURL();
+      const target = node.getTarget();
+      const inner = serializeToCleanHtml(node.getChildren());
+      const targetAttr = target ? ` target="${target}"` : "";
+      html += `<a href="${escapeHtml(href)}"${targetAttr}>${inner}</a>`;
+    } else if ($isElementNode(node)) {
+      html += serializeToCleanHtml(node.getChildren());
+    } else {
+      html += escapeHtml(node.getTextContent());
+    }
+  }
   return html;
 }
 
@@ -78,7 +104,7 @@ function ExternalValuePlugin({
   richText,
 }: {
   value: string;
-  lastInternalValue: React.MutableRefObject<string>;
+  lastInternalValue: React.RefObject<string>;
   richText: boolean;
 }) {
   const [editor] = useLexicalComposerContext();
@@ -123,20 +149,18 @@ export function InlineEditor({
   const lastInternalValue = useRef(value);
 
   const handleChange = useCallback(
-    (editorState: EditorState, editor: LexicalEditor) => {
-      if (richText) {
-        const html = editor.getEditorState().read(() => $generateHtmlFromNodes(editor, null));
-        const inlineHtml = stripParagraphWrapper(html);
-        lastInternalValue.current = inlineHtml;
-        onChange(inlineHtml);
-      } else {
-        editorState.read(() => {
-          const root = $getRoot();
-          const text = root.getTextContent();
+    (editorState: EditorState, _editor: LexicalEditor) => {
+      editorState.read(() => {
+        if (richText) {
+          const html = serializeToCleanHtml($getRoot().getChildren());
+          lastInternalValue.current = html;
+          onChange(html);
+        } else {
+          const text = $getRoot().getTextContent();
           lastInternalValue.current = text;
           onChange(text);
-        });
-      }
+        }
+      });
     },
     [onChange, richText]
   );
@@ -163,9 +187,15 @@ export function InlineEditor({
     },
   };
 
+  const placeholderEl = placeholder ? (
+    <div className="inline-editor-placeholder text-gray-400">
+      {placeholder}
+    </div>
+  ) : null;
+
   return (
     <LexicalComposer initialConfig={initialConfig}>
-      <div className={`inline-editor-container relative ${className}`}>
+      <div className={`inline-editor-container relative ${multiline ? "block" : ""} ${className}`}>
         {richText ? (
           <RichTextPlugin
             contentEditable={
@@ -175,13 +205,7 @@ export function InlineEditor({
                 }`}
               />
             }
-            placeholder={
-              placeholder ? (
-                <div className="inline-editor-placeholder absolute top-0 left-0 text-gray-400 pointer-events-none">
-                  {placeholder}
-                </div>
-              ) : null
-            }
+            placeholder={placeholderEl}
             ErrorBoundary={({ children }) => <>{children}</>}
           />
         ) : (
@@ -193,13 +217,7 @@ export function InlineEditor({
                 }`}
               />
             }
-            placeholder={
-              placeholder ? (
-                <div className="inline-editor-placeholder absolute top-0 left-0 text-gray-400 pointer-events-none">
-                  {placeholder}
-                </div>
-              ) : null
-            }
+            placeholder={placeholderEl}
             ErrorBoundary={({ children }) => <>{children}</>}
           />
         )}
