@@ -28,10 +28,12 @@ export function Icon({
   name,
   className,
   size,
+  style,
 }: {
   name: IconName;
   className?: string;
   size?: number;
+  style?: React.CSSProperties;
 }) {
   const svg = iconSvgStrings[name];
   if (!svg) return null;
@@ -47,6 +49,7 @@ export function Icon({
   return (
     <span
       className={`inline-flex items-center shrink-0 ${className || ""}`}
+      style={style}
       dangerouslySetInnerHTML={{ __html: finalSvg }}
     />
   );

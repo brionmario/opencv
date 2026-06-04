@@ -1,13 +1,15 @@
 "use client";
 
 import { Trash2, X as XIcon, Plus } from "lucide-react";
-import type { CVData } from "@/lib/cv-builder-types";
+import type { CVData, CVTheme } from "@/lib/cv-builder-types";
+import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
 import { Icon } from "@/lib/icons";
 
 interface ModernWysiwygTemplateProps {
   data: CVData;
+  theme?: CVTheme;
   onUpdate: (path: string, value: any) => void;
   onAddExperience: () => void;
   onDeleteExperience: (id: string) => void;
@@ -28,6 +30,7 @@ interface ModernWysiwygTemplateProps {
 
 export function ModernWysiwygTemplate({
   data,
+  theme: themeProp,
   onUpdate,
   onAddExperience,
   onDeleteExperience,
@@ -41,6 +44,7 @@ export function ModernWysiwygTemplate({
   onDeletePublication,
   onPhotoUpload,
 }: ModernWysiwygTemplateProps) {
+  const theme = themeProp ?? DEFAULT_THEME;
   const handleHighlightAdd = (expId: string, highlights: string[]) => {
     onUpdate(`experience.${expId}.highlights`, [...highlights, ""]);
   };
@@ -56,7 +60,31 @@ export function ModernWysiwygTemplate({
   };
 
   return (
-    <div className="bg-white p-12 font-sans" style={{ width: "8.5in", minHeight: "11in" }}>
+    <div
+      data-cv-modern=""
+      className="p-12 font-sans"
+      style={{
+        width: "8.5in",
+        minHeight: "11in",
+        fontFamily: theme.fontFace,
+        color: theme.bodyColor,
+        backgroundColor: theme.backgroundColor,
+        fontSize: `${theme.bodyFontSize}px`,
+        fontWeight: theme.bodyWeight,
+      }}
+    >
+      <style>{`
+        [data-cv-modern] h1 { font-size: ${theme.nameFontSize}px !important; font-weight: ${theme.nameWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-modern] h2 { font-size: ${theme.sectionFontSize}px !important; font-weight: ${theme.headingWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-modern] h3, [data-cv-modern] h4 { color: ${theme.headingColor} !important; }
+        [data-cv-modern] .text-blue-600 { color: ${theme.primaryColor} !important; }
+        [data-cv-modern] .text-blue-800 { color: ${theme.primaryColor} !important; }
+        [data-cv-modern] .bg-blue-50 { background-color: ${theme.primaryColor}18 !important; }
+        [data-cv-modern] .bg-blue-600 { background-color: ${theme.primaryColor} !important; }
+        [data-cv-modern] .hover\\:bg-blue-400:hover { background-color: ${theme.primaryColor}99 !important; }
+        [data-cv-modern] .border-gray-900 { border-color: ${theme.headingColor} !important; }
+        [data-cv-modern] .text-gray-900 { color: ${theme.headingColor} !important; }
+      `}</style>
       <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="mb-8">

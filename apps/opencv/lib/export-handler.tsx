@@ -561,8 +561,8 @@ function sanitizeAndRenderHtml(str: string): string {
   return sanitized;
 }
 
-export function exportToHTML(_htmlContent: string, data: CVData, filename: string) {
-  const html = generateCleanHTML(data);
+export function exportToHTML(htmlContent: string, data: CVData, filename: string) {
+  const html = htmlContent ? wrapForExport(htmlContent, data.personalInfo.fullName) : generateCleanHTML(data);
   const blob = new Blob([html], { type: "text/html;charset=utf-8" });
   downloadFile(blob, filename);
 }
@@ -578,7 +578,7 @@ function downloadFile(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function exportToPDF(_htmlContent: string, data: CVData, _filename: string) {
+export async function exportToPDF(htmlContent: string, data: CVData, _filename: string) {
   try {
     const printWindow = window.open("", "_blank");
     if (!printWindow) {
@@ -586,7 +586,7 @@ export async function exportToPDF(_htmlContent: string, data: CVData, _filename:
       return;
     }
 
-    const html = generateCleanHTML(data);
+    const html = htmlContent ? wrapForExport(htmlContent, data.personalInfo.fullName) : generateCleanHTML(data);
     printWindow.document.write(
       html.replace("</body>", `<script>window.onload = function() { window.print(); window.close(); }<\/script></body>`)
     );
@@ -595,4 +595,32 @@ export async function exportToPDF(_htmlContent: string, data: CVData, _filename:
     console.error("PDF export failed:", error);
     alert("Failed to export PDF. Please try again.");
   }
+}
+
+function wrapForExport(innerHTML: string, name: string): string {
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${escapeHtml(name)} - CV</title>
+  <script src="https://cdn.tailwindcss.com"><\/script>
+  <style>
+    body { margin: 0; padding: 20px 0; background: #f5f5f5; }
+    /* Hide editor-only controls in export */
+    .print\\:hidden,
+    [contenteditable="true"] ~ button,
+    button[title="Delete"],
+    button[title="Change icon"] { display: none !important; }
+    [contenteditable] { outline: none; cursor: default; }
+    @media print {
+      body { margin: 0; padding: 0; background: #fff; }
+      @page { margin: 0; size: A4; }
+    }
+  </style>
+</head>
+<body>
+${innerHTML}
+</body>
+</html>`;
 }

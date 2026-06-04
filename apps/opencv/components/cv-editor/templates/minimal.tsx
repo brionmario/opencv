@@ -1,13 +1,15 @@
 "use client";
 
 import { X as XIcon } from "lucide-react";
-import type { CVData } from "@/lib/cv-builder-types";
+import type { CVData, CVTheme } from "@/lib/cv-builder-types";
+import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
 import { Icon } from "@/lib/icons";
 
 interface MinimalWysiwygTemplateProps {
   data: CVData;
+  theme?: CVTheme;
   onUpdate: (path: string, value: any) => void;
   onAddExperience: () => void;
   onDeleteExperience: (id: string) => void;
@@ -28,6 +30,7 @@ interface MinimalWysiwygTemplateProps {
 
 export function MinimalWysiwygTemplate({
   data,
+  theme: themeProp,
   onUpdate,
   onAddExperience,
   onDeleteExperience,
@@ -40,9 +43,29 @@ export function MinimalWysiwygTemplate({
   onAddPublication,
   onDeletePublication,
 }: MinimalWysiwygTemplateProps) {
+  const theme = themeProp ?? DEFAULT_THEME;
   return (
-    <div className="bg-gray-50 p-8 font-sans" style={{ width: "8.5in", minHeight: "11in" }}>
-      <div className="max-w-3xl mx-auto bg-white p-12">
+    <div
+      data-cv-minimal=""
+      className="p-8 font-sans"
+      style={{
+        width: "8.5in",
+        minHeight: "11in",
+        fontFamily: theme.fontFace,
+        color: theme.bodyColor,
+        backgroundColor: `${theme.backgroundColor}e0`,
+        fontSize: `${theme.bodyFontSize}px`,
+        fontWeight: theme.bodyWeight,
+      }}
+    >
+      <style>{`
+        [data-cv-minimal] h1 { font-size: ${theme.nameFontSize}px !important; font-weight: ${theme.nameWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-minimal] h2 { font-size: ${theme.sectionFontSize}px !important; font-weight: ${theme.headingWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-minimal] h3 { color: ${theme.headingColor} !important; }
+        [data-cv-minimal] .text-blue-600 { color: ${theme.primaryColor} !important; }
+        [data-cv-minimal] .text-gray-900 { color: ${theme.headingColor} !important; }
+      `}</style>
+      <div className="max-w-3xl mx-auto p-12" style={{ backgroundColor: theme.backgroundColor }}>
         {/* Header */}
         <div className="mb-12">
           <h1 className="font-serif text-3xl font-bold text-gray-900">

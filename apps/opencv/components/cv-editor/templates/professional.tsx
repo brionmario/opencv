@@ -2,13 +2,15 @@
 
 import { useState } from "react";
 import { Upload, X as XIcon, Plus } from "lucide-react";
-import type { CVData } from "@/lib/cv-builder-types";
+import type { CVData, CVTheme } from "@/lib/cv-builder-types";
+import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 
 interface ProfessionalTemplateProps {
   data: CVData;
+  theme?: CVTheme;
   onUpdate: (path: string, value: any) => void;
   onAddExperience: () => void;
   onDeleteExperience: (id: string) => void;
@@ -29,6 +31,7 @@ interface ProfessionalTemplateProps {
 
 export function ProfessionalTemplate({
   data,
+  theme: themeProp,
   onUpdate,
   onAddExperience,
   onDeleteExperience,
@@ -46,6 +49,7 @@ export function ProfessionalTemplate({
   onDeleteLanguage,
   onPhotoUpload,
 }: ProfessionalTemplateProps) {
+  const theme = themeProp ?? DEFAULT_THEME;
   const [iconPickerOpenId, setIconPickerOpenId] = useState<string | null>(null);
   const [customIconUrl, setCustomIconUrl] = useState("");
   const handleHighlightAdd = (expId: string, highlights: string[]) => {
@@ -63,17 +67,39 @@ export function ProfessionalTemplate({
   };
 
   return (
-    <div className="bg-white font-sans text-gray-800" style={{ width: "8.5in", minHeight: "11in" }}>
+    <div
+      data-cv-professional=""
+      className="font-sans text-gray-800"
+      style={{
+        width: "8.5in",
+        minHeight: "11in",
+        fontFamily: theme.fontFace,
+        color: theme.bodyColor,
+        backgroundColor: theme.backgroundColor,
+        fontSize: `${theme.bodyFontSize}px`,
+        fontWeight: theme.bodyWeight,
+      }}
+    >
+      <style>{`
+        [data-cv-professional] h1 { font-size: ${theme.nameFontSize}px !important; font-weight: ${theme.nameWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-professional] h2 { font-size: ${theme.sectionFontSize}px !important; font-weight: ${theme.headingWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-professional] h3, [data-cv-professional] h4 { color: ${theme.headingColor} !important; }
+        [data-cv-professional] .text-pink-600 { color: ${theme.primaryColor} !important; }
+        [data-cv-professional] .border-pink-600 { border-color: ${theme.primaryColor} !important; }
+        [data-cv-professional] .bg-blue-600 { background-color: ${theme.primaryColor} !important; }
+        [data-cv-professional] .text-blue-600 { color: ${theme.primaryColor} !important; }
+        [data-cv-professional] .text-blue-500 { color: ${theme.primaryColor} !important; }
+      `}</style>
       {/* Header */}
       <div className="px-10 pt-8 pb-6">
         <div className="flex justify-between items-start">
           <div className="flex-1">
-            <h1 className="text-4xl font-bold text-gray-900 tracking-tight">
+            <h1 className="text-4xl font-bold tracking-tight">
               <InlineEditor
                 value={data.personalInfo.fullName}
                 onChange={(v) => onUpdate("personalInfo.fullName", v)}
                 placeholder="Your Name"
-                className="text-4xl font-bold text-gray-900 tracking-tight"
+                className="text-4xl font-bold tracking-tight"
               />
             </h1>
             <div className="text-lg text-pink-600 font-semibold mt-1">

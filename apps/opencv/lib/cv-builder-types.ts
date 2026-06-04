@@ -161,3 +161,33 @@ export interface CVTemplate {
   thumbnail: string;
   component: React.ComponentType<{ data: CVData }>;
 }
+
+export interface CVTheme {
+  primaryColor: string;
+  headingColor: string;
+  bodyColor: string;
+  mutedColor: string;
+  backgroundColor: string;
+  fontFace: string;
+  nameFontSize: number;
+  sectionFontSize: number;
+  bodyFontSize: number;
+  nameWeight: number;
+  headingWeight: number;
+  bodyWeight: number;
+}
+
+export const DEFAULT_THEME: CVTheme = {
+  primaryColor: "#db2777",
+  headingColor: "#111827",
+  bodyColor: "#374151",
+  mutedColor: "#9ca3af",
+  backgroundColor: "#ffffff",
+  fontFace: "Inter, ui-sans-serif, system-ui, sans-serif",
+  nameFontSize: 36,
+  sectionFontSize: 18,
+  bodyFontSize: 14,
+  nameWeight: 700,
+  headingWeight: 700,
+  bodyWeight: 400,
+};

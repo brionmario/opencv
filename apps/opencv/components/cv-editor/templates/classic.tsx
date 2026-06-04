@@ -1,13 +1,15 @@
 "use client";
 
 import { X as XIcon, Plus } from "lucide-react";
-import type { CVData } from "@/lib/cv-builder-types";
+import type { CVData, CVTheme } from "@/lib/cv-builder-types";
+import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
 import { Icon } from "@/lib/icons";
 
 interface ClassicWysiwygTemplateProps {
   data: CVData;
+  theme?: CVTheme;
   onUpdate: (path: string, value: any) => void;
   onAddExperience: () => void;
   onDeleteExperience: (id: string) => void;
@@ -28,6 +30,7 @@ interface ClassicWysiwygTemplateProps {
 
 export function ClassicWysiwygTemplate({
   data,
+  theme: themeProp,
   onUpdate,
   onAddExperience,
   onDeleteExperience,
@@ -40,6 +43,7 @@ export function ClassicWysiwygTemplate({
   onAddPublication,
   onDeletePublication,
 }: ClassicWysiwygTemplateProps) {
+  const theme = themeProp ?? DEFAULT_THEME;
   const handleHighlightAdd = (expId: string, highlights: string[]) => {
     onUpdate(`experience.${expId}.highlights`, [...highlights, ""]);
   };
@@ -55,7 +59,27 @@ export function ClassicWysiwygTemplate({
   };
 
   return (
-    <div className="bg-white p-10 font-sans" style={{ width: "8.5in", minHeight: "11in" }}>
+    <div
+      data-cv-classic=""
+      className="p-10 font-sans"
+      style={{
+        width: "8.5in",
+        minHeight: "11in",
+        fontFamily: theme.fontFace,
+        color: theme.bodyColor,
+        backgroundColor: theme.backgroundColor,
+        fontSize: `${theme.bodyFontSize}px`,
+        fontWeight: theme.bodyWeight,
+      }}
+    >
+      <style>{`
+        [data-cv-classic] h1 { font-size: ${theme.nameFontSize}px !important; font-weight: ${theme.nameWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-classic] h2 { font-size: ${theme.sectionFontSize}px !important; font-weight: ${theme.headingWeight} !important; color: ${theme.headingColor} !important; }
+        [data-cv-classic] h3 { color: ${theme.headingColor} !important; }
+        [data-cv-classic] .text-blue-600 { color: ${theme.primaryColor} !important; }
+        [data-cv-classic] .border-gray-300 { border-color: ${theme.mutedColor}66 !important; }
+        [data-cv-classic] .text-gray-900 { color: ${theme.headingColor} !important; }
+      `}</style>
       <div className="max-w-4xl mx-auto">
         {/* Header - Centered */}
         <div className="text-center mb-8 pb-8 border-b-2 border-gray-300">

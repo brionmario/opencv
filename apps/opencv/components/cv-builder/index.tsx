@@ -10,9 +10,12 @@ import { ProfessionalTemplate } from "@/components/cv-editor/templates/professio
 import { ModernWysiwygTemplate } from "@/components/cv-editor/templates/modern";
 import { ClassicWysiwygTemplate } from "@/components/cv-editor/templates/classic";
 import { MinimalWysiwygTemplate } from "@/components/cv-editor/templates/minimal";
-import { Download, FileJson, FileText, FileCode, Linkedin, Clock, X, RotateCcw } from "lucide-react";
+import { ThemeCustomizer } from "@/components/cv-editor/theme-customizer";
+import { Download, FileJson, FileText, FileCode, Linkedin, Clock, X, RotateCcw, Palette } from "lucide-react";
 import type { CVVersion } from "@/lib/cv-versioning";
 import type { StarterTemplate } from "@/lib/starter-templates";
+import type { CVTheme } from "@/lib/cv-builder-types";
+import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 
 type LayoutType = "professional" | "modern" | "classic" | "minimal";
 
@@ -21,6 +24,8 @@ export function CVBuilder() {
   const [showLinkedInImport, setShowLinkedInImport] = useState(false);
   const [showVersionHistory, setShowVersionHistory] = useState(false);
   const [showTemplatePicker, setShowTemplatePicker] = useState(false);
+  const [showThemeCustomizer, setShowThemeCustomizer] = useState(false);
+  const [theme, setTheme] = useState<CVTheme>(DEFAULT_THEME);
   const [isInitialized, setIsInitialized] = useState(false);
   const isFirstLayoutSaveRef = useRef(true);
 
@@ -61,12 +66,21 @@ export function CVBuilder() {
       setSelectedLayout(layout as LayoutType);
     }
 
+    const savedTheme = localStorage.getItem("cvBuilderTheme");
+    if (savedTheme) {
+      try { setTheme(JSON.parse(savedTheme)); } catch {}
+    }
+
     const hasSavedData = !!urlParams.get('data') || !!localStorage.getItem("cvBuilderData");
     if (!hasSavedData) {
       setShowTemplatePicker(true);
     }
     setIsInitialized(true);
   }, []);
+
+  useEffect(() => {
+    localStorage.setItem("cvBuilderTheme", JSON.stringify(theme));
+  }, [theme]);
 
   // Save layout preference to localStorage and URL
   useEffect(() => {
@@ -141,6 +155,7 @@ export function CVBuilder() {
   // Common template props
   const templateProps = {
     data,
+    theme,
     onUpdate: updateField,
     onAddExperience: () =>
       addExperience({
@@ -242,6 +257,17 @@ export function CVBuilder() {
               <RotateCcw size={14} />
               New
             </button>
+            <button
+              onClick={() => setShowThemeCustomizer(!showThemeCustomizer)}
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+                showThemeCustomizer
+                  ? "bg-indigo-600 text-white"
+                  : "bg-indigo-100 text-indigo-700 hover:bg-indigo-200"
+              }`}
+            >
+              <Palette size={14} />
+              Theme
+            </button>
           </div>
           <div className="flex gap-2">
             <button
@@ -293,6 +319,15 @@ export function CVBuilder() {
         onClose={() => setShowLinkedInImport(false)}
         onImport={handleLinkedInImport}
       />
+
+      {/* Theme Customizer Panel */}
+      {showThemeCustomizer && (
+        <ThemeCustomizer
+          theme={theme}
+          onChange={setTheme}
+          onClose={() => setShowThemeCustomizer(false)}
+        />
+      )}
 
       {/* Version History Panel */}
       {showVersionHistory && (
