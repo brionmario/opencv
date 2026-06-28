@@ -1,4 +1,5 @@
 import type { CVData } from "@/lib/cv-builder-types";
+import { sanitizeHtml } from "@/lib/html-renderer";
 
 interface ClassicTemplateProps {
   data: CVData;
@@ -81,7 +82,7 @@ export function ClassicTemplate({ data }: ClassicTemplateProps) {
                   {exp.highlights.length > 0 && (
                     <ul className="list-disc list-inside space-y-1 text-gray-700 text-sm">
                       {exp.highlights.map((highlight, idx) => (
-                        <li key={idx}>{highlight}</li>
+                        <li key={idx} dangerouslySetInnerHTML={{ __html: sanitizeHtml(highlight) }} />
                       ))}
                     </ul>
                   )}

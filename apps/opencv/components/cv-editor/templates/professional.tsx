@@ -57,9 +57,17 @@ export function ProfessionalTemplate({
   };
 
   const handleHighlightUpdate = (expId: string, highlights: string[], idx: number, value: string) => {
-    const newHighlights = [...highlights];
-    newHighlights[idx] = value;
-    onUpdate(`experience.${expId}.highlights`, newHighlights);
+    if (value.includes("\n")) {
+      // Enter on last char — split at newline into separate bullets
+      const lines = value.split("\n").map((l) => l.trim()).filter((l) => l !== "");
+      const updated = [...highlights];
+      updated.splice(idx, 1, ...(lines.length ? lines : [""]));
+      onUpdate(`experience.${expId}.highlights`, updated);
+    } else {
+      const updated = [...highlights];
+      updated[idx] = value;
+      onUpdate(`experience.${expId}.highlights`, updated);
+    }
   };
 
   const handleHighlightDelete = (expId: string, highlights: string[], idx: number) => {
@@ -210,7 +218,7 @@ export function ProfessionalTemplate({
           </div>
 
           {/* Experience */}
-          <div>
+          <div className="relative group/section">
             <div className="mb-2 pb-1 border-b-2 border-pink-600">
               <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Experience</h2>
             </div>
@@ -311,7 +319,7 @@ export function ProfessionalTemplate({
         {/* Right Column - 40% */}
         <div className="w-[42%] space-y-6">
           {/* Skills */}
-          <div>
+          <div className="relative group/section">
             <div className="mb-2 pb-1 border-b-2 border-pink-600">
               <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Skills</h2>
             </div>
@@ -340,7 +348,7 @@ export function ProfessionalTemplate({
           </div>
 
           {/* Education */}
-          <div>
+          <div className="relative group/section">
             <div className="mb-2 pb-1 border-b-2 border-pink-600">
               <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Education</h2>
             </div>
@@ -388,7 +396,7 @@ export function ProfessionalTemplate({
           </div>
 
           {/* Key Achievements */}
-          <div>
+          <div className="relative group/section">
             <div className="mb-2 pb-1 border-b-2 border-pink-600">
               <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Key Achievements</h2>
             </div>
@@ -424,7 +432,7 @@ export function ProfessionalTemplate({
 
           {/* Publications */}
           {data.publications && data.publications.length > 0 && (
-            <div>
+            <div className="relative group/section">
               <div className="mb-2 pb-1 border-b-2 border-pink-600">
                 <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Publications</h2>
               </div>
@@ -487,7 +495,7 @@ export function ProfessionalTemplate({
 
           {/* Find Me Online */}
           {data.socialLinks && data.socialLinks.length > 0 && (
-            <div>
+            <div className="relative group/section">
               <div className="mb-2 pb-1 border-b-2 border-pink-600">
                 <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Find Me Online</h2>
               </div>
@@ -581,7 +589,7 @@ export function ProfessionalTemplate({
           )}
 
           {/* Languages */}
-          <div>
+          <div className="relative group/section">
             <div className="mb-2 pb-1 border-b-2 border-pink-600">
               <h2 className="text-lg font-bold text-gray-900 uppercase tracking-wide">Languages</h2>
             </div>

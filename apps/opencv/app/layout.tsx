@@ -1,30 +1,16 @@
 import React from "react"
 import type { Metadata } from 'next'
-import { Rubik, Inter } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 
-const _rubik = Rubik({ subsets: ["latin"] });
-const _inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: 'Brion Mario - CV',
-  description: 'Brion Mario - Frontend Developer | React & TypeScript Specialist',
-  generator: 'v0.app',
+  title: 'openCV — Resume Builder',
+  description: 'Build beautiful, ATS-friendly resumes with openCV',
   icons: {
     icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
+      { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
+      { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
+      { url: '/icon.svg', type: 'image/svg+xml' },
     ],
     apple: '/apple-icon.png',
   },
@@ -37,7 +23,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en">
-      <body className={`font-sans antialiased`}>
+      <body className="antialiased" style={{ fontFamily: "'Hanken Grotesk', ui-sans-serif, system-ui, -apple-system, sans-serif" }}>
         {children}
         <Analytics />
       </body>

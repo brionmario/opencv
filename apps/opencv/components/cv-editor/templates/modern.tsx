@@ -207,6 +207,7 @@ export function ModernWysiwygTemplate({
                               value={highlight}
                               onChange={(v) => handleHighlightUpdate(exp.id, exp.highlights, idx, v)}
                               placeholder="Highlight..."
+                              richText
                               className="text-sm text-gray-700"
                             />
                           </div>

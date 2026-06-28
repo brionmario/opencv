@@ -1,4 +1,5 @@
 import type { CVData } from "@/lib/cv-builder-types";
+import { sanitizeHtml } from "@/lib/html-renderer";
 
 interface ModernTemplateProps {
   data: CVData;
@@ -80,7 +81,7 @@ export function ModernTemplate({ data }: ModernTemplateProps) {
                       {exp.highlights.length > 0 && (
                         <ul className="list-disc list-inside space-y-1 text-gray-700">
                           {exp.highlights.map((highlight, idx) => (
-                            <li key={idx} className="text-sm">{highlight}</li>
+                            <li key={idx} className="text-sm" dangerouslySetInnerHTML={{ __html: sanitizeHtml(highlight) }} />
                           ))}
                         </ul>
                       )}
