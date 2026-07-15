@@ -1,4 +1,4 @@
-import type { CVData } from "@/lib/cv-builder-types";
+import type { CVData, CVTheme } from "@/lib/cv-builder-types";
 import { getIconSvg, getSocialIconSvg, resolveSocialLinkIcon } from "@/lib/icons";
 
 export function exportToJSON(data: CVData, filename: string) {
@@ -578,19 +578,22 @@ function downloadFile(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function exportToPDF(htmlContent: string, data: CVData, _filename: string) {
+export async function exportToPDF(_htmlContent: string, data: CVData, filename: string, theme?: CVTheme) {
   try {
-    const printWindow = window.open("", "_blank");
-    if (!printWindow) {
-      alert("Please disable popup blockers to export PDF");
-      return;
-    }
+    const [{ pdf }, { default: React }, { ProfessionalPDFDocument }] = await Promise.all([
+      import("@react-pdf/renderer"),
+      import("react"),
+      import("@/lib/pdf-professional"),
+    ]);
 
-    const html = htmlContent ? wrapForExport(htmlContent, data.personalInfo.fullName) : generateCleanHTML(data);
-    printWindow.document.write(
-      html.replace("</body>", `<script>window.onload = function() { window.print(); window.close(); }<\/script></body>`)
-    );
-    printWindow.document.close();
+    const element = React.createElement(ProfessionalPDFDocument, { data, theme }) as any;
+    const blob = await pdf(element).toBlob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
   } catch (error) {
     console.error("PDF export failed:", error);
     alert("Failed to export PDF. Please try again.");

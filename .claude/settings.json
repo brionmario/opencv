@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git checkout *)",
+      "Bash(lsof -nP -iTCP -sTCP:LISTEN)",
+      "WebFetch(domain:localhost)",
+      "Bash(node /private/tmp/claude-501/-Users-brion-Desktop-brion-github-opencv/5935c8e5-b59b-4182-bc49-4f16b3ff464a/scratchpad/test-pdf-split.mjs)",
+      "Bash(node \"/private/tmp/claude-501/-Users-brion-Desktop-brion-github-opencv/5935c8e5-b59b-4182-bc49-4f16b3ff464a/scratchpad/gen-test-pdf.mjs\")",
+      "Bash(node -e ' *)"
+    ]
+  }
+}

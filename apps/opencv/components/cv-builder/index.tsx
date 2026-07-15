@@ -786,14 +786,21 @@ export function CVBuilder() {
   const handleExport = (id: string) => {
     const e = EXPORTS.find((x) => x.id === id);
     if (!e) return;
+    const name = data.personalInfo.fullName.replace(/\s+/g, "_") || "resume";
+
+    if (id === "pdf") {
+      const tidLoading = pushToast(`Generating <b>PDF</b>…`, "loader", 0);
+      exportToPDF("", data, `${name}_CV.pdf`, theme).then(() => {
+        dropToast(tidLoading);
+        pushToast(`Downloaded <b>${name}.pdf</b>`, "download");
+      });
+      return;
+    }
+
     const tidLoading = pushToast(`Preparing <b>${e.name}</b>…`, "loader", 0);
     setTimeout(() => {
       dropToast(tidLoading);
-      const name = data.personalInfo.fullName.replace(/\s+/g, "_") || "resume";
-      if (id === "pdf") {
-        const html = document.getElementById("cv-preview")?.innerHTML;
-        if (html) exportToPDF(html, data, `${name}_CV.pdf`);
-      } else if (id === "html") {
+      if (id === "html") {
         const html = document.getElementById("cv-preview")?.innerHTML;
         if (html) exportToHTML(html, data, `${name}_CV.html`);
       } else if (id === "md") {
