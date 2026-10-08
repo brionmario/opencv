@@ -709,7 +709,9 @@ export function ProfessionalTemplate({
             </div>
           </div>
 
-          {/* Photo */}
+          {/* Photo — with an avatar set you can replace it or remove it; with
+              none, the dashed ring is the upload target. Every control is
+              print:hidden so none of it reaches the exported page. */}
           <div className="ml-6 shrink-0">
             {data.personalInfo.avatar ? (
               <div className="relative group/photo">
@@ -718,16 +720,47 @@ export function ProfessionalTemplate({
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                 />
+                <label
+                  title="Replace photo"
+                  className="absolute inset-0 rounded-full cursor-pointer flex items-center justify-center bg-black/45 text-white opacity-0 group-hover/photo:opacity-100 focus-within:opacity-100 transition-opacity print:hidden"
+                >
+                  <Upload size={18} />
+                  <span className="sr-only">Replace photo</span>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = (event) => {
+                          onPhotoUpload(event.target?.result as string);
+                        };
+                        reader.readAsDataURL(file);
+                      }
+                      // Allow re-picking the same file after a removal.
+                      e.target.value = "";
+                    }}
+                    className="sr-only"
+                  />
+                </label>
                 <button
+                  type="button"
+                  title="Remove photo"
                   onClick={() => onUpdate("personalInfo.avatar", undefined)}
-                  className="absolute -top-1 -right-1 bg-red-500 text-white p-0.5 rounded-full opacity-0 group-hover/photo:opacity-100 transition-opacity print:hidden"
+                  className="absolute -top-1 -right-1 bg-red-500 text-white p-0.5 rounded-full opacity-0 group-hover/photo:opacity-100 focus-visible:opacity-100 transition-opacity print:hidden"
                 >
                   <XIcon size={12} />
+                  <span className="sr-only">Remove photo</span>
                 </button>
               </div>
             ) : (
-              <label className="cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-pink-400 transition-colors print:hidden">
+              <label
+                title="Upload photo"
+                className="cursor-pointer w-20 h-20 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center hover:border-pink-400 focus-within:border-pink-400 transition-colors print:hidden"
+              >
                 <Upload size={20} className="text-gray-400" />
+                <span className="sr-only">Upload photo</span>
                 <input
                   type="file"
                   accept="image/*"
@@ -740,8 +773,9 @@ export function ProfessionalTemplate({
                       };
                       reader.readAsDataURL(file);
                     }
+                    e.target.value = "";
                   }}
-                  className="hidden"
+                  className="sr-only"
                 />
               </label>
             )}

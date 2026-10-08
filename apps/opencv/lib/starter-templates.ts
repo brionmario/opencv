@@ -60,7 +60,10 @@ export const starterTemplates: StarterTemplate[] = [
         website: "www.jordanavery.dev",
         summary:
           "<strong>Fullstack Engineer with 7+ years of experience</strong> in building scalable, high-performant and secure software solutions. Proficient in <strong>Frontend</strong> development, <strong>Backend</strong> development and <strong>Experience Design</strong>. Currently contributing to identity and access management products, focusing on building secure and reliable platforms with <strong>Developer & User experience</strong> in mind.",
-        avatar: "/placeholder-user.jpg",
+        // Vendored from https://avatar.vercel.sh/brion?rounded=60 — served
+        // locally because that host sends no CORS header, and react-pdf has
+        // to read the bytes to embed the photo in the PDF export.
+        avatar: "/placeholder-avatar.png",
       },
       experience: [
         {

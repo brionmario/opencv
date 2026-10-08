@@ -192,6 +192,20 @@ function RichText({ html, style }: { html: string; style: any }) {
   );
 }
 
+/** react-pdf fetches image sources itself, so a cross-origin URL without a
+ *  CORS header fails silently and leaves an empty ring on the page. Uploads
+ *  are data: URLs and the bundled default is same-origin, so only a
+ *  hand-entered remote URL hits this — drop the photo rather than print a
+ *  hollow circle. */
+function isEmbeddableImage(src: string | undefined): boolean {
+  if (!src) return false;
+  if (/^(https?:)?\/\//i.test(src)) {
+    // Same-origin absolute URLs are fine; anything else we cannot read.
+    return typeof window !== "undefined" && src.startsWith(window.location.origin);
+  }
+  return true; // data: URL, or a root-relative path served by the app
+}
+
 function fmtDate(s: string): string {
   if (!s) return "";
   if (s === "Present") return "Present";
@@ -645,8 +659,8 @@ export function ProfessionalPDFDocument({
               ))}
             </View>
           </View>
-          {data.personalInfo.avatar ? (
-            <Image style={S.avatar} src={data.personalInfo.avatar} />
+          {isEmbeddableImage(data.personalInfo.avatar) ? (
+            <Image style={S.avatar} src={data.personalInfo.avatar as string} />
           ) : null}
         </View>
 

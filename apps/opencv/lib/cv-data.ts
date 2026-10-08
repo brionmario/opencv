@@ -7,7 +7,7 @@ export const cvData = {
     email: "jordan.avery@example.com",
     website: "www.jordanavery.dev",
     location: "Colombo, Sri Lanka",
-    profileImage: "/placeholder-user.jpg",
+    profileImage: "/placeholder-avatar.png",
   },
   summary:
     "With 5+ years of experience in frontend development, I specialize in building performant, scalable web applications using React and TypeScript. I have strong expertise in React principles (components, state, hooks) and TypeScript, and I'm experienced with data-fetching libraries like TanStack Query and SWR. Currently, as a senior engineer, I work on building and maintaining secure frontend features for Identity and Access Management products. I'm passionate about writing maintainable, high-quality code, improving frontend architecture, and collaborating in agile teams to deliver user-focused solutions.",
