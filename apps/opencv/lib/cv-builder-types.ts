@@ -50,6 +50,7 @@ export interface EducationEntry {
   field: string;
   startDate: string;
   endDate: string;
+  gpa?: string;
   description: string; // Supports HTML formatting: <strong>, <em>, <b>, <i>, <u>
 }
 

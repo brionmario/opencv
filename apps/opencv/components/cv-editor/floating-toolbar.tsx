@@ -13,6 +13,7 @@ import {
   INSERT_UNORDERED_LIST_COMMAND,
   INSERT_ORDERED_LIST_COMMAND,
 } from "@lexical/list";
+import { $isLinkNode, TOGGLE_LINK_COMMAND } from "@lexical/link";
 import {
   Bold,
   Italic,
@@ -20,7 +21,19 @@ import {
   Strikethrough,
   List,
   ListOrdered,
+  Link as LinkIcon,
 } from "lucide-react";
+
+function getSelectedLinkUrl(): string | null {
+  const selection = $getSelection();
+  if (!$isRangeSelection(selection)) return null;
+  for (const node of selection.getNodes()) {
+    const parent = node.getParent();
+    if ($isLinkNode(parent)) return parent.getURL();
+    if ($isLinkNode(node)) return node.getURL();
+  }
+  return null;
+}
 
 export function FloatingToolbar() {
   const [editor] = useLexicalComposerContext();
@@ -31,6 +44,7 @@ export function FloatingToolbar() {
   const [isItalic, setIsItalic] = useState(false);
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
+  const [isLink, setIsLink] = useState(false);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -39,6 +53,7 @@ export function FloatingToolbar() {
       setIsItalic(selection.hasFormat("italic"));
       setIsUnderline(selection.hasFormat("underline"));
       setIsStrikethrough(selection.hasFormat("strikethrough"));
+      setIsLink(getSelectedLinkUrl() !== null);
 
       const isCollapsed = selection.isCollapsed();
       if (!isCollapsed) {
@@ -84,6 +99,15 @@ export function FloatingToolbar() {
     return () => document.removeEventListener("mouseup", handleMouseUp);
   }, [editor, updateToolbar]);
 
+  const handleLink = useCallback(() => {
+    editor.getEditorState().read(() => {
+      const existing = getSelectedLinkUrl();
+      const url = window.prompt("Enter URL", existing ?? "https://");
+      if (url === null) return;
+      editor.dispatchCommand(TOGGLE_LINK_COMMAND, url.trim() === "" ? null : url.trim());
+    });
+  }, [editor]);
+
   if (!isVisible) return null;
 
   return (
@@ -122,6 +146,13 @@ export function FloatingToolbar() {
         title="Strikethrough"
       >
         <Strikethrough size={14} />
+      </button>
+      <button
+        onClick={handleLink}
+        className={`p-1.5 rounded hover:bg-gray-700 transition-colors ${isLink ? "bg-gray-700 text-blue-400" : ""}`}
+        title="Add Link"
+      >
+        <LinkIcon size={14} />
       </button>
       <div className="w-px h-4 bg-gray-600 mx-0.5" />
       <button

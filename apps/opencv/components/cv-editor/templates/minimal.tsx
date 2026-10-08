@@ -109,7 +109,7 @@ export function MinimalWysiwygTemplate({
                     placeholder="Start"
                     className="text-xs text-gray-500"
                   />
-                  <span>-</span>
+                  {(exp.endDate || exp.currentlyWorking) && <span>-</span>}
                   <InlineEditor
                     value={exp.endDate || (exp.currentlyWorking ? "now" : "")}
                     onChange={(v) => onUpdate(`experience.${exp.id}.endDate`, v)}
@@ -167,7 +167,7 @@ export function MinimalWysiwygTemplate({
                     placeholder="Start"
                     className="text-xs text-gray-500"
                   />
-                  <span>-</span>
+                  {edu.endDate && <span>-</span>}
                   <InlineEditor
                     value={edu.endDate}
                     onChange={(v) => onUpdate(`education.${edu.id}.endDate`, v)}
@@ -182,6 +182,14 @@ export function MinimalWysiwygTemplate({
                   onChange={(v) => onUpdate(`education.${edu.id}.institution`, v)}
                   placeholder="Institution"
                   className="text-xs text-gray-600"
+                />
+              </div>
+              <div className="text-xs text-gray-500 mt-0.5">
+                <InlineEditor
+                  value={edu.gpa || ""}
+                  onChange={(v) => onUpdate(`education.${edu.id}.gpa`, v)}
+                  placeholder="Result (e.g. GPA, Honors class)"
+                  className="text-xs text-gray-500"
                 />
               </div>
             </EditableCard>
@@ -271,6 +279,7 @@ export function MinimalWysiwygTemplate({
                   onChange={(v) => onUpdate(`publications.${pub.id}.title`, v)}
                   placeholder="Publication Title"
                   className="font-serif font-bold text-gray-900 text-sm"
+                  richText
                 />
               </h3>
               <div className="text-xs text-gray-600">
@@ -298,15 +307,6 @@ export function MinimalWysiwygTemplate({
                   />
                 </div>
               )}
-              <div className="flex items-center gap-1 text-xs mt-1">
-                <Icon name="link" size={10} className="text-gray-400 shrink-0" />
-                <InlineEditor
-                  value={pub.link || ""}
-                  onChange={(v) => onUpdate(`publications.${pub.id}.link`, v)}
-                  placeholder="Add URL..."
-                  className="text-xs text-blue-600"
-                />
-              </div>
             </EditableCard>
           ))}
         </div>

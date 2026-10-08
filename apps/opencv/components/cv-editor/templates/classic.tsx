@@ -123,7 +123,7 @@ export function ClassicWysiwygTemplate({
                     placeholder="Start"
                     className="text-xs text-gray-600"
                   />
-                  <span>-</span>
+                  {(exp.endDate || exp.currentlyWorking) && <span>-</span>}
                   <InlineEditor
                     value={exp.endDate || (exp.currentlyWorking ? "Present" : "")}
                     onChange={(v) => onUpdate(`experience.${exp.id}.endDate`, v)}
@@ -209,7 +209,7 @@ export function ClassicWysiwygTemplate({
                     placeholder="Start"
                     className="text-xs text-gray-600"
                   />
-                  <span>-</span>
+                  {edu.endDate && <span>-</span>}
                   <InlineEditor
                     value={edu.endDate}
                     onChange={(v) => onUpdate(`education.${edu.id}.endDate`, v)}
@@ -224,6 +224,14 @@ export function ClassicWysiwygTemplate({
                   onChange={(v) => onUpdate(`education.${edu.id}.institution`, v)}
                   placeholder="Institution"
                   className="text-gray-700 font-semibold"
+                />
+              </div>
+              <div className="text-xs text-gray-600 mt-0.5">
+                <InlineEditor
+                  value={edu.gpa || ""}
+                  onChange={(v) => onUpdate(`education.${edu.id}.gpa`, v)}
+                  placeholder="Result (e.g. GPA, Honors class)"
+                  className="text-xs text-gray-600"
                 />
               </div>
             </EditableCard>
@@ -313,6 +321,7 @@ export function ClassicWysiwygTemplate({
                   onChange={(v) => onUpdate(`publications.${pub.id}.title`, v)}
                   placeholder="Publication Title"
                   className="font-serif text-lg font-bold text-gray-900"
+                  richText
                 />
               </h3>
               <div className="text-gray-700 font-semibold mb-1">
@@ -340,15 +349,6 @@ export function ClassicWysiwygTemplate({
                   />
                 </div>
               )}
-              <div className="flex items-center gap-1 text-xs text-blue-600 mt-1">
-                <Icon name="link" size={10} className="text-gray-400 shrink-0" />
-                <InlineEditor
-                  value={pub.link || ""}
-                  onChange={(v) => onUpdate(`publications.${pub.id}.link`, v)}
-                  placeholder="Add URL..."
-                  className="text-xs text-blue-600"
-                />
-              </div>
             </EditableCard>
           ))}
         </div>

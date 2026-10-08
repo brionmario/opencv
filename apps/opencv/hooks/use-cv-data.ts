@@ -2,9 +2,9 @@
 
 import { useState, useCallback, useEffect, useRef } from "react";
 import type { CVData, ExperienceEntry, EducationEntry, SkillEntry, ProjectEntry, CertificationEntry, AwardEntry, ReferenceEntry, VolunteeringEntry, StrengthEntry, InterestEntry, PublicationEntry, SocialLinkEntry, CustomSection, CustomSectionItem, SectionMeta } from "@/lib/cv-builder-types";
-import { DEFAULT_SECTION_ORDER } from "@/lib/cv-builder-types";
 import { getEffectiveSectionOrder } from "@/lib/cv-sections";
 import { saveVersion, loadVersionHistory, restoreVersion, deleteVersion, renameVersion, type CVVersion } from "@/lib/cv-versioning";
+import { starterTemplates } from "@/lib/starter-templates";
 
 /**
  * Fills in customSections/sectionOrder for data that predates the section
@@ -51,32 +51,7 @@ function removeUrlParam(key: string): void {
   window.history.replaceState(null, '', url.toString());
 }
 
-const DEFAULT_CV_DATA: CVData = {
-  personalInfo: {
-    fullName: "Your Name",
-    jobTitle: "Your Job Title",
-    email: "email@example.com",
-    phone: "+1 (555) 123-4567",
-    location: "City, Country",
-    website: "www.example.com",
-    summary: "Brief professional summary goes here",
-  },
-  experience: [],
-  education: [],
-  skills: [],
-  projects: [],
-  certifications: [],
-  awards: [],
-  references: [],
-  volunteering: [],
-  strengths: [],
-  interests: [],
-  publications: [],
-  languages: [],
-  socialLinks: [],
-  customSections: [],
-  sectionOrder: DEFAULT_SECTION_ORDER,
-};
+const DEFAULT_CV_DATA: CVData = starterTemplates.find((t) => t.id === "professional")!.data;
 
 export function useCVData() {
   const [data, setData] = useState<CVData>(DEFAULT_CV_DATA);

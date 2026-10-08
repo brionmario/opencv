@@ -8,6 +8,7 @@ import { PlainTextPlugin } from "@lexical/react/LexicalPlainTextPlugin";
 import { OnChangePlugin } from "@lexical/react/LexicalOnChangePlugin";
 import { HistoryPlugin } from "@lexical/react/LexicalHistoryPlugin";
 import { ListPlugin } from "@lexical/react/LexicalListPlugin";
+import { LinkPlugin } from "@lexical/react/LexicalLinkPlugin";
 import { useLexicalComposerContext } from "@lexical/react/LexicalComposerContext";
 import { ListNode, ListItemNode } from "@lexical/list";
 import { LinkNode } from "@lexical/link";
@@ -224,6 +225,7 @@ export function InlineEditor({
         <OnChangePlugin onChange={handleChange} />
         <HistoryPlugin />
         {richText && <ListPlugin />}
+        {richText && <LinkPlugin />}
         {richText && <FloatingToolbar />}
         <SetInitialValuePlugin value={value} richText={richText} />
         <ExternalValuePlugin value={value} lastInternalValue={lastInternalValue} richText={richText} />

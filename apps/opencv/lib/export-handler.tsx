@@ -2,6 +2,11 @@ import type { CVData, CVTheme, CustomSection } from "@/lib/cv-builder-types";
 import { getIconSvg, getSocialIconSvg, resolveSocialLinkIcon } from "@/lib/icons";
 import { sectionsFlat } from "@/lib/cv-sections";
 
+function formatDateRange(start: string, end: string): string {
+  if (start && end) return `${start} - ${end}`;
+  return start || end;
+}
+
 export function exportToJSON(data: CVData, filename: string) {
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: "application/json" });
@@ -34,7 +39,7 @@ export function exportToMarkdown(data: CVData, filename: string) {
         s += `**${exp.company}**`;
         if (exp.location) s += ` | ${exp.location}`;
         s += `\n`;
-        s += `${exp.startDate} - ${exp.currentlyWorking ? "Present" : exp.endDate}\n\n`;
+        s += `${formatDateRange(exp.startDate, exp.currentlyWorking ? "Present" : exp.endDate)}\n\n`;
         if (exp.description) s += `${exp.description}\n\n`;
         if (exp.highlights.length > 0) {
           exp.highlights.forEach((h) => { if (h) s += `- ${h}\n`; });
@@ -53,7 +58,9 @@ export function exportToMarkdown(data: CVData, filename: string) {
         s += `**${edu.institution}**`;
         if (edu.field) s += ` - ${edu.field}`;
         s += `\n`;
-        s += `${edu.startDate} - ${edu.endDate}\n\n`;
+        s += `${formatDateRange(edu.startDate, edu.endDate)}\n`;
+        if (edu.gpa) s += `${edu.gpa}\n`;
+        s += `\n`;
       });
       return s;
     },
@@ -84,7 +91,7 @@ export function exportToMarkdown(data: CVData, filename: string) {
         s += `- **${pub.title}**`;
         if (pub.publisher) s += `, ${pub.publisher}`;
         if (pub.date) s += ` (${pub.date})`;
-        if (pub.link) s += ` [Link](${pub.link})`;
+        if (pub.link && !/<a[\s>]/i.test(pub.title)) s += ` [Link](${pub.link})`;
         if (pub.description) s += ` - ${pub.description}`;
         s += "\n";
       });
@@ -162,11 +169,14 @@ function generateCleanHTML(data: CVData): string {
         .map(
           (pub) => `
             <div class="publication">
-              <div class="publication-title"><strong>${escapeHtml(pub.title)}</strong></div>
+              <div class="publication-title"><strong>${
+                pub.link && !/<a[\s>]/i.test(pub.title)
+                  ? `<a href="${escapeHtml(pub.link)}" target="_blank">${sanitizeAndRenderHtml(pub.title)}</a>`
+                  : sanitizeAndRenderHtml(pub.title)
+              }</strong></div>
               <div class="publication-meta">
                 ${pub.publisher ? `<span>${escapeHtml(pub.publisher)}</span>` : ""}
                 ${pub.date ? `<span>${escapeHtml(pub.date)}</span>` : ""}
-                ${pub.link ? `<a href="${escapeHtml(pub.link)}" target="_blank">Link</a>` : ""}
               </div>
               ${pub.description ? `<div class="publication-desc">${sanitizeAndRenderHtml(pub.description)}</div>` : ""}
             </div>`
@@ -190,7 +200,7 @@ function generateCleanHTML(data: CVData): string {
           <h3>${escapeHtml(exp.jobTitle)}</h3>
           <div class="company">${escapeHtml(exp.company)}</div>
           <div class="meta">
-            <span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${escapeHtml(exp.startDate)} - ${exp.currentlyWorking ? "Present" : escapeHtml(exp.endDate)}</span>
+            <span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${formatDateRange(escapeHtml(exp.startDate), exp.currentlyWorking ? "Present" : escapeHtml(exp.endDate))}</span>
             ${exp.location ? `<span class="meta-item">${getIconSvg("location", "#9ca3af")} ${escapeHtml(exp.location)}</span>` : ""}
           </div>
           ${exp.description ? `<p class="description">${sanitizeAndRenderHtml(exp.description)}</p>` : ""}
@@ -214,7 +224,8 @@ function generateCleanHTML(data: CVData): string {
           <h3>${escapeHtml(edu.degree)}</h3>
           <div class="company">${escapeHtml(edu.institution)}</div>
           <div class="meta">
-            <span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${escapeHtml(edu.startDate)} - ${escapeHtml(edu.endDate)}</span>
+            <span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${formatDateRange(escapeHtml(edu.startDate), escapeHtml(edu.endDate))}</span>
+            ${edu.gpa ? `<span class="meta-item">${getIconSvg("award", "#9ca3af")} ${escapeHtml(edu.gpa)}</span>` : ""}
           </div>
         </div>`
     )
