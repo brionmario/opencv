@@ -7,6 +7,7 @@ import {
   View,
   Text,
   Link,
+  Image,
   StyleSheet,
   Font,
   Svg,
@@ -115,13 +116,13 @@ function stripHtml(html: string): string {
     .trim();
 }
 
-interface Seg { text: string; bold: boolean; italic: boolean }
+interface Seg { text: string; bold: boolean; italic: boolean; href?: string }
 
 function parseInline(html: string): Seg[] {
   const segs: Seg[] = [];
-  let cur: Seg = { text: "", bold: false, italic: false };
+  let cur: Seg = { text: "", bold: false, italic: false, href: undefined };
   const flush = () => {
-    if (cur.text) { segs.push({ ...cur }); cur = { text: "", bold: cur.bold, italic: cur.italic }; }
+    if (cur.text) { segs.push({ ...cur }); cur = { text: "", bold: cur.bold, italic: cur.italic, href: cur.href }; }
   };
   const src = html.replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n");
   let i = 0;
@@ -139,12 +140,18 @@ function parseInline(html: string): Seg[] {
     }
     const gt = src.indexOf(">", i);
     if (gt === -1) { cur.text += src[i++]; continue; }
-    const tag = src.slice(i, gt + 1).toLowerCase().replace(/\s+/g, "");
+    const rawTag = src.slice(i, gt + 1);
+    const tag = rawTag.toLowerCase().replace(/\s+/g, "");
     flush();
     if      (tag === "<strong>" || tag === "<b>")  cur.bold = true;
     else if (tag === "</strong>" || tag === "</b>") cur.bold = false;
     else if (tag === "<em>" || tag === "<i>")       cur.italic = true;
     else if (tag === "</em>" || tag === "</i>")     cur.italic = false;
+    else if (/^<a[\s>]/i.test(rawTag)) {
+      const hrefMatch = rawTag.match(/href\s*=\s*"([^"]*)"/i) ?? rawTag.match(/href\s*=\s*'([^']*)'/i);
+      cur.href = hrefMatch ? hrefMatch[1] : undefined;
+    }
+    else if (tag === "</a>") cur.href = undefined;
     i = gt + 1;
   }
   flush();
@@ -162,14 +169,25 @@ function fontFor(bold: boolean, italic: boolean) {
 function RichText({ html, style }: { html: string; style: any }) {
   const segs = parseInline(html);
   if (!segs.length) return null;
-  if (segs.every(s => !s.bold && !s.italic)) {
+  if (segs.every(s => !s.bold && !s.italic && !s.href)) {
     return <Text style={style}>{segs.map(s => s.text).join("")}</Text>;
   }
+  // The canvas leaves anchors unstyled (Tailwind preflight makes them inherit
+  // colour and decoration), so neutralise react-pdf's blue/underlined <Link>
+  // default and inherit the surrounding text colour instead — the link stays
+  // clickable, it just stops looking different from the export's siblings.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const flat: any = Array.isArray(style) ? Object.assign({}, ...style) : style;
+  const linkBase = { color: flat?.color, textDecoration: "none" as const };
   return (
     <Text style={style}>
-      {segs.map((s, i) => (
-        <Text key={i} style={fontFor(s.bold, s.italic)}>{s.text}</Text>
-      ))}
+      {segs.map((s, i) =>
+        s.href ? (
+          <Link key={i} src={s.href} style={[linkBase, fontFor(s.bold, s.italic)]}>{s.text}</Link>
+        ) : (
+          <Text key={i} style={fontFor(s.bold, s.italic)}>{s.text}</Text>
+        )
+      )}
     </Text>
   );
 }
@@ -181,6 +199,13 @@ function fmtDate(s: string): string {
   if (!yr) return s;
   if (!mo) return yr;
   return new Date(+yr, +mo - 1).toLocaleDateString("en-US", { month: "2-digit", year: "numeric" });
+}
+
+function fmtDateRange(start: string, end: string): string {
+  const s = fmtDate(start);
+  const e = fmtDate(end);
+  if (s && e) return `${s} – ${e}`;
+  return s || e;
 }
 
 // ── Height estimation ─────────────────────────────────────────────────────────
@@ -214,8 +239,9 @@ function makeStyles(t: CVTheme) {
   const primary = t.primaryColor || "#db2777";
   const heading = t.headingColor || "#111827";
   const body    = t.bodyColor    || "#374151";
-  const muted   = "#6b7280";
-  const faint   = "#9ca3af";
+  const muted   = "#6b7280";  // gray-500 — canvas meta/secondary text
+  const soft    = "#4b5563";  // gray-600 — canvas descriptions
+  const faint   = "#9ca3af";  // gray-400 — canvas meta icons only
 
   return StyleSheet.create({
     page: {
@@ -225,7 +251,13 @@ function makeStyles(t: CVTheme) {
     },
 
     // ── Header
-    header:     { paddingHorizontal: PAD_SIDE, paddingBottom: 12, marginBottom: 6 },
+    header:     { flexDirection: "row", alignItems: "flex-start", paddingHorizontal: PAD_SIDE, paddingBottom: 12, marginBottom: 6 },
+    headerText: { flex: 1 },
+    // 80px avatar on the canvas → 60pt here (pt = px × 0.75)
+    avatar: {
+      width: 60, height: 60, borderRadius: 30, objectFit: "cover",
+      marginLeft: 15, borderWidth: 1.5, borderColor: "#e5e7eb",
+    },
     name:       { fontWeight: 700, fontSize: 22.5, color: heading, marginBottom: 2 },
     jobTitle:   { fontWeight: 600, fontSize: 11.25, color: primary, marginBottom: 6 },
     contactRow:  { flexDirection: "row", flexWrap: "wrap", columnGap: 12, rowGap: 2 },
@@ -252,7 +284,7 @@ function makeStyles(t: CVTheme) {
     entryCompany: { fontWeight: 600, fontSize: 8.25, color: primary, marginTop: 1 },
     entryMeta:    { flexDirection: "row", columnGap: 9, marginTop: 2, marginBottom: 3 },
     metaItem:     { flexDirection: "row", alignItems: "center", columnGap: 2.5 },
-    metaTxt:      { fontSize: 7.5, color: faint },
+    metaTxt:      { fontSize: 7.5, color: muted },
 
     bulletRow: { flexDirection: "row", marginBottom: 2 },
     bulletDot: { fontSize: 8, color: faint, marginRight: 4, width: 7 },
@@ -277,23 +309,22 @@ function makeStyles(t: CVTheme) {
     awardRow:   { flexDirection: "row", columnGap: 5, marginBottom: 9 },
     awardIcon:  { width: 11, marginTop: 0.5 },
     awardTitle: { fontWeight: 700, fontSize: 8.25, color: heading },
-    awardDesc:  { fontSize: 7.5, color: muted, marginTop: 1, lineHeight: 1.4 },
+    awardDesc:  { fontSize: 7.5, color: soft, marginTop: 1, lineHeight: 1.4 },
 
     // ── Publication
     pubEntry:  { flexDirection: "row", columnGap: 5, marginBottom: 9 },
     pubIcon:   { width: 11, marginTop: 0.5 },
-    pubTitle:  { fontWeight: 700, fontSize: 8.25, color: heading },
-    pubMeta:   { fontSize: 7.5, color: muted, marginTop: 1 },
-    pubLinkRow: { flexDirection: "row", alignItems: "center", columnGap: 2.5, marginTop: 2 },
-    pubLink:   { fontSize: 7.5, color: primary },
+    pubTitle:  { fontWeight: 700, fontSize: 8.25, color: heading, textDecoration: "none" },
+    pubMeta:   { fontSize: 7.5, color: soft, marginTop: 1 },
 
     // ── Reference
     refEntry:    { marginBottom: 9 },
     refName:     { fontWeight: 700, fontSize: 8.25, color: heading },
     refTitle:    { fontWeight: 600, fontSize: 8.25, color: primary, marginTop: 1 },
-    refCompany:  { fontSize: 7.5, color: muted, marginTop: 1 },
-    refContactRow: { flexDirection: "row", flexWrap: "wrap", columnGap: 9, marginTop: 2 },
-    refContactTxt: { fontSize: 7.5, color: faint },
+    refCompany:  { fontSize: 7.5, color: soft, marginTop: 1 },
+    refContactRow: { flexDirection: "row", flexWrap: "wrap", columnGap: 9, rowGap: 2, marginTop: 2 },
+    refContactItem: { flexDirection: "row", alignItems: "center", columnGap: 2.5 },
+    refContactTxt: { fontSize: 7.5, color: muted },
 
     // ── Social
     socialEntry:    { flexDirection: "row", alignItems: "center", columnGap: 6, marginBottom: 6 },
@@ -311,8 +342,8 @@ function makeStyles(t: CVTheme) {
     customEntry:    { marginBottom: 9 },
     customTitle:    { fontWeight: 700, fontSize: 8.25, color: heading },
     customSubtitle: { fontWeight: 600, fontSize: 8.25, color: primary, marginTop: 1 },
-    customMeta:     { fontSize: 7.5, color: faint, marginTop: 1 },
-    customDesc:     { fontSize: 7.5, color: muted, marginTop: 2, lineHeight: 1.4 },
+    customMeta:     { fontSize: 7.5, color: muted, marginTop: 1 },
+    customDesc:     { fontSize: 7.5, color: soft, marginTop: 2, lineHeight: 1.4 },
   });
 }
 
@@ -383,7 +414,7 @@ export function ProfessionalPDFDocument({
         <View style={S.metaItem}>
           <PdfIcon name="calendar" size={7.5} color="#9ca3af" />
           <Text style={S.metaTxt}>
-            {fmtDate(exp.startDate)} – {exp.currentlyWorking ? "Present" : fmtDate(exp.endDate)}
+            {fmtDateRange(exp.startDate, exp.currentlyWorking ? "Present" : exp.endDate)}
           </Text>
         </View>
         {exp.location ? (
@@ -395,7 +426,7 @@ export function ProfessionalPDFDocument({
       </View>
       {exp.highlights.filter(Boolean).map((h, i) => (
         <View key={i} style={S.bulletRow}>
-          <Text style={S.bulletDot}>·</Text>
+          <Text style={S.bulletDot}>•</Text>
           <RichText html={h} style={S.bulletTxt} />
         </View>
       ))}
@@ -403,7 +434,7 @@ export function ProfessionalPDFDocument({
   );
 
   const renderLangs = (list: typeof allLangs) => (
-    <View style={S.section} wrap={false}>
+    <View key="languages" style={S.section} wrap={false}>
       <Text style={S.secHead}>Languages</Text>
       {list.map(lang => (
         <View key={lang.name} style={S.langRow} wrap={false}>
@@ -459,8 +490,14 @@ export function ProfessionalPDFDocument({
             <Text style={S.eduInst}>{edu.institution}</Text>
             <View style={[S.metaItem, { marginTop: 2 }]}>
               <PdfIcon name="calendar" size={7.5} color="#9ca3af" />
-              <Text style={S.metaTxt}>{fmtDate(edu.startDate)} – {fmtDate(edu.endDate)}</Text>
+              <Text style={S.metaTxt}>{fmtDateRange(edu.startDate, edu.endDate)}</Text>
             </View>
+            {edu.gpa ? (
+              <View style={[S.metaItem, { marginTop: 2 }]}>
+                <PdfIcon name="award" size={7.5} color="#9ca3af" />
+                <Text style={S.metaTxt}>{edu.gpa}</Text>
+              </View>
+            ) : null}
           </View>
         ))}
       </View>
@@ -510,14 +547,11 @@ export function ProfessionalPDFDocument({
               <PdfIcon name="link" size={10} color={primary} />
             </View>
             <View style={{ flex: 1 }}>
-              <Text style={S.pubTitle}>{pub.title}</Text>
-              <Text style={S.pubMeta}>{[pub.publisher, pub.date].filter(Boolean).join(" · ")}</Text>
-              {pub.link ? (
-                <View style={S.pubLinkRow}>
-                  <PdfIcon name="link" size={6.5} color="#9ca3af" />
-                  <Link src={pub.link} style={S.pubLink}>{pub.link}</Link>
-                </View>
-              ) : null}
+              <RichText
+                html={pub.link && !/<a[\s>]/i.test(pub.title) ? `<a href="${pub.link}">${pub.title}</a>` : pub.title}
+                style={S.pubTitle}
+              />
+              <Text style={S.pubMeta}>{[pub.publisher, pub.date].filter(Boolean).join(" • ")}</Text>
             </View>
           </View>
         ))}
@@ -534,8 +568,18 @@ export function ProfessionalPDFDocument({
             {ref.company ? <Text style={S.refCompany}>{ref.company}</Text> : null}
             {ref.phone || ref.email ? (
               <View style={S.refContactRow}>
-                {ref.phone ? <Text style={S.refContactTxt}>{ref.phone}</Text> : null}
-                {ref.email ? <Text style={S.refContactTxt}>{ref.email}</Text> : null}
+                {ref.phone ? (
+                  <View style={S.refContactItem}>
+                    <PdfIcon name="phone" size={7.5} color="#9ca3af" />
+                    <Text style={S.refContactTxt}>{ref.phone}</Text>
+                  </View>
+                ) : null}
+                {ref.email ? (
+                  <View style={S.refContactItem}>
+                    <PdfIcon name="email" size={7.5} color="#9ca3af" />
+                    <Text style={S.refContactTxt}>{ref.email}</Text>
+                  </View>
+                ) : null}
               </View>
             ) : null}
           </View>
@@ -589,16 +633,21 @@ export function ProfessionalPDFDocument({
       <Page size="A4" style={S.page}>
         {/* Header */}
         <View style={S.header}>
-          <Text style={S.name}>{data.personalInfo.fullName}</Text>
-          <Text style={S.jobTitle}>{data.personalInfo.jobTitle}</Text>
-          <View style={S.contactRow}>
-            {contacts.map(([icon, c], i) => (
-              <View key={i} style={S.contactItem}>
-                <PdfIcon name={icon} size={9} color={primary} />
-                <Text style={S.contactTxt}>{c}</Text>
-              </View>
-            ))}
+          <View style={S.headerText}>
+            <Text style={S.name}>{data.personalInfo.fullName}</Text>
+            <Text style={S.jobTitle}>{data.personalInfo.jobTitle}</Text>
+            <View style={S.contactRow}>
+              {contacts.map(([icon, c], i) => (
+                <View key={i} style={S.contactItem}>
+                  <PdfIcon name={icon} size={9} color={primary} />
+                  <Text style={S.contactTxt}>{c}</Text>
+                </View>
+              ))}
+            </View>
           </View>
+          {data.personalInfo.avatar ? (
+            <Image style={S.avatar} src={data.personalInfo.avatar} />
+          ) : null}
         </View>
 
         {/* Two-column body */}
