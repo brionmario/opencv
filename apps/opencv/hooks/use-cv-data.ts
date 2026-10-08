@@ -1,8 +1,21 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { CVData, ExperienceEntry, EducationEntry, SkillEntry, ProjectEntry, CertificationEntry, AwardEntry, ReferenceEntry, VolunteeringEntry, StrengthEntry, InterestEntry, PublicationEntry, SocialLinkEntry } from "@/lib/cv-builder-types";
+import type { CVData, ExperienceEntry, EducationEntry, SkillEntry, ProjectEntry, CertificationEntry, AwardEntry, ReferenceEntry, VolunteeringEntry, StrengthEntry, InterestEntry, PublicationEntry, SocialLinkEntry, CustomSection, CustomSectionItem, SectionMeta } from "@/lib/cv-builder-types";
+import { DEFAULT_SECTION_ORDER } from "@/lib/cv-builder-types";
+import { getEffectiveSectionOrder } from "@/lib/cv-sections";
 import { saveVersion, loadVersionHistory, restoreVersion, deleteVersion, renameVersion, type CVVersion } from "@/lib/cv-versioning";
+
+/**
+ * Fills in customSections/sectionOrder for data that predates the section
+ * system, or that arrived from an external source (URL, localStorage,
+ * restored version) that may be missing them or carrying a partial order.
+ */
+function normalizeCVData(raw: CVData): CVData {
+  const data: CVData = { ...raw, customSections: raw.customSections ?? [] };
+  data.sectionOrder = getEffectiveSectionOrder(data);
+  return data;
+}
 
 function encodeDataForUrl(data: CVData): string {
   try {
@@ -61,6 +74,8 @@ const DEFAULT_CV_DATA: CVData = {
   publications: [],
   languages: [],
   socialLinks: [],
+  customSections: [],
+  sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
 export function useCVData() {
@@ -75,7 +90,7 @@ export function useCVData() {
     if (urlParam) {
       const decoded = decodeDataFromUrl(urlParam);
       if (decoded) {
-        setData(decoded);
+        setData(normalizeCVData(decoded));
         const history = loadVersionHistory();
         setVersions(history.versions);
         return;
@@ -85,7 +100,7 @@ export function useCVData() {
     const saved = localStorage.getItem("cvBuilderData");
     if (saved) {
       try {
-        setData(JSON.parse(saved));
+        setData(normalizeCVData(JSON.parse(saved)));
       } catch (err) {
         console.error("Failed to load CV data:", err);
       }
@@ -278,7 +293,8 @@ export function useCVData() {
   }, [data]);
 
   const restoreSavepoint = useCallback((versionId: string) => {
-    const restoredData = restoreVersion(versionId);
+    const raw = restoreVersion(versionId);
+    const restoredData = raw ? normalizeCVData(raw) : null;
     if (restoredData) {
       setData(restoredData);
       localStorage.setItem("cvBuilderData", JSON.stringify(restoredData));
@@ -442,6 +458,113 @@ export function useCVData() {
     }));
   }, []);
 
+  // ── Custom sections ──
+  const addCustomSection = useCallback((title: string) => {
+    setData((prev) => {
+      const id = `cs-${Date.now()}`;
+      const newSection: CustomSection = { id, title, items: [] };
+      return {
+        ...prev,
+        customSections: [...prev.customSections, newSection],
+        sectionOrder: [...getEffectiveSectionOrder(prev), { id, column: "left" }],
+      };
+    });
+  }, []);
+
+  const deleteCustomSection = useCallback((id: string) => {
+    setData((prev) => ({
+      ...prev,
+      customSections: prev.customSections.filter((s) => s.id !== id),
+      sectionOrder: getEffectiveSectionOrder(prev).filter((s) => s.id !== id),
+    }));
+  }, []);
+
+  const updateCustomSectionTitle = useCallback((id: string, title: string) => {
+    setData((prev) => ({
+      ...prev,
+      customSections: prev.customSections.map((s) => (s.id === id ? { ...s, title } : s)),
+    }));
+  }, []);
+
+  const addCustomSectionItem = useCallback((sectionId: string) => {
+    setData((prev) => ({
+      ...prev,
+      customSections: prev.customSections.map((s) =>
+        s.id === sectionId
+          ? { ...s, items: [...s.items, { id: `csi-${Date.now()}`, title: "", subtitle: "", meta: "", description: "" }] }
+          : s
+      ),
+    }));
+  }, []);
+
+  const updateCustomSectionItem = useCallback((sectionId: string, itemId: string, field: keyof Omit<CustomSectionItem, "id">, value: string) => {
+    setData((prev) => ({
+      ...prev,
+      customSections: prev.customSections.map((s) =>
+        s.id === sectionId
+          ? { ...s, items: s.items.map((it) => (it.id === itemId ? { ...it, [field]: value } : it)) }
+          : s
+      ),
+    }));
+  }, []);
+
+  const deleteCustomSectionItem = useCallback((sectionId: string, itemId: string) => {
+    setData((prev) => ({
+      ...prev,
+      customSections: prev.customSections.map((s) =>
+        s.id === sectionId ? { ...s, items: s.items.filter((it) => it.id !== itemId) } : s
+      ),
+    }));
+  }, []);
+
+  // ── Section visibility / order ──
+  const toggleSectionHidden = useCallback((id: string) => {
+    setData((prev) => {
+      const order = getEffectiveSectionOrder(prev);
+      return { ...prev, sectionOrder: order.map((s) => (s.id === id ? { ...s, hidden: !s.hidden } : s)) };
+    });
+  }, []);
+
+  const setSectionColumn = useCallback((id: string, column: "left" | "right") => {
+    setData((prev) => {
+      const order = getEffectiveSectionOrder(prev);
+      return { ...prev, sectionOrder: order.map((s) => (s.id === id ? { ...s, column } : s)) };
+    });
+  }, []);
+
+  /**
+   * Moves a section one slot earlier/later. "column" mode swaps with the
+   * nearest other entry sharing the same column (for two-column templates,
+   * so a move is never a no-op just because the adjacent array entry
+   * belongs to the other column). "flat" mode swaps with the raw adjacent
+   * array entry, matching how single-column templates render the order.
+   */
+  const moveSection = useCallback((id: string, direction: -1 | 1, mode: "flat" | "column") => {
+    setData((prev) => {
+      const order = getEffectiveSectionOrder(prev);
+      const idx = order.findIndex((s) => s.id === id);
+      if (idx === -1) return prev;
+
+      let swapIdx: number;
+      if (mode === "flat") {
+        swapIdx = idx + direction;
+        if (swapIdx < 0 || swapIdx >= order.length) return prev;
+      } else {
+        const col = order[idx].column;
+        const colIndices: number[] = [];
+        order.forEach((s, i) => { if (s.column === col) colIndices.push(i); });
+        const pos = colIndices.indexOf(idx);
+        const swapPos = pos + direction;
+        if (swapPos < 0 || swapPos >= colIndices.length) return prev;
+        swapIdx = colIndices[swapPos];
+      }
+
+      const next = [...order];
+      [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
+      return { ...prev, sectionOrder: next };
+    });
+  }, []);
+
   // Generic path-based update for WYSIWYG inline editing
   const updateField = useCallback((path: string, value: any) => {
     setData((prev) => {
@@ -513,6 +636,15 @@ export function useCVData() {
     addSocialLink,
     updateSocialLink,
     deleteSocialLink,
+    addCustomSection,
+    deleteCustomSection,
+    updateCustomSectionTitle,
+    addCustomSectionItem,
+    updateCustomSectionItem,
+    deleteCustomSectionItem,
+    toggleSectionHidden,
+    setSectionColumn,
+    moveSection,
     updateField,
     resetData,
     importData,

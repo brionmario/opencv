@@ -137,6 +137,93 @@ export interface SocialLinkEntry {
   icon?: string; // predefined IconName key OR a custom image URL starting with "http"
 }
 
+/**
+ * A user-defined section not covered by the built-in types above (e.g.
+ * "Volunteering", "Hobbies"). Each item is a generic title/subtitle/meta/
+ * description entry — the same shape every built-in list section already
+ * uses — so one shared renderer covers arbitrary sections across templates.
+ */
+export interface CustomSectionItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  meta?: string;
+  description?: string; // Supports HTML formatting: <strong>, <em>, <b>, <i>, <u>
+}
+
+export interface CustomSection {
+  id: string;
+  title: string;
+  items: CustomSectionItem[];
+}
+
+/**
+ * Built-in section identifiers — stable strings, used as sectionOrder ids.
+ * Deliberately limited to the sections every template already renders.
+ * projects/certifications/volunteering/strengths/interests exist in CVData
+ * (legacy fields with no template UI anywhere, predating the section
+ * system) but are intentionally excluded here — surfacing them as
+ * toggleable would produce a "visible" section that renders nothing.
+ */
+export type BuiltInSectionId =
+  | "summary"
+  | "experience"
+  | "education"
+  | "skills"
+  | "awards"
+  | "publications"
+  | "references"
+  | "socialLinks"
+  | "languages";
+
+export const BUILT_IN_SECTION_IDS: BuiltInSectionId[] = [
+  "summary",
+  "experience",
+  "education",
+  "skills",
+  "awards",
+  "publications",
+  "references",
+  "socialLinks",
+  "languages",
+];
+
+export const SECTION_LABELS: Record<BuiltInSectionId, string> = {
+  summary: "Summary",
+  experience: "Experience",
+  education: "Education",
+  skills: "Skills",
+  awards: "Key Achievements",
+  publications: "Publications",
+  references: "References",
+  socialLinks: "Find Me Online",
+  languages: "Languages",
+};
+
+/**
+ * Section id: a BuiltInSectionId, or a CustomSection's own id.
+ * Column is only meaningful for two-column templates (professional, modern);
+ * single-column templates (classic, minimal) ignore it and flatten the order.
+ */
+export interface SectionMeta {
+  id: string;
+  column: "left" | "right";
+  hidden?: boolean;
+}
+
+/** Default arrangement, matching the professional template's original hardcoded layout. */
+export const DEFAULT_SECTION_ORDER: SectionMeta[] = [
+  { id: "summary", column: "left" },
+  { id: "education", column: "left" },
+  { id: "experience", column: "left" },
+  { id: "skills", column: "right" },
+  { id: "awards", column: "right" },
+  { id: "publications", column: "right" },
+  { id: "references", column: "right" },
+  { id: "socialLinks", column: "right" },
+  { id: "languages", column: "right" },
+];
+
 export interface CVData {
   personalInfo: PersonalInfo;
   experience: ExperienceEntry[];
@@ -152,6 +239,8 @@ export interface CVData {
   publications: PublicationEntry[];
   languages: LanguageEntry[];
   socialLinks: SocialLinkEntry[];
+  customSections: CustomSection[];
+  sectionOrder: SectionMeta[];
 }
 
 export interface CVTemplate {
@@ -184,9 +273,9 @@ export const DEFAULT_THEME: CVTheme = {
   mutedColor: "#9ca3af",
   backgroundColor: "#ffffff",
   fontFace: "Inter, ui-sans-serif, system-ui, sans-serif",
-  nameFontSize: 36,
-  sectionFontSize: 18,
-  bodyFontSize: 14,
+  nameFontSize: 30,
+  sectionFontSize: 13,
+  bodyFontSize: 11,
   nameWeight: 700,
   headingWeight: 700,
   bodyWeight: 400,

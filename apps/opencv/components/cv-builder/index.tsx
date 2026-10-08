@@ -9,17 +9,18 @@ import { ModernWysiwygTemplate } from "@/components/cv-editor/templates/modern";
 import { ClassicWysiwygTemplate } from "@/components/cv-editor/templates/classic";
 import { MinimalWysiwygTemplate } from "@/components/cv-editor/templates/minimal";
 import { ThemeCustomizer } from "@/components/cv-editor/theme-customizer";
+import { SectionsPanel } from "@/components/cv-editor/sections-panel";
 import type { CVVersion } from "@/lib/cv-versioning";
 import type { CVTheme } from "@/lib/cv-builder-types";
 import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import {
   Download, FileJson, FileText, FileCode, Linkedin, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
-  Layers, Sparkles, X,
+  Layers, Sparkles, X, ListOrdered,
 } from "lucide-react";
 
 type LayoutType = "professional" | "modern" | "classic" | "minimal";
-type DrawerType = "theme" | "history" | null;
+type DrawerType = "theme" | "history" | "sections" | null;
 type CanvasType = "soft" | "dots" | "grid" | "plain";
 
 interface Toast {
@@ -555,8 +556,16 @@ function HistoryDrawer({
 }
 
 /* ── Page break overlay ───────────────────────────────────────────────────── */
-const PAGE_H_PX = 11 * 96; // 11in at 96 dpi
-const BREAK_GAP = 120; // 60px top margin + 60px bottom margin between pages
+const PAGE_H_PX = (297 / 25.4) * 96; // A4 height (297mm) at 96 dpi — must match template page size and PDF export
+// Divider band drawn BELOW each page boundary. It must never cover the space
+// above the boundary — that is printable page-N area, and hiding it makes the
+// canvas lie about how much fits on a page.
+const BREAK_GAP = 80;
+// Extra whitespace after the divider before page N+1's content starts,
+// mirroring the top inset a real printed page has (matches the page-1
+// header's own top padding). Without this, content sits flush against the
+// divider with no visual "new page" margin.
+const PAGE_TOP_MARGIN = 32;
 
 /**
  * Pushes EditableCard elements that straddle a page-break gap zone entirely
@@ -576,10 +585,26 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
     if (!el) return;
 
     const adjust = () => {
-      const cards = Array.from(el.querySelectorAll<HTMLElement>(".group\\/card"));
+      // EditableCards plus other unbreakable leaf rows (e.g. language rows)
+      const cards = Array.from(el.querySelectorAll<HTMLElement>(".group\\/card, .group\\/lang"));
+
+      // A card that is the first item in its section's list container has a
+      // heading sitting right before that container. If the card gets pushed
+      // to the next page, push the heading along with it — otherwise the
+      // heading is left orphaned at the bottom of the previous page with a
+      // large blank gap beneath it.
+      const headingFor = new Map<HTMLElement, HTMLElement>();
+      cards.forEach((c) => {
+        const container = c.parentElement;
+        if (container && container.firstElementChild === c) {
+          const head = container.previousElementSibling;
+          if (head instanceof HTMLElement) headingFor.set(c, head);
+        }
+      });
 
       // Reset injected margins so getBoundingClientRect gives natural positions
       cards.forEach((c) => { c.style.marginTop = ""; });
+      headingFor.forEach((head) => { head.style.marginTop = ""; });
       void el.offsetHeight; // force synchronous reflow
 
       const elRect = el.getBoundingClientRect();
@@ -601,17 +626,46 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
 
           const pageNum = Math.floor(top / PAGE_H_PX);
           const boundary = (pageNum + 1) * PAGE_H_PX;
-          const gapStart = boundary - BREAK_GAP / 2;
-          const gapEnd = boundary + BREAK_GAP / 2;
+          // The divider band sits entirely below the boundary; content resumes
+          // PAGE_TOP_MARGIN further down, giving page N+1 a real top inset
+          const gapEnd = boundary + BREAK_GAP + PAGE_TOP_MARGIN;
 
           // Only push cards that straddle the actual page boundary, not merely
           // overlap the gap zone — avoids over-pushing cards that end near the
           // boundary and leaving large blank gaps on the previous page.
           if (top < boundary && bottom > boundary) {
-            const existingMt = parseFloat(getComputedStyle(card).marginTop) || 0;
-            const push = Math.ceil(gapEnd - top) + existingMt;
-            card.style.marginTop = `${push}px`;
-            accumulated += push - existingMt;
+            const head = headingFor.get(card);
+            if (head) {
+              // Push the heading (not the card) far enough that the heading
+              // itself clears the gap — the card follows it in normal flow.
+              // Using the card's own offset here would under-push the heading,
+              // leaving it inside the gap zone, hidden behind the divider.
+              const headRect = head.getBoundingClientRect();
+              const headTop = headRect.top - base + accumulated;
+              const shift = Math.ceil(gapEnd - headTop);
+
+              // The heading is the first child of its section wrapper, so its
+              // margin-top collapses with the previous section's bottom margin
+              // (the column's space-y gap) rather than adding on top of it.
+              // Setting marginTop to just `shift` would therefore fall short by
+              // that collapsed baseline, leaving the heading hidden behind the
+              // page-break divider — so measure the real gap to the previous
+              // section and add it back in.
+              const wrapper = head.parentElement;
+              const prevSibling = wrapper?.previousElementSibling ?? null;
+              let marginToSet = shift;
+              if (prevSibling) {
+                const prevBottom = prevSibling.getBoundingClientRect().bottom - base + accumulated;
+                marginToSet = shift + (headTop - prevBottom);
+              }
+              head.style.marginTop = `${Math.max(marginToSet, 0)}px`;
+              accumulated += shift;
+            } else {
+              const existingMt = parseFloat(getComputedStyle(card).marginTop) || 0;
+              const push = Math.ceil(gapEnd - top) + existingMt;
+              card.style.marginTop = `${push}px`;
+              accumulated += push - existingMt;
+            }
           }
         }
       }
@@ -634,8 +688,11 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
 
     return () => {
       ro.disconnect();
-      Array.from(el.querySelectorAll<HTMLElement>(".group\\/card"))
-        .forEach((c) => { c.style.marginTop = ""; });
+      Array.from(el.querySelectorAll<HTMLElement>(".group\\/card, .group\\/lang")).forEach((c) => {
+        c.style.marginTop = "";
+        const head = c.parentElement?.firstElementChild === c ? c.parentElement.previousElementSibling : null;
+        if (head instanceof HTMLElement) head.style.marginTop = "";
+      });
     };
   }, [containerRef, enabled]);
 }
@@ -667,7 +724,7 @@ function PageBreakOverlay({ targetRef }: { targetRef: React.RefObject<HTMLDivEle
           key={i}
           style={{
             position: "absolute",
-            top: (i + 1) * PAGE_H_PX - BREAK_GAP / 2,
+            top: (i + 1) * PAGE_H_PX,
             left: 0,
             right: 0,
             height: BREAK_GAP,
@@ -705,8 +762,32 @@ export function CVBuilder() {
   const [isInitialized, setIsInitialized] = useState(false);
   const isFirstLayoutSaveRef = useRef(true);
   const previewRef = useRef<HTMLDivElement>(null);
+  const previewContentRef = useRef<HTMLDivElement>(null);
   usePageBreakAvoider(previewRef, isInitialized);
   const { toasts, push: pushToast, drop: dropToast } = useToasts();
+
+  // Round the paper's height up to a whole number of A4 pages, so the last
+  // page's background fills the full sheet instead of stopping wherever the
+  // content happens to end (a bare minHeight only guarantees one page).
+  // Measured from the content wrapper, not previewRef itself, so setting
+  // previewRef's height here can't retrigger this effect.
+  const [paperHeight, setPaperHeight] = useState<number | null>(null);
+  useEffect(() => {
+    // CVBuilder renders null until isInitialized flips true, so this must
+    // re-run once that happens — otherwise previewContentRef is still null
+    // on the one-and-only pass of an empty-deps effect.
+    if (!isInitialized) return;
+    const el = previewContentRef.current;
+    if (!el) return;
+    const update = () => {
+      const pages = Math.max(1, Math.ceil(el.offsetHeight / PAGE_H_PX));
+      setPaperHeight(pages * PAGE_H_PX);
+    };
+    update();
+    const ro = new ResizeObserver(update);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [isInitialized]);
 
   const {
     data,
@@ -721,10 +802,21 @@ export function CVBuilder() {
     deleteAward,
     addPublication,
     deletePublication,
+    addReference,
+    deleteReference,
     addSocialLink,
     deleteSocialLink,
     addLanguage,
     deleteLanguage,
+    addCustomSection,
+    deleteCustomSection,
+    updateCustomSectionTitle,
+    addCustomSectionItem,
+    updateCustomSectionItem,
+    deleteCustomSectionItem,
+    toggleSectionHidden,
+    setSectionColumn,
+    moveSection,
     updateField,
     resetData,
     importData,
@@ -745,7 +837,17 @@ export function CVBuilder() {
 
     const savedTheme = localStorage.getItem("cvBuilderTheme");
     if (savedTheme) {
-      try { setTheme(JSON.parse(savedTheme)); } catch {}
+      try {
+        const parsed = JSON.parse(savedTheme);
+        // Migrate themes saved under the old (US Letter era) default type
+        // scale to the current A4-matched defaults.
+        if (parsed.nameFontSize === 36 && parsed.sectionFontSize === 18 && parsed.bodyFontSize === 14) {
+          parsed.nameFontSize = DEFAULT_THEME.nameFontSize;
+          parsed.sectionFontSize = DEFAULT_THEME.sectionFontSize;
+          parsed.bodyFontSize = DEFAULT_THEME.bodyFontSize;
+        }
+        setTheme(parsed);
+      } catch {}
     }
 
     const savedDark = localStorage.getItem("cvBuilderDark");
@@ -790,7 +892,19 @@ export function CVBuilder() {
 
     if (id === "pdf") {
       const tidLoading = pushToast(`Generating <b>PDF</b>…`, "loader", 0);
-      exportToPDF("", data, `${name}_CV.pdf`, theme).then(() => {
+      // Mirror the canvas page split exactly: any experience card the
+      // page-break avoider pushed past the A4 boundary goes to page 2 in
+      // the PDF too. Only the professional canvas carries the markers —
+      // other layouts fall back to the PDF document's own estimate.
+      let page2ExpIds: string[] | undefined;
+      const paper = previewRef.current;
+      if (paper && paper.querySelector("[data-cv-professional]")) {
+        const base = paper.getBoundingClientRect().top;
+        page2ExpIds = Array.from(paper.querySelectorAll<HTMLElement>("[data-entry-id]"))
+          .filter((el) => el.getBoundingClientRect().top - base >= PAGE_H_PX)
+          .map((el) => el.dataset.entryId as string);
+      }
+      exportToPDF("", data, `${name}_CV.pdf`, theme, page2ExpIds).then(() => {
         dropToast(tidLoading);
         pushToast(`Downloaded <b>${name}.pdf</b>`, "download");
       });
@@ -881,12 +995,22 @@ export function CVBuilder() {
     onDeleteAward: deleteAward,
     onAddPublication: () => addPublication({ title: "Publication Title", publisher: "", date: "" }),
     onDeletePublication: deletePublication,
+    onAddReference: () => addReference({ name: "", title: "", company: "", email: "", phone: "" }),
+    onDeleteReference: deleteReference,
     onAddSocialLink: () => addSocialLink({ platform: "", url: "" }),
     onDeleteSocialLink: deleteSocialLink,
     onAddLanguage: () => addLanguage({ name: "Language", proficiency: 3 }),
     onDeleteLanguage: deleteLanguage,
     onPhotoUpload: handlePhotoUpload,
+    onDeleteCustomSection: deleteCustomSection,
+    onUpdateCustomSectionTitle: updateCustomSectionTitle,
+    onAddCustomSectionItem: addCustomSectionItem,
+    onUpdateCustomSectionItem: updateCustomSectionItem,
+    onDeleteCustomSectionItem: deleteCustomSectionItem,
   };
+
+  // professional/modern render two columns; classic/minimal flow as one
+  const layoutColumns: 1 | 2 = selectedLayout === "professional" || selectedLayout === "modern" ? 2 : 1;
 
   const renderTemplate = () => {
     switch (selectedLayout) {
@@ -921,6 +1045,13 @@ export function CVBuilder() {
             <Linkedin size={18} />
           </IconBtn>
           <IconBtn
+            tip="Sections"
+            active={drawer === "sections"}
+            onClick={() => setDrawer((d) => (d === "sections" ? null : "sections"))}
+          >
+            <ListOrdered size={18} />
+          </IconBtn>
+          <IconBtn
             tip="Version history"
             active={drawer === "history"}
             onClick={() => setDrawer((d) => (d === "history" ? null : "history"))}
@@ -952,14 +1083,14 @@ export function CVBuilder() {
             style={{
               background: theme.backgroundColor,
               width: "100%",
-              minHeight: "11in",
+              height: paperHeight ? `${paperHeight}px` : "297mm",
               borderRadius: 4,
               boxShadow: "var(--cv-shadow-paper)",
               color: theme.bodyColor,
               transition: "background 0.3s, color 0.3s",
             }}
           >
-            {renderTemplate()}
+            <div ref={previewContentRef}>{renderTemplate()}</div>
           </div>
           <PageBreakOverlay targetRef={previewRef} />
         </div>
@@ -996,6 +1127,20 @@ export function CVBuilder() {
           onRename={updateSavepointLabel}
           onExport={handleExportVersion}
           onCreateSavepoint={handleCreateSavepoint}
+        />
+      )}
+
+      {/* ── Sections Drawer ── */}
+      {drawer === "sections" && (
+        <SectionsPanel
+          data={data}
+          layoutColumns={layoutColumns}
+          onToggleHidden={toggleSectionHidden}
+          onMove={moveSection}
+          onSetColumn={setSectionColumn}
+          onAddCustomSection={addCustomSection}
+          onDeleteCustomSection={deleteCustomSection}
+          onClose={() => setDrawer(null)}
         />
       )}
 

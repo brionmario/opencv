@@ -1,5 +1,6 @@
-import type { CVData, CVTheme } from "@/lib/cv-builder-types";
+import type { CVData, CVTheme, CustomSection } from "@/lib/cv-builder-types";
 import { getIconSvg, getSocialIconSvg, resolveSocialLinkIcon } from "@/lib/icons";
+import { sectionsFlat } from "@/lib/cv-sections";
 
 export function exportToJSON(data: CVData, filename: string) {
   const json = JSON.stringify(data, null, 2);
@@ -18,85 +19,134 @@ export function exportToMarkdown(data: CVData, filename: string) {
   if (data.personalInfo.website) contactParts.push(`${data.personalInfo.website}`);
   if (contactParts.length > 0) md += contactParts.join(" | ") + "\n\n";
 
-  if (data.personalInfo.summary) {
-    md += `## Summary\n\n${data.personalInfo.summary}\n\n`;
-  }
+  // ── Section renderers, keyed by id — order/visibility/custom sections
+  // all come from sectionsFlat(), the same source of truth the canvas and
+  // PDF export read. Markdown has no columns, so it always renders flat.
+  const builtIn: Record<string, () => string> = {
+    summary: () => (data.personalInfo.summary ? `## Summary\n\n${data.personalInfo.summary}\n\n` : ""),
 
-  if (data.experience.length > 0) {
-    md += `## Experience\n\n`;
-    data.experience.forEach((exp) => {
-      md += `### ${exp.jobTitle}\n\n`;
-      md += `**${exp.company}**`;
-      if (exp.location) md += ` | ${exp.location}`;
-      md += `\n`;
-      md += `${exp.startDate} - ${exp.currentlyWorking ? "Present" : exp.endDate}\n\n`;
-      if (exp.description) md += `${exp.description}\n\n`;
-      if (exp.highlights.length > 0) {
-        exp.highlights.forEach((h) => {
-          if (h) md += `- ${h}\n`;
-        });
-        md += "\n";
-      }
+    experience: () => {
+      const exps = data.experience.filter((e) => e.jobTitle || e.company);
+      if (!exps.length) return "";
+      let s = `## Experience\n\n`;
+      exps.forEach((exp) => {
+        s += `### ${exp.jobTitle}\n\n`;
+        s += `**${exp.company}**`;
+        if (exp.location) s += ` | ${exp.location}`;
+        s += `\n`;
+        s += `${exp.startDate} - ${exp.currentlyWorking ? "Present" : exp.endDate}\n\n`;
+        if (exp.description) s += `${exp.description}\n\n`;
+        if (exp.highlights.length > 0) {
+          exp.highlights.forEach((h) => { if (h) s += `- ${h}\n`; });
+          s += "\n";
+        }
+      });
+      return s;
+    },
+
+    education: () => {
+      const edus = data.education.filter((e) => e.degree || e.institution);
+      if (!edus.length) return "";
+      let s = `## Education\n\n`;
+      edus.forEach((edu) => {
+        s += `### ${edu.degree}\n\n`;
+        s += `**${edu.institution}**`;
+        if (edu.field) s += ` - ${edu.field}`;
+        s += `\n`;
+        s += `${edu.startDate} - ${edu.endDate}\n\n`;
+      });
+      return s;
+    },
+
+    skills: () => {
+      if (!data.skills.length) return "";
+      const names = data.skills.map((s) => s.name).filter(Boolean).join(", ");
+      return names ? `## Skills\n\n${names}\n\n` : "";
+    },
+
+    awards: () => {
+      const awards = data.awards.filter((a) => a.title);
+      if (!awards.length) return "";
+      let s = `## Achievements\n\n`;
+      awards.forEach((award) => {
+        s += `- **${award.title}**`;
+        if (award.description) s += ` - ${award.description}`;
+        s += "\n";
+      });
+      return s + "\n";
+    },
+
+    publications: () => {
+      const pubs = data.publications ?? [];
+      if (!pubs.length) return "";
+      let s = `## Publications\n\n`;
+      pubs.forEach((pub) => {
+        s += `- **${pub.title}**`;
+        if (pub.publisher) s += `, ${pub.publisher}`;
+        if (pub.date) s += ` (${pub.date})`;
+        if (pub.link) s += ` [Link](${pub.link})`;
+        if (pub.description) s += ` - ${pub.description}`;
+        s += "\n";
+      });
+      return s + "\n";
+    },
+
+    references: () => {
+      const refs = data.references.filter((r) => r.name);
+      if (!refs.length) return "";
+      let s = `## References\n\n`;
+      refs.forEach((ref) => {
+        s += `- **${ref.name}**`;
+        if (ref.title) s += `, ${ref.title}`;
+        if (ref.company) s += ` at ${ref.company}`;
+        const contact = [ref.phone, ref.email].filter(Boolean).join(", ");
+        if (contact) s += ` — ${contact}`;
+        s += "\n";
+      });
+      return s + "\n";
+    },
+
+    socialLinks: () => {
+      const links = (data.socialLinks ?? []).filter((l) => l.platform || l.url);
+      if (!links.length) return "";
+      let s = `## Links\n\n`;
+      links.forEach((link) => {
+        s += `- [${link.platform}](${link.url.startsWith("http") ? link.url : `https://${link.url}`})\n`;
+      });
+      return s + "\n";
+    },
+
+    languages: () => {
+      const langs = data.languages.filter((l) => l.name);
+      if (!langs.length) return "";
+      const labels = ["Beginner", "Elementary", "Intermediate", "Proficient", "Fluent"];
+      let s = `## Languages\n\n`;
+      langs.forEach((lang) => { s += `- ${lang.name} (${labels[lang.proficiency - 1]})\n`; });
+      return s + "\n";
+    },
+  };
+
+  const renderCustomSection = (section: CustomSection): string => {
+    if (!section.items.length) return "";
+    let s = `## ${section.title}\n\n`;
+    section.items.forEach((item) => {
+      s += `### ${item.title}\n\n`;
+      if (item.subtitle) s += `**${item.subtitle}**\n`;
+      if (item.meta) s += `${item.meta}\n`;
+      s += "\n";
+      if (item.description) s += `${item.description}\n\n`;
     });
-  }
+    return s;
+  };
 
-  if (data.education.length > 0) {
-    md += `## Education\n\n`;
-    data.education.forEach((edu) => {
-      md += `### ${edu.degree}\n\n`;
-      md += `**${edu.institution}**`;
-      if (edu.field) md += ` - ${edu.field}`;
-      md += `\n`;
-      md += `${edu.startDate} - ${edu.endDate}\n\n`;
-    });
-  }
-
-  if (data.skills.length > 0) {
-    md += `## Skills\n\n`;
-    md += data.skills.map((s) => s.name).filter(Boolean).join(", ");
-    md += "\n\n";
-  }
-
-  if (data.awards.length > 0) {
-    md += `## Achievements\n\n`;
-    data.awards.forEach((award) => {
-      md += `- **${award.title}**`;
-      if (award.description) md += ` - ${award.description}`;
-      md += "\n";
-    });
-    md += "\n";
-  }
-
-
-  if (data.publications && data.publications.length > 0) {
-    md += `## Publications\n\n`;
-    data.publications.forEach((pub) => {
-      md += `- **${pub.title}**`;
-      if (pub.publisher) md += `, ${pub.publisher}`;
-      if (pub.date) md += ` (${pub.date})`;
-      if (pub.link) md += ` [Link](${pub.link})`;
-      if (pub.description) md += ` - ${pub.description}`;
-      md += "\n";
-    });
-    md += "\n";
-  }
-
-  if (data.socialLinks && data.socialLinks.length > 0) {
-    md += `## Links\n\n`;
-    data.socialLinks.forEach((link) => {
-      md += `- [${link.platform}](${link.url.startsWith("http") ? link.url : `https://${link.url}`})\n`;
-    });
-    md += "\n";
-  }
-  // ...existing code...
-
-  if (data.languages.length > 0) {
-    md += `## Languages\n\n`;
-    const labels = ["Beginner", "Elementary", "Intermediate", "Proficient", "Fluent"];
-    data.languages.forEach((lang) => {
-      md += `- ${lang.name} (${labels[lang.proficiency - 1]})\n`;
-    });
-    md += "\n";
+  for (const meta of sectionsFlat(data)) {
+    const renderer = builtIn[meta.id];
+    if (renderer) {
+      md += renderer();
+    } else {
+      const custom = data.customSections.find((s) => s.id === meta.id);
+      if (custom) md += renderCustomSection(custom);
+    }
   }
 
   const blob = new Blob([md], { type: "text/markdown" });
@@ -133,6 +183,7 @@ function generateCleanHTML(data: CVData): string {
     .join("\n            ");
 
   const experienceHtml = data.experience
+    .filter((exp) => exp.jobTitle || exp.company)
     .map(
       (exp) => `
         <div class="entry">
@@ -156,6 +207,7 @@ function generateCleanHTML(data: CVData): string {
     .join("");
 
   const educationHtml = data.education
+    .filter((edu) => edu.degree || edu.institution)
     .map(
       (edu) => `
         <div class="entry">
@@ -169,6 +221,7 @@ function generateCleanHTML(data: CVData): string {
     .join("");
 
   const awardsHtml = data.awards
+    .filter((award) => award.title)
     .map(
       (award) => `
         <div class="achievement">
@@ -181,7 +234,22 @@ function generateCleanHTML(data: CVData): string {
     )
     .join("");
 
+  const referencesHtml = (data.references || [])
+    .filter((ref) => ref.name)
+    .map((ref) => {
+      const contact = [ref.phone, ref.email].filter((v): v is string => Boolean(v)).map(escapeHtml).join(" &middot; ");
+      return `
+        <div class="entry">
+          <h3>${escapeHtml(ref.name)}</h3>
+          ${ref.title ? `<div class="company">${escapeHtml(ref.title)}</div>` : ""}
+          ${ref.company ? `<div class="meta"><span class="meta-item">${escapeHtml(ref.company)}</span></div>` : ""}
+          ${contact ? `<div class="meta"><span class="meta-item">${contact}</span></div>` : ""}
+        </div>`;
+    })
+    .join("");
+
   const socialLinksHtml = (data.socialLinks || [])
+    .filter((link) => link.platform || link.url)
     .map((link) => {
       const resolved = resolveSocialLinkIcon(link.icon, link.platform);
       const iconHtml =
@@ -201,6 +269,7 @@ function generateCleanHTML(data: CVData): string {
 
   const labels = ["Beginner", "Elementary", "Intermediate", "Proficient", "Fluent"];
   const languagesHtml = data.languages
+    .filter((lang) => lang.name)
     .map(
       (lang) => `
         <div class="language">
@@ -440,15 +509,16 @@ function generateCleanHTML(data: CVData): string {
     <div class="two-col">
       <div class="col-left">
         ${data.personalInfo.summary ? `<h2>Summary</h2><p class="summary">${sanitizeAndRenderHtml(data.personalInfo.summary)}</p>` : ""}
-        ${data.education.length > 0 ? `<h2>Education</h2>${educationHtml}` : ""}
-        ${data.experience.length > 0 ? `<h2>Experience</h2>${experienceHtml}` : ""}
+        ${educationHtml ? `<h2>Education</h2>${educationHtml}` : ""}
+        ${experienceHtml ? `<h2>Experience</h2>${experienceHtml}` : ""}
       </div>
       <div class="col-right">
         ${data.skills.length > 0 ? `<h2>Skills</h2><div class="skills-grid">${skillsHtml}</div>` : ""}
-        ${data.awards.length > 0 ? `<h2>Key Achievements</h2>${awardsHtml}` : ""}
+        ${awardsHtml ? `<h2>Key Achievements</h2>${awardsHtml}` : ""}
         ${publicationsHtml ? `<h2>Publications</h2>${publicationsHtml}` : ""}
-        ${(data.socialLinks || []).length > 0 ? `<h2>Find Me Online</h2>${socialLinksHtml}` : ""}
-        ${data.languages.length > 0 ? `<h2>Languages</h2>${languagesHtml}` : ""}
+        ${referencesHtml ? `<h2>References</h2>${referencesHtml}` : ""}
+        ${socialLinksHtml ? `<h2>Find Me Online</h2>${socialLinksHtml}` : ""}
+        ${languagesHtml ? `<h2>Languages</h2>${languagesHtml}` : ""}
       </div>
     </div>
   </div>
@@ -578,7 +648,13 @@ function downloadFile(blob: Blob, filename: string) {
   URL.revokeObjectURL(url);
 }
 
-export async function exportToPDF(_htmlContent: string, data: CVData, filename: string, theme?: CVTheme) {
+export async function exportToPDF(
+  _htmlContent: string,
+  data: CVData,
+  filename: string,
+  theme?: CVTheme,
+  page2ExpIds?: string[],
+) {
   try {
     const [{ pdf }, { default: React }, { ProfessionalPDFDocument }] = await Promise.all([
       import("@react-pdf/renderer"),
@@ -586,7 +662,7 @@ export async function exportToPDF(_htmlContent: string, data: CVData, filename: 
       import("@/lib/pdf-professional"),
     ]);
 
-    const element = React.createElement(ProfessionalPDFDocument, { data, theme }) as any;
+    const element = React.createElement(ProfessionalPDFDocument, { data, theme, page2ExpIds }) as any;
     const blob = await pdf(element).toBlob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

@@ -7,11 +7,14 @@ interface EditableCardProps {
   children: ReactNode;
   onDelete: () => void;
   className?: string;
+  /** Rendered as data-entry-id so exports can mirror the canvas page split */
+  dataId?: string;
 }
 
-export function EditableCard({ children, onDelete, className = "" }: EditableCardProps) {
+export function EditableCard({ children, onDelete, className = "", dataId }: EditableCardProps) {
   return (
     <div
+      data-entry-id={dataId}
       className={`relative group/card rounded-sm hover:ring-1 hover:ring-teal-400 ring-offset-0 print:ring-0 ${className}`}
       style={{ breakInside: "avoid" }}
     >
