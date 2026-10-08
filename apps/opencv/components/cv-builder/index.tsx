@@ -22,6 +22,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SelectionProvider } from "@/lib/cv-selection";
+import { syncActiveDocument } from "@/lib/cv-documents";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 
 type DrawerType = "theme" | "history" | "sections" | null;
@@ -697,7 +698,7 @@ export function CVBuilder() {
 
     const hasSavedData = !!urlParams.get("data") || !!localStorage.getItem("cvBuilderData");
     // Nothing saved yet: start in the gallery rather than on an empty page.
-    if (!hasSavedData) router.replace("/templates");
+    if (!hasSavedData) router.replace("/");
 
     setIsInitialized(true);
   }, []);
@@ -723,6 +724,13 @@ export function CVBuilder() {
     url.searchParams.set("layout", selectedLayout);
     window.history.replaceState(null, "", url.toString());
   }, [selectedLayout]);
+
+  // Keep the library row for the open document in step with the editor's
+  // buffer, so the dashboard shows current templates and edit times.
+  useEffect(() => {
+    if (!isInitialized) return;
+    syncActiveDocument({ data, theme, layout: selectedLayout });
+  }, [data, theme, selectedLayout, isInitialized]);
 
   /* ── Handlers ── */
   const handleExport = (id: string) => {
@@ -787,7 +795,7 @@ export function CVBuilder() {
   };
 
   const handleNewCV = () => {
-    router.push("/templates");
+    router.push("/");
   };
 
   const handleRestore = (id: string) => {

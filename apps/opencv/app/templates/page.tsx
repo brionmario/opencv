@@ -14,6 +14,7 @@ import {
   type LayoutType,
 } from "@/lib/cv-layouts";
 import { starterTemplates } from "@/lib/starter-templates";
+import { activeDocumentId, createDocument, openDocument, syncActiveDocument } from "@/lib/cv-documents";
 import { TemplatePreview } from "@/components/cv-editor/template-preview";
 
 /** The sample the gallery falls back to when there is nothing saved yet, so a
@@ -62,7 +63,16 @@ export default function TemplatesPage() {
     try {
       localStorage.setItem(LAYOUT_STORAGE_KEY, selected);
     } catch {}
-    router.push(`/?layout=${selected}`);
+    // Switching template on an open document just restyles it; arriving here
+    // with nothing open (straight from the dashboard's "Pick a template")
+    // means this is where the document gets created.
+    if (activeDocumentId()) {
+      syncActiveDocument({ data, theme, layout: selected });
+    } else {
+      const doc = createDocument({ name: "New résumé", layout: selected, data, theme });
+      openDocument(doc.id);
+    }
+    router.push("/editor");
   };
 
   return (
@@ -70,7 +80,7 @@ export default function TemplatesPage() {
       <header className="cv-gallery-bar">
         <Link href="/" className="cv-btn cv-btn-ghost">
           <ArrowLeft size={15} />
-          Back to editor
+          Dashboard
         </Link>
         <img
           className="cv-gallery-logo"

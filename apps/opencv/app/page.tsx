@@ -1,5 +1,5 @@
-import { CVBuilder } from "@/components/cv-builder";
+import { Dashboard } from "@/components/dashboard";
 
 export default function Home() {
-  return <CVBuilder />;
+  return <Dashboard />;
 }
