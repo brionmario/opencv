@@ -9,6 +9,7 @@ import { EditableCard, AddItemButton } from "../editable-card";
 import { CustomSectionBlock } from "../custom-section-block";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsForColumn } from "@/lib/cv-sections";
+import { SectionFrame } from "@/lib/cv-selection";
 
 interface ProfessionalTemplateProps {
   data: CVData;
@@ -787,12 +788,16 @@ export function ProfessionalTemplate({
       <div className="flex px-10 pb-8 gap-7">
         {/* Left Column - 58% */}
         <div className="w-[58%] space-y-[18px]">
-          {leftSections.map((s) => renderSection(s.id))}
+          {leftSections.map((s) => (
+            <SectionFrame key={s.id} id={s.id}>{renderSection(s.id)}</SectionFrame>
+          ))}
         </div>
 
         {/* Right Column - 42% */}
         <div className="w-[42%] space-y-[18px]">
-          {rightSections.map((s) => renderSection(s.id))}
+          {rightSections.map((s) => (
+            <SectionFrame key={s.id} id={s.id}>{renderSection(s.id)}</SectionFrame>
+          ))}
         </div>
       </div>
     </div>

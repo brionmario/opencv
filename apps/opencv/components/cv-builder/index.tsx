@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef, useCallback } from "react";
+import { LAYOUTS, type LayoutType } from "@/lib/cv-layouts";
 import { useCVData } from "@/hooks/use-cv-data";
 import { exportToJSON, exportToMarkdown, exportToHTML, exportToPDF } from "@/lib/export-handler";
 import { LinkedInImport } from "./linkedin-import";
@@ -16,10 +17,13 @@ import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import {
   Download, FileJson, FileText, FileCode, Linkedin, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
-  Layers, Sparkles, X, ListOrdered,
+  Layers, Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal,
 } from "lucide-react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { SelectionProvider } from "@/lib/cv-selection";
+import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 
-type LayoutType = "professional" | "modern" | "classic" | "minimal";
 type DrawerType = "theme" | "history" | "sections" | null;
 type CanvasType = "soft" | "dots" | "grid" | "plain";
 
@@ -29,12 +33,6 @@ interface Toast {
   icon: "check" | "loader" | "linkedin" | "rotate" | "sparkles" | "download";
 }
 
-const LAYOUTS: { id: LayoutType; name: string; tag: string; desc: string }[] = [
-  { id: "professional", name: "Professional", tag: "popular",  desc: "Two-column with a tinted sidebar. The dependable choice for most roles." },
-  { id: "modern",       name: "Modern",       tag: "bold",     desc: "Accent header band and confident type. Stands out in a stack." },
-  { id: "classic",      name: "Classic",      tag: "timeless", desc: "Centered serif masthead. Formal, editorial, understated." },
-  { id: "minimal",      name: "Minimal",      tag: "quiet",    desc: "Single column, hairline rules, maximum whitespace." },
-];
 
 const EXPORTS = [
   { id: "pdf",  name: "PDF document", ext: ".pdf",  icon: <FileJson  size={17} />, desc: "Print-ready, ATS-friendly",   handler: "pdf"  },
@@ -243,173 +241,6 @@ function Toasts({ items }: { items: Toast[] }) {
           <span dangerouslySetInnerHTML={{ __html: t.msg }} />
         </div>
       ))}
-    </div>
-  );
-}
-
-/* ── Mini template previews (for modal thumbnails) ────────────────────────── */
-function MiniPreview({ layout }: { layout: string }) {
-  if (layout === "professional") {
-    return (
-      <div className="cv-mini-sidebar">
-        <div className="cv-mini-col side">
-          <div className="cv-mini-line accent" style={{ width: "70%" }} />
-          <div className="cv-mini-line" />
-          <div className="cv-mini-line" style={{ width: "80%" }} />
-          <div style={{ height: 8 }} />
-          <div className="cv-mini-line dark" style={{ width: "50%" }} />
-          <div className="cv-mini-line" />
-          <div className="cv-mini-line" style={{ width: "60%" }} />
-        </div>
-        <div className="cv-mini-col">
-          <div className="cv-mini-h" />
-          <div className="cv-mini-sub" />
-          <div className="cv-mini-line" />
-          <div className="cv-mini-line" />
-          <div className="cv-mini-line" style={{ width: "85%" }} />
-          <div style={{ height: 8 }} />
-          <div className="cv-mini-line" />
-          <div className="cv-mini-line" style={{ width: "70%" }} />
-        </div>
-      </div>
-    );
-  }
-  if (layout === "modern") {
-    return (
-      <div>
-        <div style={{ background: "#db2777", margin: "-11px -10px 9px", padding: "10px 10px 9px", opacity: 0.92 }}>
-          <div className="cv-mini-line" style={{ background: "#fff", width: "55%", opacity: 0.95 }} />
-          <div className="cv-mini-line" style={{ background: "#fff", width: "35%", opacity: 0.7, marginBottom: 0 }} />
-        </div>
-        <div className="cv-mini-line dark" style={{ width: "30%" }} />
-        <div className="cv-mini-line" />
-        <div className="cv-mini-line" style={{ width: "85%" }} />
-        <div style={{ height: 7 }} />
-        <div className="cv-mini-line dark" style={{ width: "30%" }} />
-        <div className="cv-mini-line" />
-        <div className="cv-mini-line" style={{ width: "75%" }} />
-      </div>
-    );
-  }
-  if (layout === "classic") {
-    return (
-      <div className="cv-mini-center">
-        <div className="cv-mini-h" style={{ width: "55%" }} />
-        <div className="cv-mini-sub" style={{ width: "35%" }} />
-        <div style={{ height: 1, background: "#e7e3db", margin: "0 0 10px" }} />
-        <div className="cv-mini-line dark" style={{ width: "28%", margin: "0 auto 7px" }} />
-        <div className="cv-mini-line" />
-        <div className="cv-mini-line" style={{ width: "90%" }} />
-        <div style={{ height: 7 }} />
-        <div className="cv-mini-line dark" style={{ width: "28%", margin: "0 auto 7px" }} />
-        <div className="cv-mini-line" style={{ width: "80%" }} />
-      </div>
-    );
-  }
-  return (
-    <div>
-      <div className="cv-mini-h" style={{ width: "45%" }} />
-      <div className="cv-mini-sub" style={{ width: "30%" }} />
-      <div className="cv-mini-line dark" style={{ width: "22%" }} />
-      <div className="cv-mini-line" />
-      <div className="cv-mini-line" />
-      <div className="cv-mini-line" style={{ width: "70%" }} />
-      <div style={{ height: 10 }} />
-      <div className="cv-mini-line dark" style={{ width: "22%" }} />
-      <div className="cv-mini-line" />
-      <div className="cv-mini-line" style={{ width: "60%" }} />
-    </div>
-  );
-}
-
-/* ── Template Picker Modal ────────────────────────────────────────────────── */
-function TemplatePickerModal({
-  current,
-  onPick,
-  onClose,
-}: {
-  current: LayoutType;
-  onPick: (id: LayoutType) => void;
-  onClose: () => void;
-}) {
-  const [hovered, setHovered] = useState<LayoutType>(current);
-
-  return (
-    <div className="cv-modal-scrim" onClick={onClose}>
-      <div
-        className="cv-modal"
-        role="dialog"
-        aria-modal="true"
-        aria-label="Choose a template"
-        onClick={(e) => e.stopPropagation()}
-      >
-        <div className="cv-modal-hd">
-          <div className="cv-modal-eyebrow">
-            <Sparkles size={15} />
-            Start a new résumé
-          </div>
-          <h2>Choose a template</h2>
-          <p>
-            Pick a starting point — you can switch any time, and your content carries over.
-            Every template is print-tested and ATS-friendly.
-          </p>
-          <button className="cv-iconbtn cv-modal-close" aria-label="Close" onClick={onClose}>
-            <X size={18} />
-          </button>
-        </div>
-
-        <div className="cv-modal-body">
-          <div className="cv-tpl-grid">
-            {LAYOUTS.map((t) => (
-              <button
-                key={t.id}
-                className="cv-tpl-card"
-                data-active={current === t.id ? "true" : undefined}
-                onMouseEnter={() => setHovered(t.id)}
-                onClick={() => onPick(t.id)}
-              >
-                <div className="cv-tpl-thumb">
-                  <div className="cv-tpl-thumb-inner">
-                    <MiniPreview layout={t.id} />
-                  </div>
-                  <div className="cv-tpl-pick">
-                    <span className="cv-tpl-pick-chip">
-                      <Check size={15} />
-                      Use this
-                    </span>
-                  </div>
-                </div>
-                <div className="cv-tpl-meta">
-                  <div className="row">
-                    <h4>{t.name}</h4>
-                    <span className="cv-tag">{t.tag}</span>
-                  </div>
-                  <p>{t.desc}</p>
-                </div>
-              </button>
-            ))}
-          </div>
-        </div>
-
-        <div className="cv-modal-ft">
-          <span className="cv-hint">
-            <Linkedin size={15} />
-            Already have a profile? Import from LinkedIn after picking.
-          </span>
-          <div style={{ display: "flex", gap: 10 }}>
-            <button className="cv-btn cv-btn-ghost" onClick={onClose}>
-              Maybe later
-            </button>
-            <button
-              className="cv-btn cv-btn-primary"
-              onClick={() => onPick(hovered || current)}
-            >
-              Start with {LAYOUTS.find((x) => x.id === (hovered || current))?.name}
-              <ChevronDown size={14} style={{ marginRight: -3, transform: "rotate(-90deg)" }} />
-            </button>
-          </div>
-        </div>
-      </div>
     </div>
   );
 }
@@ -757,12 +588,16 @@ export function CVBuilder() {
   const [selectedLayout, setSelectedLayout] = useState<LayoutType>("professional");
   const [showLinkedInImport, setShowLinkedInImport] = useState(false);
   const [drawer, setDrawer] = useState<DrawerType>(null);
-  const [showModal, setShowModal] = useState(false);
+  const router = useRouter();
   const [theme, setTheme] = useState<CVTheme>(DEFAULT_THEME);
   // Dark is the default register: the chrome recedes so the paper is the
   // only bright surface on the desk. A saved preference still wins.
   const [dark, setDark] = useState(true);
   const [canvas, setCanvas] = useState<CanvasType>("soft");
+  // Which section on the page the Properties dock is describing.
+  const [selectedSection, setSelectedSection] = useState<string | null>(null);
+  // The dock always shows Properties; this picks the tool panel under it.
+  const [tool, setTool] = useState<DrawerType>("sections");
   const [isInitialized, setIsInitialized] = useState(false);
   const isFirstLayoutSaveRef = useRef(true);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -861,7 +696,8 @@ export function CVBuilder() {
     if (savedCanvas) setCanvas(savedCanvas);
 
     const hasSavedData = !!urlParams.get("data") || !!localStorage.getItem("cvBuilderData");
-    if (!hasSavedData) setShowModal(true);
+    // Nothing saved yet: start in the gallery rather than on an empty page.
+    if (!hasSavedData) router.replace("/templates");
 
     setIsInitialized(true);
   }, []);
@@ -951,14 +787,7 @@ export function CVBuilder() {
   };
 
   const handleNewCV = () => {
-    setShowModal(true);
-  };
-
-  const handleModalPick = (id: LayoutType) => {
-    setSelectedLayout(id);
-    setShowModal(false);
-    const name = LAYOUTS.find((x) => x.id === id)?.name;
-    pushToast(`Started with the <b>${name}</b> template`, "sparkles");
+    router.push("/templates");
   };
 
   const handleRestore = (id: string) => {
@@ -1015,6 +844,7 @@ export function CVBuilder() {
 
   // professional/modern render two columns; classic/minimal flow as one
   const layoutColumns: 1 | 2 = selectedLayout === "professional" || selectedLayout === "modern" ? 2 : 1;
+  const pageCount = Math.max(1, Math.ceil((paperHeight ?? PAGE_H_PX) / PAGE_H_PX));
 
   const renderTemplate = () => {
     switch (selectedLayout) {
@@ -1031,38 +861,21 @@ export function CVBuilder() {
   return (
     <div className="cv-app" data-cv-density="comfortable">
 
-      {/* ── Top Bar ── */}
+      {/* ── Options bar ── */}
       <header className="cv-bar" role="banner">
-        {/* Left zone: brand */}
         <div className="cv-bar-zone left">
           <Brand />
         </div>
 
-        {/* Center zone: template switcher */}
         <div className="cv-bar-zone center">
           <TemplateSeg value={selectedLayout} onChange={handleLayoutChange} />
         </div>
 
-        {/* Right zone: actions */}
         <div className="cv-bar-zone right">
-          <IconBtn tip="Import from LinkedIn" onClick={handleLinkedInClick}>
-            <Linkedin size={18} />
-          </IconBtn>
-          <IconBtn
-            tip="Sections"
-            active={drawer === "sections"}
-            onClick={() => setDrawer((d) => (d === "sections" ? null : "sections"))}
-          >
-            <ListOrdered size={18} />
-          </IconBtn>
-          <IconBtn
-            tip="Version history"
-            active={drawer === "history"}
-            onClick={() => setDrawer((d) => (d === "history" ? null : "history"))}
-          >
-            <History size={18} />
-          </IconBtn>
-          <span className="cv-divider-v" />
+          <Link className="cv-btn" href="/templates">
+            <LayoutTemplate size={15} />
+            Templates
+          </Link>
           <button className="cv-btn" onClick={handleNewCV}>
             <Plus size={15} />
             New
@@ -1077,8 +890,40 @@ export function CVBuilder() {
         </div>
       </header>
 
-      {/* ── Desk Canvas ── */}
-      <main className="cv-desk" data-canvas={canvas}>
+      {/* ── Tool rail ── */}
+      <nav className="cv-rail" aria-label="Tools">
+        <IconBtn
+          tip="Properties"
+          active={tool === null}
+          onClick={() => setTool(null)}
+        >
+          <SlidersHorizontal size={17} />
+        </IconBtn>
+        <span className="cv-rail-sep" />
+        <IconBtn tip="Sections" active={tool === "sections"} onClick={() => setTool("sections")}>
+          <ListOrdered size={17} />
+        </IconBtn>
+        <IconBtn tip="Theme" active={tool === "theme"} onClick={() => setTool("theme")}>
+          <Palette size={17} />
+        </IconBtn>
+        <IconBtn tip="Version history" active={tool === "history"} onClick={() => setTool("history")}>
+          <History size={17} />
+        </IconBtn>
+        <span className="cv-rail-sep" />
+        <IconBtn tip="Import from LinkedIn" onClick={handleLinkedInClick}>
+          <Linkedin size={17} />
+        </IconBtn>
+      </nav>
+
+      {/* ── Desk canvas ── */}
+      <main
+        className="cv-desk"
+        data-canvas={canvas}
+        onClick={(e) => {
+          // A click on the desk itself (not on the paper) clears the selection.
+          if (e.target === e.currentTarget) setSelectedSection(null);
+        }}
+      >
         <CanvasPicker value={canvas} onChange={setCanvas} />
         <div className="cv-paper-wrap">
           <div
@@ -1094,68 +939,75 @@ export function CVBuilder() {
               transition: "background 0.3s, color 0.3s",
             }}
           >
-            <div ref={previewContentRef}>{renderTemplate()}</div>
+            <div ref={previewContentRef}>
+              <SelectionProvider selectedId={selectedSection} onSelect={setSelectedSection}>
+                {renderTemplate()}
+              </SelectionProvider>
+            </div>
           </div>
           <PageBreakOverlay targetRef={previewRef} />
         </div>
       </main>
 
-      {/* ── Theme Drawer ── */}
-      {drawer === "theme" && (
-        <ThemeCustomizer
-          theme={theme}
-          onChange={setTheme}
-          onClose={() => setDrawer(null)}
-        />
-      )}
+      {/* ── Right dock ── */}
+      <aside className="cv-dock" aria-label="Panels">
+        <section className="cv-dock-panel">
+          <div className="cv-dock-hd">Properties</div>
+          <div className="cv-dock-body">
+            <PropertiesPanel
+              data={data}
+              selectedId={selectedSection}
+              layoutColumns={layoutColumns}
+              onToggleHidden={toggleSectionHidden}
+              onMove={moveSection}
+              onSetColumn={setSectionColumn}
+              onDeleteCustomSection={deleteCustomSection}
+            />
+          </div>
+        </section>
 
-      {/* ── Floating theme button (visible when drawer is closed) ── */}
-      {drawer !== "theme" && (
-        <button
-          className="cv-theme-fab"
-          aria-label="Open theme customizer"
-          onClick={() => setDrawer("theme")}
-        >
-          <Palette size={17} />
-          Theme
-        </button>
-      )}
+        {tool && (
+          <section className="cv-dock-panel grow">
+            {tool === "sections" && (
+              <SectionsPanel
+                data={data}
+                layoutColumns={layoutColumns}
+                onToggleHidden={toggleSectionHidden}
+                onMove={moveSection}
+                onSetColumn={setSectionColumn}
+                onAddCustomSection={addCustomSection}
+                onDeleteCustomSection={deleteCustomSection}
+                onClose={() => setTool(null)}
+              />
+            )}
+            {tool === "theme" && (
+              <ThemeCustomizer theme={theme} onChange={setTheme} onClose={() => setTool(null)} />
+            )}
+            {tool === "history" && (
+              <HistoryDrawer
+                versions={versions}
+                onClose={() => setTool(null)}
+                onRestore={handleRestore}
+                onDelete={removeSavepoint}
+                onRename={updateSavepointLabel}
+                onExport={handleExportVersion}
+                onCreateSavepoint={handleCreateSavepoint}
+              />
+            )}
+          </section>
+        )}
+      </aside>
 
-      {/* ── History Drawer ── */}
-      {drawer === "history" && (
-        <HistoryDrawer
-          versions={versions}
-          onClose={() => setDrawer(null)}
-          onRestore={handleRestore}
-          onDelete={removeSavepoint}
-          onRename={updateSavepointLabel}
-          onExport={handleExportVersion}
-          onCreateSavepoint={handleCreateSavepoint}
-        />
-      )}
-
-      {/* ── Sections Drawer ── */}
-      {drawer === "sections" && (
-        <SectionsPanel
-          data={data}
-          layoutColumns={layoutColumns}
-          onToggleHidden={toggleSectionHidden}
-          onMove={moveSection}
-          onSetColumn={setSectionColumn}
-          onAddCustomSection={addCustomSection}
-          onDeleteCustomSection={deleteCustomSection}
-          onClose={() => setDrawer(null)}
-        />
-      )}
-
-      {/* ── Template Picker Modal ── */}
-      {showModal && (
-        <TemplatePickerModal
-          current={selectedLayout}
-          onPick={handleModalPick}
-          onClose={() => setShowModal(false)}
-        />
-      )}
+      {/* ── Status bar ── */}
+      <footer className="cv-status">
+        <span><b>{LAYOUTS.find((l) => l.id === selectedLayout)?.name}</b></span>
+        <span className="sep" />
+        <span>A4 · {pageCount} page{pageCount === 1 ? "" : "s"}</span>
+        <span className="sep" />
+        <span>{layoutColumns === 2 ? "2 columns" : "1 column"}</span>
+        <span className="grow" />
+        <span>{selectedSection ? `selected: ${selectedSection}` : "no selection"}</span>
+      </footer>
 
       {/* ── LinkedIn Import Modal ── */}
       <LinkedInImport

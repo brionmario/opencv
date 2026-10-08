@@ -9,6 +9,7 @@ import { EditableCard, AddItemButton } from "../editable-card";
 import { CustomSectionBlock } from "../custom-section-block";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsFlat } from "@/lib/cv-sections";
+import { SectionFrame } from "@/lib/cv-selection";
 
 interface ClassicWysiwygTemplateProps {
   data: CVData;
@@ -630,7 +631,9 @@ export function ClassicWysiwygTemplate({
           </div>
         </div>
 
-        {sectionsFlat(data).map((s) => renderSection(s.id))}
+        {sectionsFlat(data).map((s) => (
+          <SectionFrame key={s.id} id={s.id}>{renderSection(s.id)}</SectionFrame>
+        ))}
       </div>
     </div>
   );

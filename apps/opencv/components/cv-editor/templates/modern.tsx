@@ -9,6 +9,7 @@ import { EditableCard, AddItemButton } from "../editable-card";
 import { CustomSectionBlock } from "../custom-section-block";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsForColumn } from "@/lib/cv-sections";
+import { SectionFrame } from "@/lib/cv-selection";
 
 interface ModernWysiwygTemplateProps {
   data: CVData;
@@ -647,12 +648,16 @@ export function ModernWysiwygTemplate({
         <div className="grid grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="col-span-2 space-y-8">
-            {sectionsForColumn(data, "left").map((s) => renderSection(s.id))}
+            {sectionsForColumn(data, "left").map((s) => (
+              <SectionFrame key={s.id} id={s.id}>{renderSection(s.id)}</SectionFrame>
+            ))}
           </div>
 
           {/* Sidebar */}
           <div className="space-y-8">
-            {sectionsForColumn(data, "right").map((s) => renderSection(s.id))}
+            {sectionsForColumn(data, "right").map((s) => (
+              <SectionFrame key={s.id} id={s.id}>{renderSection(s.id)}</SectionFrame>
+            ))}
           </div>
         </div>
       </div>
