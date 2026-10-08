@@ -1,4 +1,5 @@
 import type { CVData } from "./cv-builder-types";
+import { DEFAULT_SECTION_ORDER } from "./cv-builder-types";
 
 export interface StarterTemplate {
   id: string;
@@ -32,6 +33,8 @@ const emptyBase: CVData = {
   publications: [],
   languages: [],
   socialLinks: [],
+  customSections: [],
+  sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
 export const starterTemplates: StarterTemplate[] = [
@@ -41,79 +44,85 @@ export const starterTemplates: StarterTemplate[] = [
     description: "Two-column layout with photo, skills grid, and achievements",
     icon: "P",
     defaultLayout: "professional",
+    // Fictional sample résumé. It intentionally fills every section the
+    // Professional layout can render (photo, rich-text summary, a bulleted
+    // experience with an inline link, three education entries, a skills grid,
+    // achievements, publications, references and social links) so the canvas
+    // and the PDF/HTML exports both have something to exercise.
     data: {
       ...emptyBase,
       personalInfo: {
-        fullName: "Brion Silva",
+        fullName: "Jordan Avery",
         jobTitle: "Technical Lead",
-        email: "brionbmp@gmail.com",
-        phone: "+94777933830",
+        email: "jordan.avery@example.com",
+        phone: "+94 (77) 123 4567",
         location: "Colombo, Sri Lanka",
-        website: "www.brionmario.com",
+        website: "www.jordanavery.dev",
         summary:
-          "<strong>Fullstack Engineer with 6+ years of experience</strong> in building scalable, high-performant and secure software solutions. Proficient in <strong>Frontend</strong> development, <strong>Backend</strong> development and <strong>Experience Design</strong>. Currently contributing to WSO2's IAM products, focusing on building secure and reliable platforms with <strong>Developer & User experience</strong> in mind.",
+          "<strong>Fullstack Engineer with 7+ years of experience</strong> in building scalable, high-performant and secure software solutions. Proficient in <strong>Frontend</strong> development, <strong>Backend</strong> development and <strong>Experience Design</strong>. Currently contributing to identity and access management products, focusing on building secure and reliable platforms with <strong>Developer & User experience</strong> in mind.",
+        avatar: "/placeholder-user.jpg",
       },
       experience: [
         {
           id: "exp-1",
           jobTitle: "Technical Lead",
-          company: "WSO2",
+          company: "Northwind Labs",
           startDate: "02/2025",
           endDate: "Present",
           currentlyWorking: true,
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Was part of the IAM Core team overlooking the frontend development.",
-            "Currently working on the WSO2's next generation IAM Platform i.e <a href='https://github.com/asgardeo/thunder' target='_blank'>Project Thunder</a>"
+            "Handled the open-source release process as part of the platform core team.",
+            "Currently working on the next generation identity platform <a href='https://example.com' target='_blank'>Lighthouse</a>"
           ],
         },
         {
           id: "exp-2",
           jobTitle: "Associate Technical Lead",
-          company: "WSO2",
+          company: "Northwind Labs",
           startDate: "05/2023",
           endDate: "02/2025",
           currentlyWorking: false,
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Designed & implemented the system architecture of <strong>WSO2 Design System, Oxygen UI</strong>.",
-            "Lead the Developer experience team maintaining the Asgardeo SDKs."
+            "Designed & implemented the system architecture of the <strong>company design system</strong>.",
+            "Lead the developer experience team maintaining the public SDKs."
           ],
         },
         {
           id: "exp-3",
           jobTitle: "Senior Software Engineer",
-          company: "WSO2",
+          company: "Northwind Labs",
           startDate: "06/2021",
           endDate: "05/2023",
           currentlyWorking: false,
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Implemented the key <strong>Branding feature</strong> of Asgardeo.",
-            "Among the <strong>top 5%</strong> of high performers at WSO2 for the year 2022.",
+            "Implemented the key <strong>Branding feature</strong> of the customer-facing console.",
+            "Among the <strong>top 5%</strong> of high performers for the year 2022.",
           ],
         },
         {
           id: "exp-4",
           jobTitle: "Software Engineer",
-          company: "WSO2",
+          company: "Northwind Labs",
           startDate: "07/2019",
           endDate: "06/2021",
           currentlyWorking: false,
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Implemented Application Management, Consent Management and many more features in WSO2 Identity Server portals.",
-            "Involved in demos like <strong>Forrester 2020</strong>, by developing frontend apps.",
+            "Implemented application management, consent management and many more features in the admin portals.",
+            "Involved in flagship analyst demos, by developing frontend apps.",
           ],
         },
         {
           id: "exp-5",
           jobTitle: "Trainee Associate Software Engineer",
-          company: "Zone24x7",
+          company: "Vertex Systems",
           startDate: "07/2017",
           endDate: "07/2018",
           currentlyWorking: false,
@@ -121,7 +130,7 @@ export const starterTemplates: StarterTemplate[] = [
           description: "",
           highlights: [
             "Built a compile-time plugin system for the Angular portals using Angular DevKit.",
-            "Worked on Java & .NET services of Matrix247 Agents.",
+            "Worked on Java & .NET services of the field-agent platform.",
           ],
         },
       ],
@@ -129,10 +138,31 @@ export const starterTemplates: StarterTemplate[] = [
         {
           id: "edu-1",
           degree: "B.ENG(Hons) Software Engineering",
-          institution: "University of Westminster",
+          institution: "Riverside Institute of Technology",
           field: "Software Engineering",
           startDate: "09/2015",
           endDate: "07/2019",
+          gpa: "1st Class Honors with an average of 84.8%",
+          description: "",
+        },
+        {
+          id: "edu-2",
+          degree: "Secondary School Diploma",
+          institution: "Lakeside College, Colombo, Sri Lanka",
+          field: "Secondary Education",
+          startDate: "2012",
+          endDate: "",
+          gpa: "1A 1C 2S",
+          description: "",
+        },
+        {
+          id: "edu-3",
+          degree: "Secondary School Certificate",
+          institution: "Lakeside College, Colombo, Sri Lanka",
+          field: "Secondary Education",
+          startDate: "2009",
+          endDate: "",
+          gpa: "5A 1B C3",
           description: "",
         },
       ],
@@ -159,54 +189,71 @@ export const starterTemplates: StarterTemplate[] = [
       awards: [
         {
           id: "aw-1",
-          title: "University of Westminster Award",
-          issuer: "University of Westminster",
+          title: "Riverside Institute Award",
+          issuer: "Riverside Institute of Technology",
           date: "2019",
           description: "Batch all-rounder for the academic year 2018/2019.",
         },
         {
           id: "aw-2",
-          title: "National Best Quality ICT Awards NBQSA 2017",
-          issuer: "NBQSA",
+          title: "National Software Quality Awards 2017",
+          issuer: "National Software Quality Awards",
           date: "2017",
-          description: "Awarded a merit prize for the Safe Plant project.",
+          description: "Awarded a merit prize for the SafeGrid project.",
         },
         {
           id: "aw-3",
-          title: "Innoserve Awards 2017 Taipei, Taiwan",
-          issuer: "Innoserve",
+          title: "International Innovation Awards 2017",
+          issuer: "International Innovation Awards",
           date: "2017",
-          description: "Won the silver award in the international category for the project Safe Plant.",
+          description: "Won the silver award in the international category for the project SafeGrid.",
         },
       ],
       socialLinks: [
-        { id: "sl-1", platform: "GitHub", url: "www.github.com/brionmario" },
-        { id: "sl-2", platform: "Portfolio", url: "www.brionmario.com" },
-        { id: "sl-3", platform: "LinkedIn", url: "www.linkedin.com/in/brionmario" },
-        { id: "sl-4", platform: "Medium", url: "www.medium.com/@brionmario" },
-        { id: "sl-5", platform: "ResearchGate", url: "www.researchgate.net/profile/Brion-Mario" },
+        { id: "sl-1", platform: "GitHub", url: "www.github.com/jordanavery" },
+        { id: "sl-2", platform: "Portfolio", url: "www.jordanavery.dev" },
+        { id: "sl-3", platform: "LinkedIn", url: "www.linkedin.com/in/jordanavery" },
+        { id: "sl-4", platform: "Medium", url: "www.medium.com/@jordanavery" },
+        { id: "sl-5", platform: "ResearchGate", url: "www.researchgate.net/profile/Jordan-Avery" },
       ],
-      languages: [{ name: "English", proficiency: 4 }, { name: "Sinhala", proficiency: 5 }],
+      languages: [],
       projects: [],
       certifications: [],
-      references: [],
+      references: [
+        {
+          id: "ref-1",
+          name: "Morgan Ellis",
+          title: "Chief Operating Officer (COO)",
+          company: "Brightpath Ltd",
+          email: "morgan.ellis@example.com",
+          phone: "+94 (76) 234 5678",
+        },
+        {
+          id: "ref-2",
+          name: "Priya Raman",
+          title: "Senior Lecturer",
+          company: "Riverside Institute of Technology",
+          email: "priya.raman@example.edu",
+          phone: "+94 (77) 345 6789",
+        },
+      ],
       volunteering: [],
       strengths: [],
       interests: [],
       publications: [{
         id: "pub-1",
-        title: "Early Prediction of Cybersickness in Virtual, Augmented & Mixed Reality Applications: A Review",
-        publisher: "International Conference for Convergence of Technology (I2CT)",
+        title: "Early Prediction of Motion Sickness in Mixed Reality Applications: A Review",
+        publisher: "International Conference on Emerging Technology (ICET)",
         date: "2019",
-        link: "https://ieeexplore.ieee.org/document/9033650",
+        link: "https://example.com/publications/mixed-reality-review",
         description: "",
       },
     {
         id: "pub-2",
-        title: "Kidney Transplant aftercare with IOT Medical Wearables",
+        title: "Post-Transplant Aftercare with IoT Medical Wearables",
         publisher: "",
         date: "2017",
-        link: "https://www.researchgate.net/publication/327653042_Kidney_Transplant_aftercare_with_IOT_Medical_Wearables",
+        link: "https://example.com/publications/iot-medical-wearables",
         description: "",
     }],
     },
@@ -246,7 +293,7 @@ export const starterTemplates: StarterTemplate[] = [
         location: "San Francisco, CA",
         website: "alexjohnson.dev",
         summary:
-          "Full-stack software engineer with <strong>6+ years of experience</strong> building web applications at scale. Expertise in <em>React, Node.js</em>, and cloud infrastructure. Passionate about clean architecture, developer experience, and mentoring teams.",
+          "Full-stack software engineer with <strong>7+ years of experience</strong> building web applications at scale. Expertise in <em>React, Node.js</em>, and cloud infrastructure. Passionate about clean architecture, developer experience, and mentoring teams.",
       },
       experience: [
         {

@@ -7,6 +7,7 @@ import { Download, FileJson, FileText } from "lucide-react";
 
 export function CV() {
   const [isExporting, setIsExporting] = useState(false);
+  const fileBase = `${cvData.personal.name.replace(/\s+/g, "_")}_CV`;
 
   const handlePDFExport = () => {
     setIsExporting(true);
@@ -16,7 +17,7 @@ export function CV() {
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url;
-      link.download = "Brion_Mario_CV.html";
+      link.download = `${fileBase}.html`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -39,7 +40,7 @@ export function CV() {
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Brion Mario - CV</title>
+  <title>${cvData.personal.name} - CV</title>
   <style>
     body {
       font-family: Inter, Arial, Helvetica, sans-serif;
@@ -67,7 +68,7 @@ export function CV() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "Brion_Mario_CV.html";
+      a.download = `${fileBase}.html`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
@@ -83,7 +84,7 @@ export function CV() {
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
-      a.download = "Brion_Mario_CV.json";
+      a.download = `${fileBase}.json`;
       a.click();
       URL.revokeObjectURL(url);
     } catch (error) {
