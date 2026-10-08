@@ -45,10 +45,12 @@ const EXPORTS = [
 
 /* ── Canvas picker (lives on the desk) ───────────────────────────────────── */
 const CANVAS_OPTIONS: { id: CanvasType; label: string; style: React.CSSProperties }[] = [
-  { id: "soft",  label: "Studio", style: { background: "radial-gradient(120% 90% at 50% 0%, #fff, #ece6dc)" } },
-  { id: "dots",  label: "Dots",   style: { backgroundColor: "#f1ece3", backgroundImage: "radial-gradient(#c9c2b4 1px, transparent 1.2px)", backgroundSize: "6px 6px" } },
-  { id: "grid",  label: "Grid",   style: { backgroundColor: "#f3eee5", backgroundImage: "linear-gradient(#ddd7ca 1px,transparent 1px),linear-gradient(90deg,#ddd7ca 1px,transparent 1px)", backgroundSize: "7px 7px" } },
-  { id: "plain", label: "Plain",  style: { background: "#eee8de" } },
+  // Swatches track the chrome tokens so they stay legible in either theme,
+  // and each pattern is scaled up enough to read at 24px.
+  { id: "soft",  label: "Studio", style: { background: "linear-gradient(180deg, var(--cv-surface-3), var(--cv-desk))" } },
+  { id: "dots",  label: "Dots",   style: { backgroundColor: "var(--cv-desk)", backgroundImage: "radial-gradient(var(--cv-text-3) 1px, transparent 1.2px)", backgroundSize: "6px 6px" } },
+  { id: "grid",  label: "Grid",   style: { backgroundColor: "var(--cv-desk)", backgroundImage: "linear-gradient(var(--cv-border-2) 1px,transparent 1px),linear-gradient(90deg,var(--cv-border-2) 1px,transparent 1px)", backgroundSize: "7px 7px" } },
+  { id: "plain", label: "Plain",  style: { background: "var(--cv-desk)" } },
 ];
 
 function CanvasPicker({ value, onChange }: { value: CanvasType; onChange: (v: CanvasType) => void }) {
@@ -275,7 +277,7 @@ function MiniPreview({ layout }: { layout: string }) {
   if (layout === "modern") {
     return (
       <div>
-        <div style={{ background: "var(--cv-accent)", margin: "-11px -10px 9px", padding: "10px 10px 9px", opacity: 0.92 }}>
+        <div style={{ background: "#db2777", margin: "-11px -10px 9px", padding: "10px 10px 9px", opacity: 0.92 }}>
           <div className="cv-mini-line" style={{ background: "#fff", width: "55%", opacity: 0.95 }} />
           <div className="cv-mini-line" style={{ background: "#fff", width: "35%", opacity: 0.7, marginBottom: 0 }} />
         </div>
@@ -757,7 +759,9 @@ export function CVBuilder() {
   const [drawer, setDrawer] = useState<DrawerType>(null);
   const [showModal, setShowModal] = useState(false);
   const [theme, setTheme] = useState<CVTheme>(DEFAULT_THEME);
-  const [dark, setDark] = useState(false);
+  // Dark is the default register: the chrome recedes so the paper is the
+  // only bright surface on the desk. A saved preference still wins.
+  const [dark, setDark] = useState(true);
   const [canvas, setCanvas] = useState<CanvasType>("soft");
   const [isInitialized, setIsInitialized] = useState(false);
   const isFirstLayoutSaveRef = useRef(true);
