@@ -26,6 +26,7 @@ import { assetPath } from "@/lib/asset-path";
 import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 import { LayoutMap } from "@/components/cv-editor/layout-map";
+import { SectionPicker } from "@/components/cv-editor/section-picker";
 
 type DrawerType = "theme" | "history" | "sections" | null;
 type CanvasType = "soft" | "dots" | "grid" | "plain";
@@ -604,6 +605,7 @@ export function CVBuilder() {
   const [selectedSection, setSelectedSection] = useState<string | null>(null);
   // The dock always shows Properties; this picks the tool panel under it.
   const [tool, setTool] = useState<DrawerType>("sections");
+  const [pickingSection, setPickingSection] = useState(false);
   const [isInitialized, setIsInitialized] = useState(false);
   const isFirstLayoutSaveRef = useRef(true);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -978,7 +980,11 @@ export function CVBuilder() {
             }}
           >
             <div ref={previewContentRef}>
-              <SelectionProvider selectedId={selectedSection} onSelect={setSelectedSection}>
+              <SelectionProvider
+                selectedId={selectedSection}
+                onSelect={setSelectedSection}
+                onOpenLayout={(id) => { setSelectedSection(id); setTool("sections"); }}
+              >
                 {renderTemplate()}
               </SelectionProvider>
             </div>
@@ -989,21 +995,6 @@ export function CVBuilder() {
 
       {/* ── Right dock ── */}
       <aside className="cv-dock" aria-label="Panels">
-        <section className="cv-dock-panel">
-          <div className="cv-dock-hd">Properties</div>
-          <div className="cv-dock-body">
-            <PropertiesPanel
-              data={data}
-              selectedId={selectedSection}
-              layoutColumns={layoutColumns}
-              onToggleHidden={toggleSectionHidden}
-              onMove={moveSection}
-              onSetColumn={setSectionColumn}
-              onDeleteCustomSection={deleteCustomSection}
-            />
-          </div>
-        </section>
-
         {tool && (
           <section className="cv-dock-panel grow">
             {tool === "sections" && (
@@ -1019,7 +1010,7 @@ export function CVBuilder() {
                     onSelect={setSelectedSection}
                     onPlace={placeSection}
                     onToggleHidden={toggleSectionHidden}
-                    onAddSection={() => addCustomSection("New section")}
+                    onAddSection={() => setPickingSection(true)}
                   />
                 </div>
               </>
@@ -1040,6 +1031,21 @@ export function CVBuilder() {
             )}
           </section>
         )}
+
+        <section className="cv-dock-panel">
+          <div className="cv-dock-hd">Properties</div>
+          <div className="cv-dock-body">
+            <PropertiesPanel
+              data={data}
+              selectedId={selectedSection}
+              layoutColumns={layoutColumns}
+              onToggleHidden={toggleSectionHidden}
+              onMove={moveSection}
+              onSetColumn={setSectionColumn}
+              onDeleteCustomSection={deleteCustomSection}
+            />
+          </div>
+        </section>
       </aside>
 
       {/* ── Status bar ── */}
@@ -1052,6 +1058,20 @@ export function CVBuilder() {
         <span className="grow" />
         <span>{selectedSection ? `selected: ${selectedSection}` : "no selection"}</span>
       </footer>
+
+      {/* ── Section catalogue ── */}
+      {pickingSection && (
+        <SectionPicker
+          data={data}
+          onAddBuiltIn={(id) => {
+            // Built-ins always exist in sectionOrder; "adding" one reveals it.
+            toggleSectionHidden(id);
+            setSelectedSection(id);
+          }}
+          onAddCustom={(title) => addCustomSection(title)}
+          onClose={() => setPickingSection(false)}
+        />
+      )}
 
       {/* ── LinkedIn Import Modal ── */}
       <LinkedInImport

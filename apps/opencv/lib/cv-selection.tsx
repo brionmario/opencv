@@ -1,6 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useMemo, useCallback } from "react";
+import { Settings2 } from "lucide-react";
 
 /**
  * Canvas selection.
@@ -19,6 +20,8 @@ import React, { createContext, useContext, useMemo, useCallback } from "react";
 interface SelectionCtx {
   selectedId: string | null;
   select: (id: string | null) => void;
+  /** Opens the Layout dock focused on a section, from the page itself. */
+  openLayout?: (id: string) => void;
   /** False inside read-only renders (the template gallery preview). */
   enabled: boolean;
 }
@@ -32,17 +35,19 @@ const Ctx = createContext<SelectionCtx>({
 export function SelectionProvider({
   selectedId,
   onSelect,
+  onOpenLayout,
   enabled = true,
   children,
 }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
+  onOpenLayout?: (id: string) => void;
   enabled?: boolean;
   children: React.ReactNode;
 }) {
   const value = useMemo<SelectionCtx>(
-    () => ({ selectedId, select: onSelect, enabled }),
-    [selectedId, onSelect, enabled]
+    () => ({ selectedId, select: onSelect, openLayout: onOpenLayout, enabled }),
+    [selectedId, onSelect, onOpenLayout, enabled]
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -60,7 +65,7 @@ export function useSelection() {
  * that originated in one of those is left alone.
  */
 export function SectionFrame({ id, children }: { id: string; children: React.ReactNode }) {
-  const { selectedId, select, enabled } = useSelection();
+  const { selectedId, select, openLayout, enabled } = useSelection();
 
   const onClick = useCallback(
     (e: React.MouseEvent) => {
@@ -83,6 +88,17 @@ export function SectionFrame({ id, children }: { id: string; children: React.Rea
       onClick={onClick}
     >
       {children}
+      {openLayout ? (
+        <button
+          type="button"
+          className="cv-section-cog print:hidden"
+          title="Layout"
+          aria-label="Open layout for this section"
+          onClick={(e) => { e.stopPropagation(); select(id); openLayout(id); }}
+        >
+          <Settings2 size={13} />
+        </button>
+      ) : null}
     </div>
   );
 }
