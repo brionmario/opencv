@@ -10,7 +10,6 @@ import { ModernWysiwygTemplate } from "@/components/cv-editor/templates/modern";
 import { ClassicWysiwygTemplate } from "@/components/cv-editor/templates/classic";
 import { MinimalWysiwygTemplate } from "@/components/cv-editor/templates/minimal";
 import { ThemeCustomizer } from "@/components/cv-editor/theme-customizer";
-import { SectionsPanel } from "@/components/cv-editor/sections-panel";
 import type { CVVersion } from "@/lib/cv-versioning";
 import type { CVTheme } from "@/lib/cv-builder-types";
 import { DEFAULT_THEME } from "@/lib/cv-builder-types";
@@ -26,6 +25,7 @@ import { syncActiveDocument } from "@/lib/cv-documents";
 import { assetPath } from "@/lib/asset-path";
 import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
+import { LayoutMap } from "@/components/cv-editor/layout-map";
 
 type DrawerType = "theme" | "history" | "sections" | null;
 type CanvasType = "soft" | "dots" | "grid" | "plain";
@@ -662,6 +662,7 @@ export function CVBuilder() {
     toggleSectionHidden,
     setSectionColumn,
     moveSection,
+    placeSection,
     updateField,
     resetData,
     importData,
@@ -857,6 +858,32 @@ export function CVBuilder() {
   const layoutColumns: 1 | 2 = selectedLayout === "professional" || selectedLayout === "modern" ? 2 : 1;
   const pageCount = Math.max(1, Math.ceil((paperHeight ?? PAGE_H_PX) / PAGE_H_PX));
 
+  // The layout map sizes its blocks from what the page actually renders, so
+  // it can never imply a different document than the one on screen.
+  const [sectionHeights, setSectionHeights] = useState<Record<string, number>>({});
+  useEffect(() => {
+    const root = previewContentRef.current;
+    if (!root) return;
+    const measure = () => {
+      const next: Record<string, number> = {};
+      root.querySelectorAll<HTMLElement>("[data-cv-section]").forEach((el) => {
+        const id = el.dataset.cvSection;
+        if (id) next[id] = el.offsetHeight;
+      });
+      setSectionHeights((prev) => {
+        const same =
+          Object.keys(next).length === Object.keys(prev).length &&
+          Object.keys(next).every((k) => prev[k] === next[k]);
+        return same ? prev : next;
+      });
+    };
+    measure();
+    const ro = new ResizeObserver(measure);
+    ro.observe(root);
+    root.querySelectorAll("[data-cv-section]").forEach((el) => ro.observe(el));
+    return () => ro.disconnect();
+  }, [data, selectedLayout, theme]);
+
   const renderTemplate = () => {
     switch (selectedLayout) {
       case "professional": return <ProfessionalTemplate {...templateProps} />;
@@ -980,16 +1007,22 @@ export function CVBuilder() {
         {tool && (
           <section className="cv-dock-panel grow">
             {tool === "sections" && (
-              <SectionsPanel
-                data={data}
-                layoutColumns={layoutColumns}
-                onToggleHidden={toggleSectionHidden}
-                onMove={moveSection}
-                onSetColumn={setSectionColumn}
-                onAddCustomSection={addCustomSection}
-                onDeleteCustomSection={deleteCustomSection}
-                onClose={() => setTool(null)}
-              />
+              <>
+                <div className="cv-dock-hd">Layout</div>
+                <div className="cv-dock-body">
+                  <LayoutMap
+                    data={data}
+                    layoutColumns={layoutColumns}
+                    heights={sectionHeights}
+                    pageHeightPx={PAGE_H_PX}
+                    selectedId={selectedSection}
+                    onSelect={setSelectedSection}
+                    onPlace={placeSection}
+                    onToggleHidden={toggleSectionHidden}
+                    onAddSection={() => addCustomSection("New section")}
+                  />
+                </div>
+              </>
             )}
             {tool === "theme" && (
               <ThemeCustomizer theme={theme} onChange={setTheme} onClose={() => setTool(null)} />

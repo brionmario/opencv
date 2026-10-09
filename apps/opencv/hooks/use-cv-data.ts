@@ -514,6 +514,44 @@ export function useCVData() {
    * belongs to the other column). "flat" mode swaps with the raw adjacent
    * array entry, matching how single-column templates render the order.
    */
+  /**
+   * Drops a section at an explicit position: into `column`, immediately
+   * before `beforeId`, or at the end of that column when `beforeId` is null.
+   *
+   * Anchoring to a neighbouring id rather than an index means the caller
+   * never has to translate between "third visible box in the right column"
+   * and a position in the flat sectionOrder array — the two can't disagree.
+   */
+  const placeSection = useCallback(
+    (id: string, column: "left" | "right", beforeId: string | null) => {
+      setData((prev) => {
+        const order = getEffectiveSectionOrder(prev);
+        const moving = order.find((s) => s.id === id);
+        if (!moving || id === beforeId) return prev;
+
+        const without = order.filter((s) => s.id !== id);
+        const placed = { ...moving, column };
+
+        let insertAt: number;
+        if (beforeId) {
+          const at = without.findIndex((s) => s.id === beforeId);
+          insertAt = at === -1 ? without.length : at;
+        } else {
+          // End of the target column's run, so it lands under its new
+          // neighbours rather than at the end of the whole document.
+          let last = -1;
+          without.forEach((s, i) => { if (s.column === column) last = i; });
+          insertAt = last === -1 ? without.length : last + 1;
+        }
+
+        const next = [...without];
+        next.splice(insertAt, 0, placed);
+        return { ...prev, sectionOrder: next };
+      });
+    },
+    []
+  );
+
   const moveSection = useCallback((id: string, direction: -1 | 1, mode: "flat" | "column") => {
     setData((prev) => {
       const order = getEffectiveSectionOrder(prev);
@@ -620,6 +658,7 @@ export function useCVData() {
     toggleSectionHidden,
     setSectionColumn,
     moveSection,
+    placeSection,
     updateField,
     resetData,
     importData,
