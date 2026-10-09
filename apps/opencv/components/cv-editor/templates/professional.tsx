@@ -9,6 +9,7 @@ import { EditableCard, AddItemButton } from "../editable-card";
 import { CustomSectionBlock } from "../custom-section-block";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsForColumn } from "@/lib/cv-sections";
+import { assetPath } from "@/lib/asset-path";
 import { SectionFrame } from "@/lib/cv-selection";
 
 interface ProfessionalTemplateProps {
@@ -717,7 +718,7 @@ export function ProfessionalTemplate({
             {data.personalInfo.avatar ? (
               <div className="relative group/photo">
                 <img
-                  src={data.personalInfo.avatar}
+                  src={assetPath(data.personalInfo.avatar)}
                   alt="Profile"
                   className="w-20 h-20 rounded-full object-cover border-2 border-gray-200"
                 />

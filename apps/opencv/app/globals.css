@@ -959,7 +959,7 @@
   border-bottom: 1px solid var(--cv-border);
 }
 .cv-gallery-logo { height: 26px; width: auto; display: block; }
-.cv-gallery-bar-end { display: flex; justify-content: flex-end; }
+.cv-gallery-bar-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
 
 .cv-gallery-body {
   display: grid;
@@ -1052,6 +1052,7 @@
   border-bottom: 1px solid var(--cv-border);
 }
 .cv-home-logo { height: 24px; width: auto; display: block; }
+.cv-home-theme { margin-left: auto; }
 
 .cv-home-body { display: grid; grid-template-columns: 232px minmax(0, 1fr); min-height: 0; }
 

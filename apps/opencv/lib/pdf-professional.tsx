@@ -20,6 +20,7 @@ import type { CVData, CVTheme, ExperienceEntry, CustomSection } from "@/lib/cv-b
 import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { iconSvgStrings, resolveSocialLinkIcon, type IconName } from "@/lib/icons";
 import { sectionsForColumn, getEffectiveSectionOrder } from "@/lib/cv-sections";
+import { assetPath } from "@/lib/asset-path";
 
 Font.registerHyphenationCallback((word) => [word]);
 
@@ -660,7 +661,7 @@ export function ProfessionalPDFDocument({
             </View>
           </View>
           {isEmbeddableImage(data.personalInfo.avatar) ? (
-            <Image style={S.avatar} src={data.personalInfo.avatar as string} />
+            <Image style={S.avatar} src={assetPath(data.personalInfo.avatar) as string} />
           ) : null}
         </View>
 

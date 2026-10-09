@@ -23,6 +23,8 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SelectionProvider } from "@/lib/cv-selection";
 import { syncActiveDocument } from "@/lib/cv-documents";
+import { assetPath } from "@/lib/asset-path";
+import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 
 type DrawerType = "theme" | "history" | "sections" | null;
@@ -191,8 +193,8 @@ function Brand() {
       {/* Both marks ship, and CSS picks one by theme — swapping in JS would
           flash the wrong tile before the theme attribute is applied. */}
       <Link className="cv-brand-mark" href="/" aria-label="Dashboard">
-        <img className="mark-light" src="/brand/logo-mark.png" alt="" />
-        <img className="mark-dark" src="/brand/logo-mark-inverted.png" alt="" />
+        <img className="mark-light" src={assetPath("/brand/logo-mark.png")} alt="" />
+        <img className="mark-dark" src={assetPath("/brand/logo-mark-inverted.png")} alt="" />
       </Link>
       <div className="cv-brand-name">
         open<b>cv</b>
@@ -693,8 +695,7 @@ export function CVBuilder() {
       } catch {}
     }
 
-    const savedDark = localStorage.getItem("cvBuilderDark");
-    if (savedDark) setDark(savedDark === "true");
+    setDark(readChromeTheme());
 
     const savedCanvas = localStorage.getItem("cvBuilderCanvas") as CanvasType | null;
     if (savedCanvas) setCanvas(savedCanvas);
@@ -711,9 +712,8 @@ export function CVBuilder() {
   }, [theme]);
 
   useEffect(() => {
-    localStorage.setItem("cvBuilderDark", String(dark));
-    // dark here is the app-shell dark mode (toolbar moon/sun), not the CV page
-    document.documentElement.setAttribute("data-cv-theme", dark ? "dark" : "light");
+    // The app-shell theme (toolbar moon/sun), not the CV page's own appearance.
+    setChromeTheme(dark);
   }, [dark]);
 
   useEffect(() => {

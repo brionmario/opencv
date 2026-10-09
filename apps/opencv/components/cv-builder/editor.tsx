@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { ChevronDown, Plus, Trash2, Upload, X as XIcon } from "lucide-react";
 import type { CVData } from "@/lib/cv-builder-types";
+import { assetPath } from "@/lib/asset-path";
 import { AISuggestions } from "./ai-suggestions";
 
 interface EditorProps {
@@ -56,7 +57,7 @@ export function CVEditor({ data, onPersonalInfoChange, ...handlers }: EditorProp
               <div className="relative w-24 h-24 rounded-full border-2 border-dashed border-gray-300 flex items-center justify-center overflow-hidden bg-gray-50">
                 {data.personalInfo.avatar ? (
                   <>
-                    <img src={data.personalInfo.avatar} alt="Avatar" className="w-full h-full object-cover" />
+                    <img src={assetPath(data.personalInfo.avatar)} alt="Avatar" className="w-full h-full object-cover" />
                     <button
                       onClick={() => onPersonalInfoChange({ avatar: undefined })}
                       className="absolute top-0 right-0 bg-red-500 text-white p-1 rounded-full hover:bg-red-600"

@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Plus, FileText, Home, Trash2, Copy, Pencil, LayoutTemplate,
-  Linkedin, LayoutGrid, Rows3, Undo2, Clock,
+  Linkedin, LayoutGrid, Rows3, Undo2, Clock, Sun, Moon,
 } from "lucide-react";
 import { starterTemplates } from "@/lib/starter-templates";
 import { TemplatePreview } from "@/components/cv-editor/template-preview";
@@ -15,6 +15,8 @@ import {
   purgeDocument, renameDocument, relativeTime, type CVDocument,
 } from "@/lib/cv-documents";
 import { layoutMeta } from "@/lib/cv-layouts";
+import { initChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
+import { assetPath } from "@/lib/asset-path";
 
 type View = "home" | "files" | "deleted";
 type Density = "grid" | "list";
@@ -35,10 +37,7 @@ export function Dashboard() {
   }, []);
 
   useEffect(() => {
-    const savedDark = localStorage.getItem("cvBuilderDark");
-    const isDark = savedDark === null ? true : savedDark === "true";
-    setDark(isDark);
-    document.documentElement.setAttribute("data-cv-theme", isDark ? "dark" : "light");
+    setDark(initChromeTheme());
 
     // An existing single-document user keeps their work: it becomes doc one.
     migrateLegacyDocument();
@@ -71,9 +70,17 @@ export function Dashboard() {
       <header className="cv-home-bar">
         <img
           className="cv-home-logo"
-          src={dark ? "/brand/logo-inverted.png" : "/brand/logo.png"}
+          src={assetPath(dark ? "/brand/logo-inverted.png" : "/brand/logo.png")}
           alt="openCV — Open Source CV Builder"
         />
+        <button
+          className="cv-iconbtn cv-home-theme"
+          aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+          title={dark ? "Light mode" : "Dark mode"}
+          onClick={() => { const next = !dark; setDark(next); setChromeTheme(next); }}
+        >
+          {dark ? <Sun size={17} /> : <Moon size={17} />}
+        </button>
       </header>
 
       <div className="cv-home-body">

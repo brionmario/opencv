@@ -1,4 +1,5 @@
 import type { CVData, CVTheme, CustomSection } from "@/lib/cv-builder-types";
+import { absoluteAssetUrl } from "@/lib/asset-path";
 import { getIconSvg, getSocialIconSvg, resolveSocialLinkIcon } from "@/lib/icons";
 import { sectionsFlat } from "@/lib/cv-sections";
 
@@ -184,7 +185,7 @@ function generateCleanHTML(data: CVData): string {
         .join("");
     }
   const avatarHtml = data.personalInfo.avatar
-    ? `<img src="${data.personalInfo.avatar}" class="avatar" />`
+    ? `<img src="${absoluteAssetUrl(data.personalInfo.avatar)}" class="avatar" />`
     : "";
 
   const skillsHtml = data.skills

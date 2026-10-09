@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, Check } from "lucide-react";
+import { ArrowLeft, Check, Sun, Moon } from "lucide-react";
 import type { CVData, CVTheme } from "@/lib/cv-builder-types";
 import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import {
@@ -16,6 +16,8 @@ import {
 import { starterTemplates } from "@/lib/starter-templates";
 import { activeDocumentId, createDocument, openDocument, syncActiveDocument } from "@/lib/cv-documents";
 import { TemplatePreview } from "@/components/cv-editor/template-preview";
+import { assetPath } from "@/lib/asset-path";
+import { initChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 
 /** The sample the gallery falls back to when there is nothing saved yet, so a
  *  first-time visitor still sees a filled-in page rather than empty rules. */
@@ -35,10 +37,7 @@ export default function TemplatesPage() {
   // Read the saved document so every preview shows the user's own content.
   useEffect(() => {
     try {
-      const savedDark = localStorage.getItem("cvBuilderDark");
-      const isDark = savedDark === null ? true : savedDark === "true";
-      setDark(isDark);
-      document.documentElement.setAttribute("data-cv-theme", isDark ? "dark" : "light");
+      setDark(initChromeTheme());
       const savedData = localStorage.getItem(DATA_STORAGE_KEY);
       if (savedData) {
         const parsed = JSON.parse(savedData) as CVData;
@@ -84,10 +83,18 @@ export default function TemplatesPage() {
         </Link>
         <img
           className="cv-gallery-logo"
-          src={dark ? "/brand/logo-inverted.png" : "/brand/logo.png"}
+          src={assetPath(dark ? "/brand/logo-inverted.png" : "/brand/logo.png")}
           alt="openCV — Open Source CV Builder"
         />
         <div className="cv-gallery-bar-end">
+          <button
+            className="cv-iconbtn"
+            aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
+            title={dark ? "Light mode" : "Dark mode"}
+            onClick={() => { const next = !dark; setDark(next); setChromeTheme(next); }}
+          >
+            {dark ? <Sun size={17} /> : <Moon size={17} />}
+          </button>
           <button className="cv-btn cv-btn-primary" onClick={use} disabled={!ready}>
             {selected === applied ? <Check size={15} /> : null}
             Use {meta.name}
