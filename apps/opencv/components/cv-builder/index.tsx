@@ -1006,7 +1006,6 @@ export function CVBuilder() {
                     layoutColumns={layoutColumns}
                     heights={sectionHeights}
                     pageHeightPx={PAGE_H_PX}
-                    paperColor={theme.backgroundColor}
                     selectedId={selectedSection}
                     onSelect={setSelectedSection}
                     onPlace={placeSection}
