@@ -1208,13 +1208,19 @@
 
 /* The miniature page: white, like the paper it stands for. */
 .cv-map-page {
-  background: var(--cv-paper);
+  /* Background comes from the résumé's own page colour (inline), so the map
+     is a small version of the page rather than a diagram of it. */
   border: 1px solid var(--cv-border-2);
   border-radius: var(--cv-radius-sm);
   padding: 7px;
   display: flex; flex-direction: column; gap: 6px;
   touch-action: none;
+  /* A dark dock around a white page is a lot of glare for a panel you stare
+     at while dragging; seat it slightly rather than letting it float. */
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .04);
+  filter: saturate(0.96);
 }
+[data-cv-theme="dark"] .cv-map-page { opacity: 0.93; }
 .cv-map-header {
   display: flex; align-items: center; justify-content: center; gap: 5px;
   height: 22px; flex-shrink: 0;
@@ -1374,3 +1380,53 @@
   padding: 0 8px; height: 27px; font-size: 12px; font-family: var(--cv-font-ui);
 }
 .cv-pick-custom input:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: -1px; }
+
+/* ---- Home hero ---- */
+.cv-home-hero {
+  position: relative;
+  margin-bottom: 26px;
+  padding: 34px 32px;
+  min-height: 210px;
+  display: flex; align-items: center;
+  border: 1px solid var(--cv-border);
+  border-radius: var(--cv-radius-lg);
+  background-color: #1b2233;
+  background-size: cover;
+  background-position: center right;
+  overflow: hidden;
+}
+/* The art keeps its left third clear, but text still needs guaranteed
+   contrast at narrow widths where the sheets creep leftwards. */
+.cv-home-hero::before {
+  content: "";
+  position: absolute; inset: 0;
+  background: linear-gradient(90deg, #141b2bf2 0%, #141b2bd9 38%, #141b2b40 62%, transparent 100%);
+}
+.cv-home-hero-text { position: relative; max-width: 42ch; }
+.cv-home-hero-eyebrow {
+  display: inline-block; margin-bottom: 10px;
+  font-family: var(--cv-font-mono); font-size: 10.5px;
+  text-transform: uppercase; letter-spacing: 0.08em; color: #8fb4f5;
+}
+.cv-home-hero h1 {
+  margin: 0; font-size: 26px; font-weight: 740; letter-spacing: -0.025em;
+  color: #f2f5fa; line-height: 1.18;
+}
+.cv-home-hero p {
+  margin: 9px 0 0; font-size: 13px; line-height: 1.55; color: #b9c2d2;
+}
+.cv-home-hero-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 18px; }
+/* The hero is dark in both themes, so its secondary button needs its own skin
+   rather than the light-theme chrome one. */
+.cv-home-hero-actions .cv-btn:not(.cv-btn-primary) {
+  background: #ffffff14; color: #e7ecf5; border-color: #ffffff2e;
+}
+.cv-home-hero-actions .cv-btn:not(.cv-btn-primary):hover {
+  background: #ffffff21; border-color: #ffffff4d;
+}
+
+@media (max-width: 720px) {
+  .cv-home-hero { padding: 24px 20px; min-height: 0; }
+  .cv-home-hero::before { background: linear-gradient(180deg, #141b2bf5 0%, #141b2bd9 70%, #141b2bbf 100%); }
+  .cv-home-hero h1 { font-size: 21px; }
+}

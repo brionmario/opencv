@@ -15,6 +15,9 @@ export interface LayoutMapProps {
   heights: Record<string, number>;
   /** Height of one page on the canvas, in px — for the page-break lines. */
   pageHeightPx: number;
+  /** The résumé's own page colour, so the map is the page rather than a
+   *  diagram of it — if the document is themed, the map follows. */
+  paperColor: string;
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onPlace: (id: string, column: Column, beforeId: string | null) => void;
@@ -41,6 +44,7 @@ export function LayoutMap({
   layoutColumns,
   heights,
   pageHeightPx,
+  paperColor,
   selectedId,
   onSelect,
   onPlace,
@@ -147,7 +151,7 @@ export function LayoutMap({
     <div className="cv-map" onPointerMove={onPointerMove} onPointerUp={endDrag} onPointerCancel={endDrag}>
       <p className="cv-map-hint">Drag a block to move it between columns or reorder it.</p>
 
-      <div className="cv-map-page">
+      <div className="cv-map-page" style={{ background: paperColor }}>
         {/* The header is part of every template and isn't placeable. */}
         <div className="cv-map-header">
           <Lock size={11} />

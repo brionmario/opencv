@@ -113,6 +113,31 @@ export function Dashboard() {
         {/* ── Main ── */}
         <main className="cv-home-main">
           {view === "home" && (
+            <section
+              className="cv-home-hero"
+              style={{ backgroundImage: `url(${assetPath("/brand/home-banner.jpg")})` }}
+            >
+              <div className="cv-home-hero-text">
+                <span className="cv-home-hero-eyebrow">Open source · no account</span>
+                <h1>What you see is what prints.</h1>
+                <p>
+                  Four print-tested templates, a live layout editor, and exports
+                  measured against the page — not approximated from it.
+                </p>
+                <div className="cv-home-hero-actions">
+                  <button className="cv-btn cv-btn-primary" onClick={createBlank}>
+                    <Plus size={15} />
+                    New résumé
+                  </button>
+                  <Link className="cv-btn" href="/templates">
+                    Browse templates
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )}
+
+          {view === "home" && (
             <section className="cv-home-start">
               <h2>What do you want to create?</h2>
               <div className="cv-home-cards">
