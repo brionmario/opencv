@@ -323,12 +323,16 @@
 /* ---- Brand ---- */
 .cv-brand { display: flex; align-items: center; gap: 10px; padding-right: 4px; }
 .cv-brand-mark {
-  width: 26px; height: 26px; border-radius: var(--cv-radius-sm); flex-shrink: 0;
-  display: grid; place-items: center;
-  background: var(--cv-surface-3);
-  border: 1px solid var(--cv-border-2);
-  color: var(--cv-accent);
+  width: 26px; height: 26px; flex-shrink: 0;
+  display: block; padding: 0; border: 0; background: none;
 }
+/* The mark tiles are drawn for light and dark backgrounds; show the one that
+   matches the chrome. */
+.cv-brand-mark img { width: 100%; height: 100%; display: block; }
+.cv-brand-mark .mark-dark { display: none; }
+[data-cv-theme="dark"] .cv-brand-mark .mark-light { display: none; }
+[data-cv-theme="dark"] .cv-brand-mark .mark-dark { display: block; }
+
 .cv-brand-name { font-size: 16px; font-weight: 750; letter-spacing: -0.02em; color: var(--cv-text); }
 .cv-brand-name b { color: var(--cv-accent); font-weight: 750; }
 .cv-doc-name {

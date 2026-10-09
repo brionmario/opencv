@@ -7,10 +7,11 @@ export const metadata: Metadata = {
   title: 'openCV — Resume Builder',
   description: 'Build beautiful, ATS-friendly resumes with openCV',
   icons: {
+    // No SVG entry: browsers prefer it over the PNGs regardless of order,
+    // which would override the scheme-specific marks below.
     icon: [
       { url: '/icon-light-32x32.png', media: '(prefers-color-scheme: light)' },
       { url: '/icon-dark-32x32.png', media: '(prefers-color-scheme: dark)' },
-      { url: '/icon.svg', type: 'image/svg+xml' },
     ],
     apple: '/apple-icon.png',
   },

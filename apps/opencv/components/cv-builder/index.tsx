@@ -188,11 +188,14 @@ function ExportMenu({ onExport }: { onExport: (id: string) => void }) {
 function Brand() {
   return (
     <div className="cv-brand">
-      <div className="cv-brand-mark" aria-hidden="true">
-        <Layers size={17} strokeWidth={1.8} />
-      </div>
+      {/* Both marks ship, and CSS picks one by theme — swapping in JS would
+          flash the wrong tile before the theme attribute is applied. */}
+      <Link className="cv-brand-mark" href="/" aria-label="Dashboard">
+        <img className="mark-light" src="/brand/logo-mark.png" alt="" />
+        <img className="mark-dark" src="/brand/logo-mark-inverted.png" alt="" />
+      </Link>
       <div className="cv-brand-name">
-        open<b>CV</b>
+        open<b>cv</b>
       </div>
       <div className="cv-doc-name">
         <span className="slash">/</span>
