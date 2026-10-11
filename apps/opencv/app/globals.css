@@ -1194,6 +1194,10 @@
 }
 .cv-home-doc-actions {
   position: absolute; top: 6px; right: 6px;
+  /* Above .cv-home-thumb-hit, the overlay that makes the whole card open the
+     document — without this it covers these controls and swallows their
+     clicks, so every button opened the résumé instead of acting. */
+  z-index: 2;
   display: flex; gap: 2px; padding: 2px;
   background: var(--cv-surface); border: 1px solid var(--cv-border-2);
   border-radius: var(--cv-radius-sm);
