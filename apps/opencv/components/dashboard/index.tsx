@@ -56,12 +56,6 @@ export function Dashboard() {
     open(doc.id);
   };
 
-  const createFromSample = () => {
-    const starter = starterTemplates[0];
-    const doc = createDocument({ name: "New résumé", layout: starter.defaultLayout, data: starter.data });
-    open(doc.id);
-  };
-
   const shown = view === "deleted" ? trash : docs;
 
   return (
@@ -146,15 +140,10 @@ export function Dashboard() {
                   <b>Blank résumé</b>
                   <span>Start from an empty page and fill it in.</span>
                 </button>
-                <button className="cv-home-card" onClick={createFromSample}>
-                  <span className="cv-home-card-art"><FileText size={22} /></span>
-                  <b>From a sample</b>
-                  <span>A filled-in résumé you can edit down.</span>
-                </button>
                 <Link className="cv-home-card" href="/templates">
                   <span className="cv-home-card-art"><LayoutTemplate size={22} /></span>
                   <b>Pick a template</b>
-                  <span>Compare all four side by side, then start.</span>
+                  <span>Compare all four, then start from a sample or empty.</span>
                 </Link>
               </div>
             </section>

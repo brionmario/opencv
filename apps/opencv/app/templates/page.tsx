@@ -19,15 +19,23 @@ import { TemplatePreview } from "@/components/cv-editor/template-preview";
 import { assetPath } from "@/lib/asset-path";
 import { initChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 
-/** The sample the gallery falls back to when there is nothing saved yet, so a
- *  first-time visitor still sees a filled-in page rather than empty rules. */
-const SAMPLE: CVData = starterTemplates[0].data;
+/** A filled-in résumé, so a template can be judged on real content. */
+const SAMPLE: CVData =
+  starterTemplates.find((t) => t.id === "professional")?.data ?? starterTemplates[0].data;
+
+/** The same document with nothing written in it — headings and placeholders. */
+const BLANK: CVData =
+  starterTemplates.find((t) => t.id === "blank")?.data ?? starterTemplates[0].data;
 
 export default function TemplatesPage() {
   const router = useRouter();
   const [selected, setSelected] = useState<LayoutType>("professional");
   const [applied, setApplied] = useState<LayoutType>("professional");
   const [data, setData] = useState<CVData>(SAMPLE);
+  /** True when this visit will create a document rather than restyle one. */
+  const [creating, setCreating] = useState(false);
+  /** Only meaningful while creating: start from the sample, or from a blank. */
+  const [keepSample, setKeepSample] = useState(true);
   const [theme, setTheme] = useState<CVTheme>(DEFAULT_THEME);
   const [ready, setReady] = useState(false);
   // The shell theme lives on <html>; this route sets it too so the gallery
@@ -38,8 +46,13 @@ export default function TemplatesPage() {
   useEffect(() => {
     try {
       setDark(initChromeTheme());
+      // With a document open this page only restyles it, so it previews that
+      // document. With nothing open it is the create step, and the preview
+      // follows the sample/blank choice instead.
+      const open = !!activeDocumentId();
+      setCreating(!open);
       const savedData = localStorage.getItem(DATA_STORAGE_KEY);
-      if (savedData) {
+      if (open && savedData) {
         const parsed = JSON.parse(savedData) as CVData;
         if (parsed?.personalInfo) setData(parsed);
       }
@@ -57,6 +70,7 @@ export default function TemplatesPage() {
   }, []);
 
   const meta = useMemo(() => LAYOUTS.find((l) => l.id === selected) ?? LAYOUTS[0], [selected]);
+  const previewData = creating ? (keepSample ? SAMPLE : BLANK) : data;
 
   const use = () => {
     try {
@@ -65,10 +79,15 @@ export default function TemplatesPage() {
     // Switching template on an open document just restyles it; arriving here
     // with nothing open (straight from the dashboard's "Pick a template")
     // means this is where the document gets created.
-    if (activeDocumentId()) {
+    if (!creating) {
       syncActiveDocument({ data, theme, layout: selected });
     } else {
-      const doc = createDocument({ name: "New résumé", layout: selected, data, theme });
+      const doc = createDocument({
+        name: keepSample ? `${meta.name} résumé` : "Untitled résumé",
+        layout: selected,
+        data: keepSample ? SAMPLE : BLANK,
+        theme,
+      });
       openDocument(doc.id);
     }
     router.push("/editor");
@@ -87,6 +106,22 @@ export default function TemplatesPage() {
           alt="openCV — Open Source CV Builder"
         />
         <div className="cv-gallery-bar-end">
+          {creating && (
+            <div className="cv-start-choice" role="group" aria-label="Starting content">
+              <button
+                data-active={keepSample ? "true" : undefined}
+                onClick={() => setKeepSample(true)}
+              >
+                Sample content
+              </button>
+              <button
+                data-active={!keepSample ? "true" : undefined}
+                onClick={() => setKeepSample(false)}
+              >
+                Start empty
+              </button>
+            </div>
+          )}
           <button
             className="cv-iconbtn"
             aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
@@ -139,14 +174,18 @@ export default function TemplatesPage() {
           <div className="cv-gallery-stage-inner">
             <div className="cv-gallery-paper">
               {ready ? (
-                <TemplatePreview layout={selected} data={data} theme={theme} />
+                <TemplatePreview layout={selected} data={previewData} theme={theme} />
               ) : null}
             </div>
           </div>
           <footer className="cv-gallery-stage-ft">
             <span>{meta.name}</span>
             <span className="cv-gallery-stage-note">
-              Live preview with your own content · A4
+              {creating
+                ? keepSample
+                  ? "Preview with sample content · A4"
+                  : "Preview with empty placeholders · A4"
+                : "Live preview with your own content · A4"}
             </span>
           </footer>
         </section>
