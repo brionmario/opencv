@@ -10,8 +10,8 @@ const BUILT_IN_SET = new Set<string>(BUILT_IN_SECTION_IDS);
  *   types introduced after a CV was created, or legacy data saved before
  *   sectionOrder existed at all).
  * - Appends any custom section missing from the saved order (defensive;
- *   the hook keeps these in sync, but data can also arrive via LinkedIn
- *   import, restored versions, or hand-edited JSON).
+ *   the hook keeps these in sync, but data can also arrive from restored
+ *   versions or hand-edited JSON).
  *
  * Every template and exporter reads section order through this function
  * rather than `data.sectionOrder` directly, so no caller needs its own

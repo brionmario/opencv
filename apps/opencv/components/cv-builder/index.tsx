@@ -4,7 +4,6 @@ import React, { useState, useEffect, useRef, useCallback } from "react";
 import { LAYOUTS, type LayoutType } from "@/lib/cv-layouts";
 import { useCVData } from "@/hooks/use-cv-data";
 import { exportToJSON, exportToMarkdown, exportToHTML, exportToPDF } from "@/lib/export-handler";
-import { LinkedInImport } from "./linkedin-import";
 import { ProfessionalTemplate } from "@/components/cv-editor/templates/professional";
 import { ModernWysiwygTemplate } from "@/components/cv-editor/templates/modern";
 import { ClassicWysiwygTemplate } from "@/components/cv-editor/templates/classic";
@@ -14,7 +13,7 @@ import type { CVVersion } from "@/lib/cv-versioning";
 import type { CVTheme } from "@/lib/cv-builder-types";
 import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import {
-  Download, FileJson, FileText, FileCode, Linkedin, History,
+  Download, FileJson, FileText, FileCode, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
   Layers, Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal,
 } from "lucide-react";
@@ -34,7 +33,7 @@ type CanvasType = "soft" | "dots" | "grid" | "plain";
 interface Toast {
   id: number;
   msg: string;
-  icon: "check" | "loader" | "linkedin" | "rotate" | "sparkles" | "download";
+  icon: "check" | "loader" | "rotate" | "sparkles" | "download";
 }
 
 
@@ -235,7 +234,6 @@ function Toasts({ items }: { items: Toast[] }) {
   const icons: Record<Toast["icon"], React.ReactNode> = {
     check:    <Check size={15} />,
     loader:   <Download size={15} />,
-    linkedin: <Linkedin size={15} />,
     rotate:   <RotateCcw size={15} />,
     sparkles: <Sparkles size={15} />,
     download: <Download size={15} />,
@@ -593,7 +591,6 @@ function PageBreakOverlay({ targetRef }: { targetRef: React.RefObject<HTMLDivEle
 ══════════════════════════════════════════════════════════════════════════ */
 export function CVBuilder() {
   const [selectedLayout, setSelectedLayout] = useState<LayoutType>("professional");
-  const [showLinkedInImport, setShowLinkedInImport] = useState(false);
   const [drawer, setDrawer] = useState<DrawerType>(null);
   const router = useRouter();
   const [theme, setTheme] = useState<CVTheme>(DEFAULT_THEME);
@@ -780,21 +777,6 @@ export function CVBuilder() {
     }, 1100);
   };
 
-  const handleLinkedInImport = (linkedInData: any) => {
-    importData({
-      ...data,
-      personalInfo: { ...data.personalInfo, ...linkedInData.personalInfo },
-      experience: [...data.experience, ...(linkedInData.experience || [])],
-      education: [...data.education, ...(linkedInData.education || [])],
-      skills: [...data.skills, ...(linkedInData.skills || [])],
-    });
-    pushToast("Imported profile from <b>LinkedIn</b>", "linkedin");
-  };
-
-  const handleLinkedInClick = () => {
-    setShowLinkedInImport(true);
-  };
-
   const handleExportVersion = (version: CVVersion) => {
     const name = data.personalInfo.fullName.replace(/\s+/g, "_") || "resume";
     exportToJSON(version.data, `${name}_CV_${version.label.replace(/\s+/g, "_")}.json`);
@@ -949,10 +931,6 @@ export function CVBuilder() {
         <IconBtn tip="Version history" active={tool === "history"} onClick={() => setTool("history")}>
           <History size={17} />
         </IconBtn>
-        <span className="cv-rail-sep" />
-        <IconBtn tip="Import from LinkedIn" onClick={handleLinkedInClick}>
-          <Linkedin size={17} />
-        </IconBtn>
       </nav>
 
       {/* ── Desk canvas ── */}
@@ -1072,13 +1050,6 @@ export function CVBuilder() {
           onClose={() => setPickingSection(false)}
         />
       )}
-
-      {/* ── LinkedIn Import Modal ── */}
-      <LinkedInImport
-        isOpen={showLinkedInImport}
-        onClose={() => setShowLinkedInImport(false)}
-        onImport={handleLinkedInImport}
-      />
 
       {/* ── Toasts ── */}
       <Toasts items={toasts} />

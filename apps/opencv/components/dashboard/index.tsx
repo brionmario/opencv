@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
   Plus, FileText, Home, Trash2, Copy, Pencil, LayoutTemplate,
-  Linkedin, LayoutGrid, Rows3, Undo2, Clock, Sun, Moon,
+  LayoutGrid, Rows3, Undo2, Clock, Sun, Moon,
 } from "lucide-react";
 import { starterTemplates } from "@/lib/starter-templates";
 import { TemplatePreview } from "@/components/cv-editor/template-preview";
@@ -156,11 +156,6 @@ export function Dashboard() {
                   <b>Pick a template</b>
                   <span>Compare all four side by side, then start.</span>
                 </Link>
-                <button className="cv-home-card" onClick={createBlank}>
-                  <span className="cv-home-card-art"><Linkedin size={22} /></span>
-                  <b>Import from LinkedIn</b>
-                  <span>Paste a profile and let it fill the page.</span>
-                </button>
               </div>
             </section>
           )}
