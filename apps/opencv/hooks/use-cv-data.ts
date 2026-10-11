@@ -14,6 +14,12 @@ import { starterTemplates } from "@/lib/starter-templates";
 function normalizeCVData(raw: CVData): CVData {
   const data: CVData = { ...raw, customSections: raw.customSections ?? [] };
   data.sectionOrder = getEffectiveSectionOrder(data);
+  // Languages predate having ids and were addressed by name, so documents
+  // saved before that get one here — by position, which is the only thing
+  // that distinguishes two entries sharing a name.
+  data.languages = (data.languages ?? []).map((lang, i) =>
+    lang.id ? lang : { ...lang, id: `lng-legacy-${i}` }
+  );
   return data;
 }
 
@@ -233,21 +239,21 @@ export function useCVData() {
   const addLanguage = useCallback((lang: { name: string; proficiency: 1 | 2 | 3 | 4 | 5 }) => {
     setData((prev) => ({
       ...prev,
-      languages: [...prev.languages, lang],
+      languages: [...prev.languages, { id: `lng-${Date.now().toString(36)}-${prev.languages.length}`, ...lang }],
     }));
   }, []);
 
-  const updateLanguage = useCallback((name: string, proficiency: 1 | 2 | 3 | 4 | 5) => {
+  const updateLanguage = useCallback((id: string, proficiency: 1 | 2 | 3 | 4 | 5) => {
     setData((prev) => ({
       ...prev,
-      languages: prev.languages.map((lang) => (lang.name === name ? { ...lang, proficiency } : lang)),
+      languages: prev.languages.map((lang) => (lang.id === id ? { ...lang, proficiency } : lang)),
     }));
   }, []);
 
-  const deleteLanguage = useCallback((name: string) => {
+  const deleteLanguage = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
-      languages: prev.languages.filter((lang) => lang.name !== name),
+      languages: prev.languages.filter((lang) => lang.id !== id),
     }));
   }, []);
 
@@ -639,9 +645,8 @@ export function useCVData() {
         const field = parts[2];
 
         if (collection === "languages") {
-          // Languages use name as key
           newData.languages = newData.languages.map((lang) =>
-            lang.name === id ? { ...lang, [field]: value } : lang
+            lang.id === id ? { ...lang, [field]: value } : lang
           );
         } else if (Array.isArray(newData[collection])) {
           (newData as any)[collection] = (newData[collection] as any[]).map((item: any) =>

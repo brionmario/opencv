@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LAYOUTS, type LayoutType } from "@/lib/cv-layouts";
 import { useCVData } from "@/hooks/use-cv-data";
 import { exportToJSON, exportToMarkdown, exportToHTML, exportToPDF } from "@/lib/export-handler";
@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { SelectionProvider } from "@/lib/cv-selection";
+import { emptySectionIds, sectionItemCount } from "@/lib/cv-sections";
 import { syncActiveDocument } from "@/lib/cv-documents";
 import { assetPath } from "@/lib/asset-path";
 import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
@@ -473,6 +474,30 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
           // Only push cards that straddle the actual page boundary, not merely
           // overlap the gap zone — avoids over-pushing cards that end near the
           // boundary and leaving large blank gaps on the previous page.
+          // A heading can be orphaned without anything straddling: it sits at
+          // the foot of page N while its first row already starts on page N+1.
+          // Nothing crosses the boundary, so the straddle case below never
+          // fires and the heading is left behind on its own.
+          const headOnly = headingFor.get(card);
+          if (headOnly && !(top < boundary && bottom > boundary)) {
+            const headRect = headOnly.getBoundingClientRect();
+            const headTop = headRect.top - base + accumulated;
+            if (Math.floor(headTop / PAGE_H_PX) < Math.floor(top / PAGE_H_PX)) {
+              const headBoundary = (Math.floor(headTop / PAGE_H_PX) + 1) * PAGE_H_PX;
+              const shift = Math.ceil(headBoundary + BREAK_GAP + PAGE_TOP_MARGIN - headTop);
+              const wrapper = headOnly.parentElement;
+              const prevSibling = wrapper?.previousElementSibling ?? null;
+              let marginToSet = shift;
+              if (prevSibling) {
+                const prevBottom = prevSibling.getBoundingClientRect().bottom - base + accumulated;
+                marginToSet = shift + (headTop - prevBottom);
+              }
+              headOnly.style.marginTop = `${Math.max(marginToSet, 0)}px`;
+              accumulated += shift;
+              continue;
+            }
+          }
+
           if (top < boundary && bottom > boundary) {
             const head = headingFor.get(card);
             if (head) {
@@ -675,6 +700,10 @@ export function CVBuilder() {
     removeSavepoint,
     updateSavepointLabel,
   } = useCVData();
+
+  // Sections on the page that would render nothing, so the canvas can say
+  // which headings are not going to appear in an export.
+  const emptyIds = useMemo(() => emptySectionIds(data), [data]);
 
   /* ── Init ── */
   useEffect(() => {
@@ -966,6 +995,7 @@ export function CVBuilder() {
                 selectedId={selectedSection}
                 onSelect={setSelectedSection}
                 onOpenLayout={(id) => { setSelectedSection(id); setTool("sections"); }}
+                emptyIds={emptyIds}
               >
                 {renderTemplate()}
               </SelectionProvider>
@@ -1045,17 +1075,7 @@ export function CVBuilder() {
       {/* ── Delete confirmation ── */}
       {deletingSection && (() => {
         const custom = data.customSections.find((c) => c.id === deletingSection);
-        const counts: Record<string, number> = {
-          experience: data.experience.length,
-          education: data.education.length,
-          skills: data.skills.length,
-          awards: data.awards.length,
-          publications: (data.publications ?? []).length,
-          references: (data.references ?? []).length,
-          socialLinks: (data.socialLinks ?? []).length,
-          languages: (data.languages ?? []).length,
-        };
-        const n = custom ? custom.items.length : counts[deletingSection];
+        const n = custom ? custom.items.length : (sectionItemCount(data, deletingSection) ?? 0);
         const lost =
           deletingSection === "summary"
             ? (data.personalInfo.summary ? "text" : null)

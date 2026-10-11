@@ -1497,3 +1497,33 @@
   margin: 7px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--cv-text-2);
 }
 .cv-confirm-actions { display: flex; gap: 8px; margin-top: 16px; }
+
+/* ---- Sections that will not print ----
+   The exporters omit a section with no content, but the canvas still draws
+   its heading and add-button so you can fill it. Marking it keeps the
+   promise honest: what is dimmed here is not in the PDF. */
+.cv-section-frame[data-empty="true"] { position: relative; opacity: 0.55; }
+.cv-section-frame[data-empty="true"]::after {
+  content: "empty · won’t print";
+  position: absolute; top: -7px; right: 0;
+  padding: 1px 6px; border-radius: 3px;
+  background: var(--cv-surface-3); color: var(--cv-text-3);
+  border: 1px solid var(--cv-border-2);
+  font-family: var(--cv-font-ui); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.03em; white-space: nowrap;
+  pointer-events: none;
+}
+@media print {
+  .cv-section-frame[data-empty="true"] { display: none !important; }
+  .cv-section-frame[data-empty="true"]::after { content: none !important; }
+}
+
+/* ---- Editor placeholders ----
+   A placeholder sat in the same colour as real text, so an unfilled date read
+   as content ("2012 End"). Make it obviously a prompt, and never print it. */
+.inline-editor-placeholder {
+  font-style: italic;
+  opacity: 0.6;
+  user-select: none;
+}
+@media print { .inline-editor-placeholder { display: none !important; } }

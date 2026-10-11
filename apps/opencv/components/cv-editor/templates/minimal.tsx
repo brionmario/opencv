@@ -30,7 +30,7 @@ interface MinimalWysiwygTemplateProps {
   onAddSocialLink: () => void;
   onDeleteSocialLink: (id: string) => void;
   onAddLanguage: () => void;
-  onDeleteLanguage: (name: string) => void;
+  onDeleteLanguage: (id: string) => void;
   onPhotoUpload: (dataUrl: string) => void;
   onDeleteCustomSection: (sectionId: string) => void;
   onUpdateCustomSectionTitle: (sectionId: string, title: string) => void;
@@ -468,17 +468,17 @@ export function MinimalWysiwygTemplate({
         </div>
         <div className="flex gap-6">
           {data.languages.map((lang, langIdx) => (
-            <div key={langIdx} className="group/lang flex items-center gap-2">
+            <div key={lang.id ?? langIdx} className="group/lang flex items-center gap-2">
               <div className="text-xs font-semibold text-gray-900">
                 <InlineEditor
                   value={lang.name}
-                  onChange={(v) => onUpdate(`languages.${lang.name}.name`, v)}
+                  onChange={(v) => onUpdate(`languages.${lang.id}.name`, v)}
                   placeholder="Language"
                   className="text-xs font-semibold text-gray-900"
                 />
               </div>
               <button
-                onClick={() => onDeleteLanguage(lang.name)}
+                onClick={() => onDeleteLanguage(lang.id!)}
                 className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover/lang:opacity-100 transition-opacity print:hidden"
               >
                 <XIcon size={10} />

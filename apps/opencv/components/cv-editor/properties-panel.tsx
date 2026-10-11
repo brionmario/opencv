@@ -3,7 +3,7 @@
 import { Eye, EyeOff, ChevronUp, ChevronDown, Trash2, MousePointerSquareDashed } from "lucide-react";
 import type { CVData, SectionMeta } from "@/lib/cv-builder-types";
 import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
-import { getEffectiveSectionOrder } from "@/lib/cv-sections";
+import { getEffectiveSectionOrder, sectionItemCount } from "@/lib/cv-sections";
 
 export interface PropertiesPanelProps {
   data: CVData;
@@ -22,24 +22,6 @@ function labelFor(id: string, data: CVData): string {
     data.customSections.find((s) => s.id === id)?.title ??
     "Untitled section"
   );
-}
-
-/** How many entries the section currently holds, so the panel can say something
- *  true about the selection rather than just naming it. */
-function countFor(id: string, data: CVData): number | null {
-  switch (id) {
-    case "experience":   return data.experience.length;
-    case "education":    return data.education.length;
-    case "skills":       return data.skills.length;
-    case "awards":       return data.awards.length;
-    case "publications": return (data.publications ?? []).length;
-    case "references":   return (data.references ?? []).length;
-    case "socialLinks":  return (data.socialLinks ?? []).length;
-    case "languages":    return (data.languages ?? []).length;
-    case "summary":      return null;
-    default:
-      return data.customSections.find((s) => s.id === id)?.items.length ?? null;
-  }
 }
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
@@ -75,7 +57,7 @@ export function PropertiesPanel({
   }
 
   const isCustom = data.customSections.some((s) => s.id === meta.id);
-  const count = countFor(meta.id, data);
+  const count = sectionItemCount(data, meta.id);
 
   // Movement is relative to the list the section actually sits in: its own
   // column for two-column templates, the whole flow for single-column ones.

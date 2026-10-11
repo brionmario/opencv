@@ -30,7 +30,7 @@ interface ModernWysiwygTemplateProps {
   onAddSocialLink: () => void;
   onDeleteSocialLink: (id: string) => void;
   onAddLanguage: () => void;
-  onDeleteLanguage: (name: string) => void;
+  onDeleteLanguage: (id: string) => void;
   onPhotoUpload: (dataUrl: string) => void;
   onDeleteCustomSection: (sectionId: string) => void;
   onUpdateCustomSectionTitle: (sectionId: string, title: string) => void;
@@ -506,11 +506,11 @@ export function ModernWysiwygTemplate({
         </div>
         <div className="space-y-2">
           {data.languages.map((lang, langIdx) => (
-            <div key={langIdx} className="group/lang">
+            <div key={lang.id ?? langIdx} className="group/lang">
               <div className="font-medium text-gray-900 text-sm mb-1">
                 <InlineEditor
                   value={lang.name}
-                  onChange={(v) => onUpdate(`languages.${lang.name}.name`, v)}
+                  onChange={(v) => onUpdate(`languages.${lang.id}.name`, v)}
                   placeholder="Language"
                   className="font-medium text-gray-900 text-sm"
                 />
@@ -523,7 +523,7 @@ export function ModernWysiwygTemplate({
                       <button
                         key={i}
                         onClick={() =>
-                          onUpdate(`languages.${lang.name}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)
+                          onUpdate(`languages.${lang.id}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)
                         }
                         className={`h-1.5 w-1.5 rounded-full transition-colors ${
                           i < lang.proficiency ? "bg-blue-600" : "bg-gray-300"
@@ -532,7 +532,7 @@ export function ModernWysiwygTemplate({
                     ))}
                 </div>
                 <button
-                  onClick={() => onDeleteLanguage(lang.name)}
+                  onClick={() => onDeleteLanguage(lang.id!)}
                   className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover/lang:opacity-100 transition-opacity print:hidden"
                 >
                   <Trash2 size={12} />

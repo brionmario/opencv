@@ -31,7 +31,7 @@ interface ProfessionalTemplateProps {
   onAddSocialLink: () => void;
   onDeleteSocialLink: (id: string) => void;
   onAddLanguage: () => void;
-  onDeleteLanguage: (name: string) => void;
+  onDeleteLanguage: (id: string) => void;
   onPhotoUpload: (dataUrl: string) => void;
   onDeleteCustomSection: (sectionId: string) => void;
   onUpdateCustomSectionTitle: (sectionId: string, title: string) => void;
@@ -550,15 +550,15 @@ export function ProfessionalTemplate({
         <div className="space-y-2 mt-2">
           {data.languages.map((lang, langIdx) => (
             <div
-              key={langIdx}
-              data-entry-id={`lang-${lang.name}`}
+              key={lang.id ?? langIdx}
+              data-entry-id={`lang-${lang.id}`}
               className="group/lang flex items-center justify-between"
             >
               <div>
                 <div className="font-bold text-gray-900 text-sm">
                   <InlineEditor
                     value={lang.name}
-                    onChange={(v) => onUpdate(`languages.${lang.name}.name`, v)}
+                    onChange={(v) => onUpdate(`languages.${lang.id}.name`, v)}
                     placeholder="Language"
                     className="font-bold text-gray-900 text-sm"
                   />
@@ -575,7 +575,7 @@ export function ProfessionalTemplate({
                       <button
                         key={i}
                         onClick={() =>
-                          onUpdate(`languages.${lang.name}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)
+                          onUpdate(`languages.${lang.id}.proficiency`, (i + 1) as 1 | 2 | 3 | 4 | 5)
                         }
                         className={`w-3.5 h-3.5 rounded-full transition-colors ${
                           i < lang.proficiency ? "bg-blue-600" : "bg-gray-300"
@@ -584,7 +584,7 @@ export function ProfessionalTemplate({
                     ))}
                 </div>
                 <button
-                  onClick={() => onDeleteLanguage(lang.name)}
+                  onClick={() => onDeleteLanguage(lang.id!)}
                   className="p-0.5 text-red-400 hover:text-red-600 opacity-0 group-hover/lang:opacity-100 transition-opacity print:hidden"
                 >
                   <XIcon size={12} />

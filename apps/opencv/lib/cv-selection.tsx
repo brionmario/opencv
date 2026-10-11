@@ -22,6 +22,8 @@ interface SelectionCtx {
   select: (id: string | null) => void;
   /** Opens the Layout dock focused on a section, from the page itself. */
   openLayout?: (id: string) => void;
+  /** Sections that are on the page but would render nothing in an export. */
+  emptyIds?: Set<string>;
   /** False inside read-only renders (the template gallery preview). */
   enabled: boolean;
 }
@@ -36,18 +38,20 @@ export function SelectionProvider({
   selectedId,
   onSelect,
   onOpenLayout,
+  emptyIds,
   enabled = true,
   children,
 }: {
   selectedId: string | null;
   onSelect: (id: string | null) => void;
   onOpenLayout?: (id: string) => void;
+  emptyIds?: Set<string>;
   enabled?: boolean;
   children: React.ReactNode;
 }) {
   const value = useMemo<SelectionCtx>(
-    () => ({ selectedId, select: onSelect, openLayout: onOpenLayout, enabled }),
-    [selectedId, onSelect, onOpenLayout, enabled]
+    () => ({ selectedId, select: onSelect, openLayout: onOpenLayout, emptyIds, enabled }),
+    [selectedId, onSelect, onOpenLayout, emptyIds, enabled]
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }
@@ -65,7 +69,7 @@ export function useSelection() {
  * that originated in one of those is left alone.
  */
 export function SectionFrame({ id, children }: { id: string; children: React.ReactNode }) {
-  const { selectedId, select, openLayout, enabled } = useSelection();
+  const { selectedId, select, openLayout, emptyIds, enabled } = useSelection();
 
   const onClick = useCallback(
     (e: React.MouseEvent) => {
@@ -85,6 +89,7 @@ export function SectionFrame({ id, children }: { id: string; children: React.Rea
       className="cv-section-frame"
       data-cv-section={id}
       data-selected={selectedId === id ? "true" : undefined}
+      data-empty={emptyIds?.has(id) ? "true" : undefined}
       onClick={onClick}
     >
       {children}

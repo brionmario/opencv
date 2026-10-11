@@ -397,8 +397,8 @@ export function ProfessionalPDFDocument({
   const links    = (data.socialLinks  ?? []).filter(l => l.platform || l.url);
   const allLangs = (data.languages ?? []).filter(l => l.name);
   const p2Ids    = new Set(page2ExpIds ?? []);
-  const langs      = allLangs.filter(l => !p2Ids.has(`lang-${l.name}`));
-  const page2Langs = allLangs.filter(l => p2Ids.has(`lang-${l.name}`));
+  const langs      = allLangs.filter(l => !p2Ids.has(`lang-${l.id}`));
+  const page2Langs = allLangs.filter(l => p2Ids.has(`lang-${l.id}`));
 
   // ── Decide which experience entries go on page 1 ──────────────────────────
   const page1Exps: ExperienceEntry[] = [];
@@ -452,7 +452,7 @@ export function ProfessionalPDFDocument({
     <View key="languages" style={S.section} wrap={false}>
       <Text style={S.secHead}>Languages</Text>
       {list.map(lang => (
-        <View key={lang.name} style={S.langRow} wrap={false}>
+        <View key={lang.id ?? lang.name} style={S.langRow} wrap={false}>
           <View>
             <Text style={S.langName}>{lang.name}</Text>
             <Text style={S.langLabel}>

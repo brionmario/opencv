@@ -127,6 +127,11 @@ export interface PublicationEntry {
 }
 
 export interface LanguageEntry {
+  /** Stable identity. Languages were keyed by name, which silently merged
+   *  entries that shared one — editing or deleting any of them hit them all,
+   *  and the page-split markers collided. Optional so documents saved before
+   *  this still load; the hook assigns ids on read. */
+  id?: string;
   name: string;
   proficiency: 1 | 2 | 3 | 4 | 5;
 }
