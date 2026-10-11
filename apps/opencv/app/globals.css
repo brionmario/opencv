@@ -192,6 +192,13 @@
   --cv-accent-soft: color-mix(in srgb, var(--cv-accent) 14%, transparent);
   --cv-accent-line: color-mix(in srgb, var(--cv-accent) 45%, transparent);
 
+  /* Destructive actions. Defined alongside the accent so a delete never has
+     to reach for a one-off hex. */
+  --cv-danger: #e5484d;
+  --cv-danger-fg: #ffffff;
+  --cv-danger-soft: color-mix(in srgb, var(--cv-danger) 14%, transparent);
+  --cv-danger-line: color-mix(in srgb, var(--cv-danger) 45%, transparent);
+
   /* Tool chrome, not marketing chrome: small radii, flat surfaces. */
   --cv-radius: 6px;
   --cv-radius-sm: 4px;
@@ -224,6 +231,7 @@
   --cv-text-3:    #878d97;
   --cv-border:    #e2e5ea;
   --cv-border-2:  #cfd4db;
+  --cv-danger:    #cf2b30;
   --cv-hover:     rgba(21,24,29,.045);
   --cv-hover-2:   rgba(21,24,29,.075);
   --cv-shadow-sm: 0 1px 2px rgba(16,20,26,.06);
@@ -245,6 +253,7 @@
   --cv-text-3:    #70767f;
   --cv-border:    #2b3038;
   --cv-border-2:  #3a4049;
+  --cv-danger:    #f0595e;
   --cv-hover:     rgba(255,255,255,.045);
   --cv-hover-2:   rgba(255,255,255,.08);
   --cv-shadow-sm: 0 1px 2px rgba(0,0,0,.40);
@@ -391,6 +400,20 @@
 .cv-btn:hover { background: var(--cv-surface-2); border-color: var(--cv-text-3); }
 .cv-btn:active { background: var(--cv-surface-3); }
 .cv-btn:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: 2px; }
+
+/* Destructive variant: outlined at rest so it does not shout from the panel,
+   filled on hover once the pointer has committed to it. */
+.cv-btn-danger {
+  color: var(--cv-danger);
+  border-color: var(--cv-danger-line);
+  background: var(--cv-danger-soft);
+}
+.cv-btn-danger:hover {
+  background: var(--cv-danger);
+  border-color: var(--cv-danger);
+  color: var(--cv-danger-fg);
+}
+.cv-btn-danger:focus-visible { outline: 2px solid var(--cv-danger); outline-offset: 2px; }
 
 .cv-btn-ghost { border-color: transparent; background: transparent; }
 .cv-btn-ghost:hover { background: var(--cv-hover); border-color: transparent; }
@@ -921,8 +944,12 @@
   font-family: var(--cv-font-mono); font-size: 11px; color: var(--cv-text-3);
   font-variant-numeric: tabular-nums;
 }
-.cv-prop-danger { margin-top: 12px; padding-top: 10px; border-top: 1px solid var(--cv-border); }
-.cv-prop-danger .cv-btn:hover { border-color: #b4474f; color: #e2707a; }
+.cv-prop-danger {
+  margin-top: 14px; padding-top: 11px;
+  border-top: 1px solid var(--cv-border);
+  display: flex; flex-direction: column; gap: 6px; align-items: flex-start;
+}
+.cv-prop-danger p { margin: 0; font-size: 11px; color: var(--cv-text-3); line-height: 1.45; }
 
 .cv-seg-sm {
   display: inline-flex; padding: 2px; gap: 1px;
@@ -1256,15 +1283,21 @@
   overflow: hidden; text-overflow: ellipsis;
   display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;
 }
-.cv-map-box-eye {
+.cv-map-box-tools {
   position: absolute; top: 2px; right: 2px;
+  display: flex; gap: 1px;
+  opacity: 0; transition: opacity var(--cv-dur) var(--cv-ease);
+}
+.cv-map-box:hover .cv-map-box-tools,
+.cv-map-box[data-selected="true"] .cv-map-box-tools { opacity: 1; }
+.cv-map-box-tool {
   width: 16px; height: 16px; display: grid; place-items: center;
   border: 0; border-radius: 3px; background: transparent;
-  color: var(--cv-text-3); cursor: pointer; opacity: 0;
-  transition: opacity var(--cv-dur) var(--cv-ease);
+  color: var(--cv-text-3); cursor: pointer;
+  transition: background var(--cv-dur) var(--cv-ease), color var(--cv-dur) var(--cv-ease);
 }
-.cv-map-box:hover .cv-map-box-eye { opacity: 1; }
-.cv-map-box-eye:hover { background: var(--cv-hover-2); color: var(--cv-text); }
+.cv-map-box-tool:hover { background: var(--cv-hover-2); color: var(--cv-text); }
+.cv-map-box-tool.danger:hover { background: var(--cv-danger); color: var(--cv-danger-fg); }
 
 /* Where the dragged block would land. */
 .cv-map-drop {
@@ -1430,3 +1463,33 @@
   .cv-home-hero::before { background: linear-gradient(180deg, #070d1bf5 0%, #070d1bdb 70%, #070d1bc4 100%); }
   .cv-home-hero h1 { font-size: 21px; }
 }
+
+/* ---- Destructive confirmation ---- */
+.cv-confirm {
+  width: min(420px, 100%);
+  display: flex; gap: 14px;
+  padding: 20px;
+  background: var(--cv-surface);
+  border: 1px solid var(--cv-border-2);
+  border-radius: var(--cv-radius-lg);
+  box-shadow: var(--cv-shadow-lg);
+  font-family: var(--cv-font-ui);
+  animation: cv-modalin 0.18s var(--cv-ease);
+}
+.cv-confirm-icon {
+  flex-shrink: 0;
+  width: 32px; height: 32px; display: grid; place-items: center;
+  border-radius: var(--cv-radius-sm);
+  background: var(--cv-danger-soft);
+  border: 1px solid var(--cv-danger-line);
+  color: var(--cv-danger);
+}
+.cv-confirm-body { min-width: 0; }
+.cv-confirm-body h2 {
+  margin: 0; font-size: 15px; font-weight: 680; letter-spacing: -0.012em;
+  color: var(--cv-text);
+}
+.cv-confirm-body p {
+  margin: 7px 0 0; font-size: 12.5px; line-height: 1.5; color: var(--cv-text-2);
+}
+.cv-confirm-actions { display: flex; gap: 8px; margin-top: 16px; }

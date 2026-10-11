@@ -13,7 +13,7 @@ export interface PropertiesPanelProps {
   onToggleHidden: (id: string) => void;
   onMove: (id: string, direction: -1 | 1, mode: "flat" | "column") => void;
   onSetColumn: (id: string, column: "left" | "right") => void;
-  onDeleteCustomSection: (id: string) => void;
+  onRequestDelete: (id: string) => void;
 }
 
 function labelFor(id: string, data: CVData): string {
@@ -58,7 +58,7 @@ export function PropertiesPanel({
   onToggleHidden,
   onMove,
   onSetColumn,
-  onDeleteCustomSection,
+  onRequestDelete,
 }: PropertiesPanelProps) {
   const order = getEffectiveSectionOrder(data);
   const meta: SectionMeta | undefined = selectedId
@@ -147,14 +147,17 @@ export function PropertiesPanel({
         </div>
       </Field>
 
-      {isCustom && (
-        <div className="cv-prop-danger">
-          <button className="cv-btn cv-btn-sm" onClick={() => onDeleteCustomSection(meta.id)}>
-            <Trash2 size={14} />
-            Delete section
-          </button>
-        </div>
-      )}
+      <div className="cv-prop-danger">
+        <button className="cv-btn cv-btn-sm cv-btn-danger" onClick={() => onRequestDelete(meta.id)}>
+          <Trash2 size={14} />
+          Delete section
+        </button>
+        <p>
+          {isCustom
+            ? "Removes the section and everything in it."
+            : "Clears its content and takes it off the page."}
+        </p>
+      </div>
     </div>
   );
 }

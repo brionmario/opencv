@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useMemo, useRef, useState } from "react";
-import { Lock, Eye, EyeOff, Plus } from "lucide-react";
+import { Lock, Eye, EyeOff, Plus, X } from "lucide-react";
 import type { CVData, SectionMeta } from "@/lib/cv-builder-types";
 import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
 import { getEffectiveSectionOrder } from "@/lib/cv-sections";
@@ -19,6 +19,7 @@ export interface LayoutMapProps {
   onSelect: (id: string | null) => void;
   onPlace: (id: string, column: Column, beforeId: string | null) => void;
   onToggleHidden: (id: string) => void;
+  onRequestDelete: (id: string) => void;
   onAddSection: () => void;
 }
 
@@ -45,6 +46,7 @@ export function LayoutMap({
   onSelect,
   onPlace,
   onToggleHidden,
+  onRequestDelete,
   onAddSection,
 }: LayoutMapProps) {
   const order = getEffectiveSectionOrder(data);
@@ -178,14 +180,26 @@ export function LayoutMap({
                     title={labelFor(s.id, data)}
                   >
                     <span className="cv-map-box-label">{labelFor(s.id, data)}</span>
-                    <button
-                      className="cv-map-box-eye"
-                      aria-label={`Hide ${labelFor(s.id, data)}`}
-                      onPointerDown={(e) => e.stopPropagation()}
-                      onClick={(e) => { e.stopPropagation(); onToggleHidden(s.id); }}
-                    >
-                      <Eye size={12} />
-                    </button>
+                    <span className="cv-map-box-tools">
+                      <button
+                        className="cv-map-box-tool"
+                        aria-label={`Hide ${labelFor(s.id, data)}`}
+                        title="Hide"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); onToggleHidden(s.id); }}
+                      >
+                        <Eye size={12} />
+                      </button>
+                      <button
+                        className="cv-map-box-tool danger"
+                        aria-label={`Delete ${labelFor(s.id, data)}`}
+                        title="Delete"
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => { e.stopPropagation(); onRequestDelete(s.id); }}
+                      >
+                        <X size={12} />
+                      </button>
+                    </span>
                   </div>
                 </div>
               ))}

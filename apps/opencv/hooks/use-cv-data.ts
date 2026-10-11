@@ -446,6 +446,53 @@ export function useCVData() {
     });
   }, []);
 
+  /**
+   * Removes a section from the résumé, whatever kind it is.
+   *
+   * A custom section is deleted outright. A built-in one cannot be: every
+   * template reads its content from a named field on CVData, and
+   * getEffectiveSectionOrder re-appends any built-in missing from the order
+   * (that is how older documents pick up newer section types). So deleting a
+   * built-in clears its content and marks it hidden, which takes it off the
+   * page and returns it to the catalogue as an empty section.
+   *
+   * It therefore destroys content, and callers are expected to confirm first.
+   */
+  const removeSection = useCallback((id: string) => {
+    setData((prev) => {
+      const isCustom = prev.customSections.some((s) => s.id === id);
+      if (isCustom) {
+        return {
+          ...prev,
+          customSections: prev.customSections.filter((s) => s.id !== id),
+          sectionOrder: getEffectiveSectionOrder(prev).filter((s) => s.id !== id),
+        };
+      }
+
+      const cleared: Partial<CVData> = {};
+      switch (id) {
+        case "summary":      cleared.personalInfo = { ...prev.personalInfo, summary: "" }; break;
+        case "experience":   cleared.experience = []; break;
+        case "education":    cleared.education = []; break;
+        case "skills":       cleared.skills = []; break;
+        case "awards":       cleared.awards = []; break;
+        case "publications": cleared.publications = []; break;
+        case "references":   cleared.references = []; break;
+        case "socialLinks":  cleared.socialLinks = []; break;
+        case "languages":    cleared.languages = []; break;
+        default: break;
+      }
+
+      return {
+        ...prev,
+        ...cleared,
+        sectionOrder: getEffectiveSectionOrder(prev).map((s) =>
+          s.id === id ? { ...s, hidden: true } : s
+        ),
+      };
+    });
+  }, []);
+
   const deleteCustomSection = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
@@ -651,6 +698,7 @@ export function useCVData() {
     deleteSocialLink,
     addCustomSection,
     deleteCustomSection,
+    removeSection,
     updateCustomSectionTitle,
     addCustomSectionItem,
     updateCustomSectionItem,

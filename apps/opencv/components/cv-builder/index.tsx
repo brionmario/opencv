@@ -26,6 +26,8 @@ import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 import { LayoutMap } from "@/components/cv-editor/layout-map";
 import { SectionPicker } from "@/components/cv-editor/section-picker";
+import { ConfirmDelete } from "@/components/cv-editor/confirm-delete";
+import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
 
 type DrawerType = "theme" | "history" | "sections" | null;
 type CanvasType = "soft" | "dots" | "grid" | "plain";
@@ -603,6 +605,7 @@ export function CVBuilder() {
   // The dock always shows Properties; this picks the tool panel under it.
   const [tool, setTool] = useState<DrawerType>("sections");
   const [pickingSection, setPickingSection] = useState(false);
+  const [deletingSection, setDeletingSection] = useState<string | null>(null);
   const [isInitialized, setIsInitialized] = useState(false);
   const isFirstLayoutSaveRef = useRef(true);
   const previewRef = useRef<HTMLDivElement>(null);
@@ -654,6 +657,7 @@ export function CVBuilder() {
     deleteLanguage,
     addCustomSection,
     deleteCustomSection,
+    removeSection,
     updateCustomSectionTitle,
     addCustomSectionItem,
     updateCustomSectionItem,
@@ -988,6 +992,7 @@ export function CVBuilder() {
                     onSelect={setSelectedSection}
                     onPlace={placeSection}
                     onToggleHidden={toggleSectionHidden}
+                    onRequestDelete={setDeletingSection}
                     onAddSection={() => setPickingSection(true)}
                   />
                 </div>
@@ -1020,7 +1025,7 @@ export function CVBuilder() {
               onToggleHidden={toggleSectionHidden}
               onMove={moveSection}
               onSetColumn={setSectionColumn}
-              onDeleteCustomSection={deleteCustomSection}
+              onRequestDelete={setDeletingSection}
             />
           </div>
         </section>
@@ -1036,6 +1041,45 @@ export function CVBuilder() {
         <span className="grow" />
         <span>{selectedSection ? `selected: ${selectedSection}` : "no selection"}</span>
       </footer>
+
+      {/* ── Delete confirmation ── */}
+      {deletingSection && (() => {
+        const custom = data.customSections.find((c) => c.id === deletingSection);
+        const counts: Record<string, number> = {
+          experience: data.experience.length,
+          education: data.education.length,
+          skills: data.skills.length,
+          awards: data.awards.length,
+          publications: (data.publications ?? []).length,
+          references: (data.references ?? []).length,
+          socialLinks: (data.socialLinks ?? []).length,
+          languages: (data.languages ?? []).length,
+        };
+        const n = custom ? custom.items.length : counts[deletingSection];
+        const lost =
+          deletingSection === "summary"
+            ? (data.personalInfo.summary ? "text" : null)
+            : n > 0
+              ? `${n} ${n === 1 ? "entry" : "entries"}`
+              : null;
+        return (
+          <ConfirmDelete
+            label={
+              custom?.title ??
+              SECTION_LABELS[deletingSection as BuiltInSectionId] ??
+              "this section"
+            }
+            lost={lost}
+            recoverable={!custom}
+            onCancel={() => setDeletingSection(null)}
+            onConfirm={() => {
+              removeSection(deletingSection);
+              if (selectedSection === deletingSection) setSelectedSection(null);
+              setDeletingSection(null);
+            }}
+          />
+        );
+      })()}
 
       {/* ── Section catalogue ── */}
       {pickingSection && (
