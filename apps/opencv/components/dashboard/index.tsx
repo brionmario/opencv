@@ -115,7 +115,7 @@ export function Dashboard() {
           {view === "home" && (
             <section
               className="cv-home-hero"
-              style={{ backgroundImage: `url(${assetPath("/brand/home-banner.jpg")})` }}
+              style={{ backgroundImage: `url(${assetPath("/brand/home-banner.webp")})` }}
             >
               <div className="cv-home-hero-text">
                 <span className="cv-home-hero-eyebrow">Open source · no account</span>

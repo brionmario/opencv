@@ -1388,7 +1388,9 @@
   display: flex; align-items: center;
   border: 1px solid var(--cv-border);
   border-radius: var(--cv-radius-lg);
-  background-color: #1b2233;
+  /* Sampled from the artwork's empty left field, so any area the image
+     does not cover is seamless with it. */
+  background-color: #070d1b;
   background-size: cover;
   background-position: center right;
   overflow: hidden;
@@ -1398,7 +1400,7 @@
 .cv-home-hero::before {
   content: "";
   position: absolute; inset: 0;
-  background: linear-gradient(90deg, #141b2bf2 0%, #141b2bd9 38%, #141b2b40 62%, transparent 100%);
+  background: linear-gradient(90deg, #070d1bf0 0%, #070d1bc7 34%, #070d1b2b 58%, transparent 78%);
 }
 .cv-home-hero-text { position: relative; max-width: 42ch; }
 .cv-home-hero-eyebrow {
@@ -1425,6 +1427,6 @@
 
 @media (max-width: 720px) {
   .cv-home-hero { padding: 24px 20px; min-height: 0; }
-  .cv-home-hero::before { background: linear-gradient(180deg, #141b2bf5 0%, #141b2bd9 70%, #141b2bbf 100%); }
+  .cv-home-hero::before { background: linear-gradient(180deg, #070d1bf5 0%, #070d1bdb 70%, #070d1bc4 100%); }
   .cv-home-hero h1 { font-size: 21px; }
 }
