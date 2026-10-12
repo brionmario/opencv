@@ -16,6 +16,7 @@ import {
 import { starterTemplates } from "@/lib/starter-templates";
 import { activeDocumentId, createDocument, openDocument, syncActiveDocument } from "@/lib/cv-documents";
 import { TemplatePreview } from "@/components/cv-editor/template-preview";
+import { ConfirmDelete } from "@/components/cv-editor/confirm-delete";
 import { assetPath } from "@/lib/asset-path";
 import { initChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 
@@ -36,6 +37,7 @@ export default function TemplatesPage() {
   const [creating, setCreating] = useState(false);
   /** Only meaningful while creating: start from the sample, or from a blank. */
   const [keepSample, setKeepSample] = useState(true);
+  const [confirmingReplace, setConfirmingReplace] = useState(false);
   const [theme, setTheme] = useState<CVTheme>(DEFAULT_THEME);
   const [ready, setReady] = useState(false);
   // The shell theme lives on <html>; this route sets it too so the gallery
@@ -51,6 +53,9 @@ export default function TemplatesPage() {
       // follows the sample/blank choice instead.
       const open = !!activeDocumentId();
       setCreating(!open);
+      // Creating: the sample is the obvious starting point. Restyling an
+      // existing résumé: taking the sample would discard it, so opt in.
+      setKeepSample(!open);
       const savedData = localStorage.getItem(DATA_STORAGE_KEY);
       if (open && savedData) {
         const parsed = JSON.parse(savedData) as CVData;
@@ -70,9 +75,30 @@ export default function TemplatesPage() {
   }, []);
 
   const meta = useMemo(() => LAYOUTS.find((l) => l.id === selected) ?? LAYOUTS[0], [selected]);
-  const previewData = creating ? (keepSample ? SAMPLE : BLANK) : data;
+  // Always preview the sample. Judging a template against a sparse document
+  // tells you nothing about it, so the preview shows the design filled in and
+  // the toggle below decides whether that content comes with it.
+  const previewData = SAMPLE;
+  /** Whether opting in would actually destroy something. A document still
+   *  carrying the blank starter's placeholders has nothing to lose — and its
+   *  placeholders are non-empty strings, so "is it filled in?" has to mean
+   *  "does it differ from the blank?", not "is it truthy?". */
+  const hasOwnContent =
+    !creating &&
+    (data.experience.length > 0 ||
+      data.education.length > 0 ||
+      data.skills.length > 0 ||
+      (data.awards?.length ?? 0) > 0 ||
+      data.personalInfo.fullName !== BLANK.personalInfo.fullName ||
+      data.personalInfo.summary !== BLANK.personalInfo.summary);
 
   const use = () => {
+    // Overwriting a real document with the sample is destructive, so ask.
+    if (keepSample && hasOwnContent && !confirmingReplace) {
+      setConfirmingReplace(true);
+      return;
+    }
+    setConfirmingReplace(false);
     try {
       localStorage.setItem(LAYOUT_STORAGE_KEY, selected);
     } catch {}
@@ -80,7 +106,12 @@ export default function TemplatesPage() {
     // with nothing open (straight from the dashboard's "Pick a template")
     // means this is where the document gets created.
     if (!creating) {
-      syncActiveDocument({ data, theme, layout: selected });
+      syncActiveDocument({ data: keepSample ? SAMPLE : data, theme, layout: selected });
+      // The editor reads the open-document buffer, not the library row, and
+      // writes the buffer back on mount — so updating only the row would be
+      // immediately overwritten by the stale buffer. Re-open to load it.
+      const openId = activeDocumentId();
+      if (keepSample && openId) openDocument(openId);
     } else {
       const doc = createDocument({
         name: keepSample ? `${meta.name} résumé` : "Untitled résumé",
@@ -106,22 +137,16 @@ export default function TemplatesPage() {
           alt="openCV — Open Source CV Builder"
         />
         <div className="cv-gallery-bar-end">
-          {creating && (
-            <div className="cv-start-choice" role="group" aria-label="Starting content">
-              <button
-                data-active={keepSample ? "true" : undefined}
-                onClick={() => setKeepSample(true)}
-              >
-                Sample content
-              </button>
-              <button
-                data-active={!keepSample ? "true" : undefined}
-                onClick={() => setKeepSample(false)}
-              >
-                Start empty
-              </button>
-            </div>
-          )}
+          <label className="cv-keep-sample" title={creating
+            ? "Start this résumé from the sample content shown"
+            : "Replace your current content with the sample shown"}>
+            <input
+              type="checkbox"
+              checked={keepSample}
+              onChange={(e) => setKeepSample(e.target.checked)}
+            />
+            Keep sample content
+          </label>
           <button
             className="cv-iconbtn"
             aria-label={dark ? "Switch to light mode" : "Switch to dark mode"}
@@ -136,6 +161,25 @@ export default function TemplatesPage() {
           </button>
         </div>
       </header>
+
+      {confirmingReplace && (
+        <ConfirmDelete
+          label="your résumé content"
+          lost={null}
+          recoverable={false}
+          title="Replace your content with the sample?"
+          body={`Your current résumé${
+            data.experience.length
+              ? ` — including ${data.experience.length} experience ${
+                  data.experience.length === 1 ? "entry" : "entries"
+                } —`
+              : ""
+          } will be replaced by the sample shown. This cannot be undone.`}
+          confirmLabel="Replace content"
+          onCancel={() => setConfirmingReplace(false)}
+          onConfirm={use}
+        />
+      )}
 
       <div className="cv-gallery-body">
         {/* ── Chooser ── */}
@@ -181,11 +225,11 @@ export default function TemplatesPage() {
           <footer className="cv-gallery-stage-ft">
             <span>{meta.name}</span>
             <span className="cv-gallery-stage-note">
-              {creating
-                ? keepSample
-                  ? "Preview with sample content · A4"
-                  : "Preview with empty placeholders · A4"
-                : "Live preview with your own content · A4"}
+              {keepSample
+                ? "Sample content · you will keep it · A4"
+                : creating
+                  ? "Sample content · you will start with empty placeholders · A4"
+                  : "Sample content · your own résumé is kept · A4"}
             </span>
           </footer>
         </section>

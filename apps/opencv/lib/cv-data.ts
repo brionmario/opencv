@@ -2,10 +2,10 @@
 // Keep this anonymized — it ships in the bundle and is what the demo renders.
 export const cvData = {
   personal: {
-    name: "Jordan Avery",
+    name: "Aydan Silva",
     phone: "+94771234567",
-    email: "jordan.avery@example.com",
-    website: "www.jordanavery.dev",
+    email: "aydan.silva@example.com",
+    website: "www.aydansilva.dev",
     location: "Colombo, Sri Lanka",
     profileImage: "/placeholder-avatar.png",
   },
@@ -105,10 +105,10 @@ export const cvData = {
     },
   ],
   socialLinks: [
-    { platform: "GitHub", url: "https://www.github.com/jordanavery" },
-    { platform: "Portfolio", url: "https://www.jordanavery.dev" },
-    { platform: "LinkedIn", url: "https://www.linkedin.com/in/jordanavery" },
-    { platform: "Medium", url: "https://www.medium.com/@jordanavery" },
+    { platform: "GitHub", url: "https://www.github.com/aydansilva" },
+    { platform: "Portfolio", url: "https://www.aydansilva.dev" },
+    { platform: "LinkedIn", url: "https://www.linkedin.com/in/aydansilva" },
+    { platform: "Medium", url: "https://www.medium.com/@aydansilva" },
   ],
   languages: [
     { name: "English", proficiency: 4 },

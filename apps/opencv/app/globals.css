@@ -1550,3 +1550,21 @@
   background: var(--cv-surface-3); color: var(--cv-text);
   border-color: var(--cv-border-2);
 }
+
+/* ---- "Keep sample content" opt-in ---- */
+.cv-keep-sample {
+  display: inline-flex; align-items: center; gap: 7px;
+  padding: 0 10px; height: 30px;
+  border: 1px solid var(--cv-border-2); border-radius: var(--cv-radius);
+  background: var(--cv-surface-2);
+  font-family: var(--cv-font-ui); font-size: 12.5px; font-weight: 550;
+  color: var(--cv-text-2); cursor: pointer; white-space: nowrap;
+  transition: color var(--cv-dur) var(--cv-ease), border-color var(--cv-dur) var(--cv-ease);
+}
+.cv-keep-sample:hover { color: var(--cv-text); border-color: var(--cv-text-3); }
+.cv-keep-sample:has(input:checked) {
+  color: var(--cv-text);
+  border-color: var(--cv-accent-line);
+  background: var(--cv-accent-soft);
+}
+.cv-keep-sample input { accent-color: var(--cv-accent); width: 14px; height: 14px; cursor: pointer; }

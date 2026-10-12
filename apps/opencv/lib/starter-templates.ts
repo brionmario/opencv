@@ -52,12 +52,12 @@ export const starterTemplates: StarterTemplate[] = [
     data: {
       ...emptyBase,
       personalInfo: {
-        fullName: "Jordan Avery",
+        fullName: "Aydan Silva",
         jobTitle: "Technical Lead",
-        email: "jordan.avery@example.com",
+        email: "aydan.silva@example.com",
         phone: "+94 (77) 123 4567",
         location: "Colombo, Sri Lanka",
-        website: "www.jordanavery.dev",
+        website: "www.aydansilva.dev",
         summary:
           "<strong>Fullstack Engineer with 7+ years of experience</strong> in building scalable, high-performant and secure software solutions. Proficient in <strong>Frontend</strong> development, <strong>Backend</strong> development and <strong>Experience Design</strong>. Currently contributing to identity and access management products, focusing on building secure and reliable platforms with <strong>Developer & User experience</strong> in mind.",
         // Vendored from https://avatar.vercel.sh/brion?rounded=60 — served
@@ -213,11 +213,11 @@ export const starterTemplates: StarterTemplate[] = [
         },
       ],
       socialLinks: [
-        { id: "sl-1", platform: "GitHub", url: "www.github.com/jordanavery" },
-        { id: "sl-2", platform: "Portfolio", url: "www.jordanavery.dev" },
-        { id: "sl-3", platform: "LinkedIn", url: "www.linkedin.com/in/jordanavery" },
-        { id: "sl-4", platform: "Medium", url: "www.medium.com/@jordanavery" },
-        { id: "sl-5", platform: "ResearchGate", url: "www.researchgate.net/profile/Jordan-Avery" },
+        { id: "sl-1", platform: "GitHub", url: "www.github.com/aydansilva" },
+        { id: "sl-2", platform: "Portfolio", url: "www.aydansilva.dev" },
+        { id: "sl-3", platform: "LinkedIn", url: "www.linkedin.com/in/aydansilva" },
+        { id: "sl-4", platform: "Medium", url: "www.medium.com/@aydansilva" },
+        { id: "sl-5", platform: "ResearchGate", url: "www.researchgate.net/profile/Aydan-Silva" },
       ],
       languages: [],
       projects: [],
