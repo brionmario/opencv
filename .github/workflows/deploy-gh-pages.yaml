@@ -2,10 +2,9 @@
 
 name: ☄️ Deploy Documentation
 
+# Deploys are manual on purpose: pushing to main should not publish. Run this
+# workflow from the Actions tab, or `gh workflow run "☄️ Deploy Documentation"`.
 on:
-  push:
-    branches:
-      - main
   workflow_dispatch:
     inputs:
       basePath:

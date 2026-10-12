@@ -987,6 +987,9 @@
 }
 .cv-gallery-logo { height: 26px; width: auto; display: block; }
 .cv-gallery-bar-end { display: flex; align-items: center; justify-content: flex-end; gap: 8px; }
+/* The back link is a direct grid child, so it stretches across its whole 1fr
+   column and its hover background with it. Size it to its own content. */
+.cv-gallery-bar > .cv-btn { justify-self: start; }
 
 .cv-gallery-body {
   display: grid;
