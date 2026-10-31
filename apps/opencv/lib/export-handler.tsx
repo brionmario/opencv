@@ -1,4 +1,5 @@
 import type { CVData, CVTheme, CustomSection } from "@/lib/cv-builder-types";
+import { toJsonResume } from "@brionmario/opencv-core";
 import { absoluteAssetUrl } from "@/lib/asset-path";
 import { getIconSvg, getSocialIconSvg, resolveSocialLinkIcon } from "@/lib/icons";
 import { sectionsFlat } from "@/lib/cv-sections";
@@ -8,7 +9,24 @@ function formatDateRange(start: string, end: string): string {
   return start || end;
 }
 
+/**
+ * Exports the résumé as JSON Resume, the format the menu has always claimed
+ * it was. It used to write out CVData — the editor's own shape, full of
+ * entry ids and section columns that mean nothing outside this app — which
+ * no JSON Resume consumer could read.
+ *
+ * The internal shape is still available, under its own name, because it is
+ * the only lossless form: it is what a backup or a hand-off to another
+ * opencv instance wants.
+ */
 export function exportToJSON(data: CVData, filename: string) {
+  const json = JSON.stringify(toJsonResume(data), null, 2);
+  const blob = new Blob([json], { type: "application/json" });
+  downloadFile(blob, filename);
+}
+
+/** The editor's own document, losing nothing. */
+export function exportToNativeJSON(data: CVData, filename: string) {
   const json = JSON.stringify(data, null, 2);
   const blob = new Blob([json], { type: "application/json" });
   downloadFile(blob, filename);

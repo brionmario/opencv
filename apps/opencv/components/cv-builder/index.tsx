@@ -3,7 +3,7 @@
 import React, { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { LAYOUTS, type LayoutType } from "@/lib/cv-layouts";
 import { useCVData } from "@/hooks/use-cv-data";
-import { exportToJSON, exportToMarkdown, exportToHTML, exportToPDF } from "@/lib/export-handler";
+import { exportToJSON, exportToNativeJSON, exportToMarkdown, exportToHTML, exportToPDF } from "@/lib/export-handler";
 import { ProfessionalTemplate } from "@/components/cv-editor/templates/professional";
 import { ModernWysiwygTemplate } from "@/components/cv-editor/templates/modern";
 import { ClassicWysiwygTemplate } from "@/components/cv-editor/templates/classic";
@@ -50,7 +50,8 @@ const EXPORTS = [
   { id: "pdf",  name: "PDF document", ext: ".pdf",  icon: <FileJson  size={17} />, desc: "Print-ready, ATS-friendly",   handler: "pdf"  },
   { id: "html", name: "Web page",     ext: ".html", icon: <FileCode  size={17} />, desc: "Self-contained HTML file",    handler: "html" },
   { id: "md",   name: "Markdown",     ext: ".md",   icon: <FileText  size={17} />, desc: "Plain text, portable",        handler: "md"   },
-  { id: "json", name: "JSON Resume",  ext: ".json", icon: <FileJson  size={17} />, desc: "Structured data schema",      handler: "json" },
+  { id: "json", name: "JSON Resume",  ext: ".json", icon: <FileJson  size={17} />, desc: "Standard schema, machine-readable", handler: "json" },
+  { id: "native", name: "opencv document", ext: ".json", icon: <FileJson size={17} />, desc: "Everything, for backup or re-import", handler: "native" },
 ];
 
 /* ── Canvas picker (lives on the desk) ───────────────────────────────────── */
@@ -811,6 +812,8 @@ export function CVBuilder() {
         exportToMarkdown(data, `${name}_CV.md`);
       } else if (id === "json") {
         exportToJSON(data, `${name}_CV.json`);
+      } else if (id === "native") {
+        exportToNativeJSON(data, `${name}_opencv.json`);
       }
       pushToast(`Downloaded <b>${name}${e.ext}</b>`, "download");
     }, 1100);
@@ -850,7 +853,9 @@ export function CVBuilder() {
 
   const handleExportVersion = (version: CVVersion) => {
     const name = data.personalInfo.fullName.replace(/\s+/g, "_") || "resume";
-    exportToJSON(version.data, `${name}_CV_${version.label.replace(/\s+/g, "_")}.json`);
+    // A snapshot is a backup, so it keeps the lossless shape rather than
+    // the interchange one.
+    exportToNativeJSON(version.data, `${name}_opencv_${version.label.replace(/\s+/g, "_")}.json`);
   };
 
   const handleNewCV = () => {
