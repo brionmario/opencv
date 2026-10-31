@@ -67,9 +67,13 @@ jobs:
 
       - name: 🏗️ Build Project
         id: build
-        run: |
-          cd apps/opencv
-          pnpm build
+        # Through nx, from the root, so the app's workspace dependencies are
+        # built first. Calling `pnpm build` inside apps/opencv skips that:
+        # @brionmario/opencv-core resolves to its dist/, which is gitignored,
+        # so a clean checkout had nothing to resolve and the build failed on
+        # 91 unresolved imports. nx reads dependsOn: ["^build"] and builds the
+        # package ahead of the app.
+        run: npx nx build @brionmario/opencv
         env:
           NEXT_OUTPUT: export
           # github.event.inputs is only populated on workflow_dispatch, so a
