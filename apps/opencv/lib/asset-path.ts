@@ -31,3 +31,20 @@ export function absoluteAssetUrl<T extends string | undefined>(path: T): T {
   if (!prefixed || !prefixed.startsWith("/") || typeof window === "undefined") return prefixed;
   return new URL(prefixed, window.location.origin).href as T;
 }
+
+/**
+ * The canonical origin the site is published at, including the base path.
+ *
+ * Metadata needs absolute URLs. Next's `metadataBase` cannot do the job here:
+ * resolving a root-relative path like `/brand/og.png` against a base that has
+ * its own path drops that path, so every card image would point outside the
+ * sub-path and 404 — the same trap the icon URLs above already work around.
+ */
+export const SITE_URL = (
+  process.env.NEXT_PUBLIC_SITE_URL ?? `https://brionmario.github.io${BASE_PATH}`
+).replace(/\/+$/, "");
+
+/** An absolute URL on the published site, for metadata and structured data. */
+export function siteUrl(path = "/"): string {
+  return `${SITE_URL}${path.startsWith("/") ? path : `/${path}`}`.replace(/\/$/, "") || SITE_URL;
+}
