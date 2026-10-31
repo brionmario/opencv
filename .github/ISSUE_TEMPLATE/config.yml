@@ -1,0 +1,9 @@
+# Blank issues stay available on purpose: not everything worth reporting fits
+# a form, and a half-filled template is worse than a clear paragraph.
+blank_issues_enabled: true
+contact_links:
+  # No Discussions link: Discussions are not enabled on this repository, and a
+  # contact link to a disabled tab is a 404 with a friendly name.
+  - name: 🖥️ Try it on the live app first
+    url: https://brionmario.github.io/opencv
+    about: Worth checking whether the problem still happens on the published build.

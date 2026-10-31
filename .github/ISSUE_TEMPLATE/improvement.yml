@@ -1,0 +1,19 @@
+name: "🚀 Suggest an Improvement"
+description: Something that already works, but could work better.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: limitation
+    attributes:
+      label: Current limitation
+      description: What it does today, and where that falls short.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Suggested improvement
+      description: What it could do instead.
+    validations:
+      required: true

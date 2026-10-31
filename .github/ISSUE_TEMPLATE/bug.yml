@@ -1,0 +1,90 @@
+name: "🐞 Report a Bug"
+description: Something does not work the way it should.
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: A clear and concise description of what went wrong, and what you expected instead.
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: What you did, in order, up to the point it went wrong.
+      placeholder: |
+        1. Opened the editor
+        2. Added an experience entry
+        3. Exported to PDF
+        4. The second page was blank
+    validations:
+      required: true
+
+  - type: input
+    id: share_link
+    attributes:
+      label: Share link
+      description: >
+        The quickest possible fix. Hit **Share** in the editor and paste the link — it carries
+        the whole document, so the bug can be opened and reproduced exactly as you saw it.
+        ⚠️ That link contains your résumé. Before pasting, either remove anything personal or
+        reproduce the problem on a sample résumé from the template gallery.
+      placeholder: https://brionmario.github.io/opencv/view#cv=...
+    validations:
+      required: false
+
+  - type: dropdown
+    id: template
+    attributes:
+      label: Template
+      description: Which layout were you using? Several bugs only show up in one of them.
+      options:
+        - Not template-specific / not sure
+        - Professional
+        - Modern
+        - Classic
+        - Minimal
+      default: 0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where does it go wrong?
+      description: >
+        The canvas, the exports and the print path render from different code, so a problem
+        in one often does not exist in the others.
+      options:
+        - On the editor canvas
+        - PDF export
+        - Web page (HTML) export
+        - Markdown export
+        - JSON Resume export
+        - Printing
+        - A shared read-only link
+        - Somewhere else / not sure
+      default: 0
+    validations:
+      required: true
+
+  - type: input
+    id: environment
+    attributes:
+      label: Browser and OS
+      description: Including the version, since rendering differs between them.
+      placeholder: Chrome 131 on macOS 15
+    validations:
+      required: true
+
+  - type: input
+    id: where
+    attributes:
+      label: Where were you running it?
+      description: The published site, or your own build. If it is a build, the commit helps.
+      placeholder: brionmario.github.io/opencv, or a local build at commit abc1234
+    validations:
+      required: false

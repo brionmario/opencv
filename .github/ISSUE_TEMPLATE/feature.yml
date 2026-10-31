@@ -1,0 +1,48 @@
+name: "💡 Request a Feature"
+description: Suggest new functionality.
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: >
+        Describe the problem rather than the solution — the best fix is often not the one
+        either of us thought of first.
+      placeholder: |
+        When I want to [goal], I have to [current workaround], which means [what it costs me].
+    validations:
+      required: true
+
+  - type: textarea
+    id: usecases
+    attributes:
+      label: Use cases
+      description: Concrete situations where you would reach for this.
+      placeholder: |
+        1. Applying to roles that each want a slightly different emphasis
+        2. ...
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: What you have in mind
+      description: If you already have a shape in mind, describe it. Sketches and screenshots welcome.
+    validations:
+      required: false
+
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope
+      description: Anything you think should explicitly be left out.
+      placeholder: |
+        In scope:
+        - ...
+
+        Out of scope:
+        - ...
+    validations:
+      required: false
