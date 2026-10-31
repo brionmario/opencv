@@ -14,8 +14,8 @@ import {
  *
  * The editor was built around a single document held in three localStorage
  * keys (data, theme, layout). Rather than rewrite that, those keys stay as the
- * *open document buffer* — the editor reads and writes them exactly as before
- * — and this module owns the library of documents around it: it opens a
+ * *open document buffer* (the editor reads and writes them exactly as
+ * before), and this module owns the library of documents around it: it opens a
  * document into the buffer, and mirrors edits back out of it.
  *
  * That keeps the editor unaware of the library, so there is one place to

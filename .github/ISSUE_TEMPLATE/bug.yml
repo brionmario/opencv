@@ -28,7 +28,7 @@ body:
     attributes:
       label: Share link
       description: >
-        The quickest possible fix. Hit **Share** in the editor and paste the link — it carries
+        The quickest possible fix. Hit **Share** in the editor and paste the link; it carries
         the whole document, so the bug can be opened and reproduced exactly as you saw it.
         ⚠️ That link contains your résumé. Before pasting, either remove anything personal or
         reproduce the problem on a sample résumé from the template gallery.

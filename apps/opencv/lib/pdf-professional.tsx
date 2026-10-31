@@ -26,7 +26,7 @@ Font.registerHyphenationCallback((word) => [word]);
 
 // Embed the same Inter the canvas renders with, so line wrapping and column
 // heights in the PDF match the editor (Helvetica is narrower and desyncs
-// the WYSIWYG page split). Registered lazily — this module is only imported
+// the WYSIWYG page split). Registered lazily; this module is only imported
 // client-side by the export handler.
 if (typeof window !== "undefined") {
   Font.register({
@@ -83,7 +83,7 @@ function PdfIcon({ name, size, color }: { name: IconName; size: number; color: s
 // ── Page geometry ─────────────────────────────────────────────────────────────
 // A4: 595.28 × 841.89 pt, margins 27pt top/bottom, 30pt sides
 // (matches the canvas templates and HTML export, which render at 210×297mm
-// with 36px/40px padding — pt = px × 0.75)
+// with 36px/40px padding; pt = px × 0.75)
 const PAD_H = 27;
 const PAD_SIDE = 30;
 const COL_GAP = 21;
@@ -93,7 +93,7 @@ const HEADER_H = 80;
 
 // ── Height estimation constants ───────────────────────────────────────────────
 // Conservative (narrower than actual rendered width) so estimates are slightly
-// tall, which biases the split to put FEWER entries on page 1 — matching the
+// tall, which biases the split to put FEWER entries on page 1, matching the
 // canvas page-break behaviour where break-inside:avoid pushes entries down.
 const LEFT_CHARS = 56;  // chars per line estimate for left column
 const LINE_H     = 12;  // pt per text line
@@ -175,7 +175,7 @@ function RichText({ html, style }: { html: string; style: any }) {
   }
   // The canvas leaves anchors unstyled (Tailwind preflight makes them inherit
   // colour and decoration), so neutralise react-pdf's blue/underlined <Link>
-  // default and inherit the surrounding text colour instead — the link stays
+  // default and inherit the surrounding text colour instead; the link stays
   // clickable, it just stops looking different from the export's siblings.
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const flat: any = Array.isArray(style) ? Object.assign({}, ...style) : style;
@@ -196,7 +196,7 @@ function RichText({ html, style }: { html: string; style: any }) {
 /** react-pdf fetches image sources itself, so a cross-origin URL without a
  *  CORS header fails silently and leaves an empty ring on the page. Uploads
  *  are data: URLs and the bundled default is same-origin, so only a
- *  hand-entered remote URL hits this — drop the photo rather than print a
+ *  hand-entered remote URL hits this, so drop the photo rather than print a
  *  hollow circle. */
 function isEmbeddableImage(src: string | undefined): boolean {
   if (!src) return false;
@@ -254,9 +254,9 @@ function makeStyles(t: CVTheme) {
   const primary = t.primaryColor || "#db2777";
   const heading = t.headingColor || "#111827";
   const body    = t.bodyColor    || "#374151";
-  const muted   = "#6b7280";  // gray-500 — canvas meta/secondary text
-  const soft    = "#4b5563";  // gray-600 — canvas descriptions
-  const faint   = "#9ca3af";  // gray-400 — canvas meta icons only
+  const muted   = "#6b7280";  // gray-500: canvas meta/secondary text
+  const soft    = "#4b5563";  // gray-600: canvas descriptions
+  const faint   = "#9ca3af";  // gray-400: canvas meta icons only
 
   return StyleSheet.create({
     page: {
@@ -483,10 +483,10 @@ export function ProfessionalPDFDocument({
     </View>
   );
 
-  // ── Section registry — mirrors the canvas: order/visibility/column come
+  // ── Section registry: mirrors the canvas: order/visibility/column come
   // from sectionOrder; this only knows how to draw each section. Overflow to
   // page 2 remains scoped to experience + languages (the only sections the
-  // canvas tags with per-item ids for measurement) — other sections are
+  // canvas tags with per-item ids for measurement); other sections are
   // assumed to fit page 1, matching the app's existing pagination model. ──
   const builtInBlocks: Record<string, React.ReactNode> = {
     summary: data.personalInfo.summary ? (
@@ -633,7 +633,7 @@ export function ProfessionalPDFDocument({
   const renderBlock = (id: string): React.ReactNode => builtInBlocks[id] ?? customBlocks[id] ?? null;
 
   // builtInBlocks.experience/.languages already render only the page-1 slice
-  // (page1Exps/langs) — the overflow (page2Exps/page2Langs) renders on page 2
+  // (page1Exps/langs); the overflow (page2Exps/page2Langs) renders on page 2
   // below, in whichever column experience/languages are actually assigned to.
   const leftSections = sectionsForColumn(data, "left");
   const rightSections = sectionsForColumn(data, "right");
@@ -668,7 +668,7 @@ export function ProfessionalPDFDocument({
         {/* Two-column body */}
         <View style={S.cols}>
 
-          {/* ── Left / Right — driven by sectionOrder, same as the canvas ── */}
+          {/* ── Left / Right, driven by sectionOrder, same as the canvas ── */}
           <View style={S.left}>
             {leftSections.map((s) => renderBlock(s.id))}
           </View>

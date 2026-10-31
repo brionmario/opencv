@@ -134,7 +134,7 @@ export interface PublicationEntry {
 
 export interface LanguageEntry {
   /** Stable identity. Languages were keyed by name, which silently merged
-   *  entries that shared one — editing or deleting any of them hit them all,
+   *  entries that shared one, so editing or deleting any of them hit them all,
    *  and the page-split markers collided. Optional so documents saved before
    *  this still load; the hook assigns ids on read. */
   id?: string;
@@ -152,8 +152,8 @@ export interface SocialLinkEntry {
 /**
  * A user-defined section not covered by the built-in types above (e.g.
  * "Volunteering", "Hobbies"). Each item is a generic title/subtitle/meta/
- * description entry — the same shape every built-in list section already
- * uses — so one shared renderer covers arbitrary sections across templates.
+ * description entry, the same shape every built-in list section already
+ * uses, so one shared renderer covers arbitrary sections across templates.
  */
 export interface CustomSectionItem {
   id: string;
@@ -170,11 +170,11 @@ export interface CustomSection {
 }
 
 /**
- * Built-in section identifiers — stable strings, used as sectionOrder ids.
+ * Built-in section identifiers: stable strings, used as sectionOrder ids.
  * Deliberately limited to the sections every template already renders.
  * projects/certifications/volunteering/strengths/interests exist in CVData
  * (legacy fields with no template UI anywhere, predating the section
- * system) but are intentionally excluded here — surfacing them as
+ * system) but are intentionally excluded here, since surfacing them as
  * toggleable would produce a "visible" section that renders nothing.
  */
 export type BuiltInSectionId =

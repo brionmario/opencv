@@ -2,8 +2,8 @@
  * JSON Resume (https://jsonresume.org/schema) in and out.
  *
  * This is the interchange format. opencv's own CVData is shaped around what
- * the editor needs — ids on every entry so the canvas can address them,
- * section order, per-section columns — none of which another tool wants or
+ * the editor needs (ids on every entry so the canvas can address them,
+ * section order, per-section columns), none of which another tool wants or
  * understands. JSON Resume is what the rest of the world reads, so it is the
  * format to hand an agent, a parser or another résumé builder.
  *
@@ -14,7 +14,7 @@
  *
  * Rich text: CVData descriptions may hold inline HTML, which JSON Resume
  * expects as plain text, so it is stripped on the way out. The reverse is not
- * true — imported text is taken literally and never parsed as HTML, since it
+ * true: imported text is taken literally and never parsed as HTML, since it
  * comes from outside and must not be able to inject markup into the canvas.
  */
 

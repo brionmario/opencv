@@ -10,7 +10,7 @@ build-and-share loop runs in this process, and the link it hands back is served
 by the same static site a person uses.
 
 Documents are spoken in [JSON Resume](https://jsonresume.org/schema) rather than
-opencv's internal shape — an agent already knows that schema, and the internal
+opencv's internal shape, because an agent already knows that schema, and the internal
 one is full of editor bookkeeping that would be noise to generate.
 
 ## Tools
@@ -25,7 +25,7 @@ one is full of editor bookkeeping that would be noise to generate.
 
 ## Using it
 
-Build it first — the server runs from `dist`, and it depends on
+Build it first: the server runs from `dist`, and it depends on
 `@brionmario/opencv-core`, so let nx build them in order:
 
 ```bash
@@ -64,10 +64,10 @@ A link **is** the document. Nothing is stored anywhere, so:
 - It cannot be revoked. Sharing one is giving out the résumé itself.
 - `update_resume` returns a *new* link. The old one keeps resolving to the old
   version, because it still contains it.
-- It is long — a few KB — and it breaks if truncated. An embedded photo makes it
+- It is long, a few KB, and it breaks if truncated. An embedded photo makes it
   much longer; `create_resume` says so when the result crosses the point where
   some clients start shortening links.
 - The payload sits in the URL fragment, which browsers never send to a server.
-  That is what keeps it off access logs and out of `Referer` headers — and also
+  That is what keeps it off access logs and out of `Referer` headers, and also
   why a plain `fetch` of a share link sees an empty page. Only a JavaScript
   client renders it.

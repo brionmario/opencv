@@ -20,7 +20,7 @@ body:
     id: where
     attributes:
       label: Where?
-      description: The file, page or section — a link is ideal.
+      description: The file, page or section; a link is ideal.
       placeholder: README.md, docs/..., or apps/opencv/public/llms.txt
     validations:
       required: true

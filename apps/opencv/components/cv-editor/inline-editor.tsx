@@ -171,7 +171,7 @@ export function InlineEditor({
 
   // A read-only render skips Lexical entirely. Mounting an editor per field
   // just to forbid typing would ship the editor to every viewer of a shared
-  // link and leave contentEditable regions they could type into — edits that
+  // link and leave contentEditable regions they could type into, edits that
   // go nowhere, since the handlers are inert. Static markup is also what a
   // crawler and a screen reader want. The container/content classes are kept
   // so the metrics (the -mx-0.5 bleed especially) match the canvas exactly.

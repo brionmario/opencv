@@ -13,7 +13,7 @@ export interface LayoutMapProps {
   layoutColumns: 1 | 2;
   /** Rendered height of each section on the real canvas, in px, keyed by id. */
   heights: Record<string, number>;
-  /** Height of one page on the canvas, in px — for the page-break lines. */
+  /** Height of one page on the canvas, in px, for the page-break lines. */
   pageHeightPx: number;
   selectedId: string | null;
   onSelect: (id: string | null) => void;

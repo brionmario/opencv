@@ -11,8 +11,8 @@ function formatDateRange(start: string, end: string): string {
 
 /**
  * Exports the résumé as JSON Resume, the format the menu has always claimed
- * it was. It used to write out CVData — the editor's own shape, full of
- * entry ids and section columns that mean nothing outside this app — which
+ * it was. It used to write out CVData (the editor's own shape, full of
+ * entry ids and section columns that mean nothing outside this app), which
  * no JSON Resume consumer could read.
  *
  * The internal shape is still available, under its own name, because it is
@@ -43,7 +43,7 @@ export function exportToMarkdown(data: CVData, filename: string) {
   if (data.personalInfo.website) contactParts.push(`${data.personalInfo.website}`);
   if (contactParts.length > 0) md += contactParts.join(" | ") + "\n\n";
 
-  // ── Section renderers, keyed by id — order/visibility/custom sections
+  // ── Section renderers, keyed by id; order/visibility/custom sections
   // all come from sectionsFlat(), the same source of truth the canvas and
   // PDF export read. Markdown has no columns, so it always renders flat.
   const builtIn: Record<string, () => string> = {

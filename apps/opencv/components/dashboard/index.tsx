@@ -230,7 +230,7 @@ export function Dashboard() {
                 {shown.map((d) => (
                   <li key={d.id} className="cv-home-doc">
                     {/* The preview renders a real template, which contains its
-                        own buttons — so the hit target is an overlay sibling
+                        own buttons, so the hit target is an overlay sibling
                         rather than a wrapping <button>, which would nest
                         interactive elements and break hydration. */}
                     <div className="cv-home-thumb">

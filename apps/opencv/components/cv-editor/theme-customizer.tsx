@@ -149,7 +149,7 @@ export function ThemeCustomizer({ theme, onChange, onClose }: ThemeCustomizerPro
   const paperIsDark = isColorDark(theme.backgroundColor);
 
   return (
-    /* No scrim — panel floats over content without blocking interaction */
+    /* No scrim: panel floats over content without blocking interaction */
     <aside className="cv-drawer" role="dialog" aria-label="Theme customizer">
 
       {/* Header */}

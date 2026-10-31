@@ -55,7 +55,7 @@ export function sectionsFlat(data: CVData): SectionMeta[] {
  *
  * The canvas, the Properties panel and the delete confirmation all need this,
  * and the exporters decide whether to draw a section at all from the same
- * underlying emptiness — so it lives here rather than being re-derived.
+ * underlying emptiness, so it lives here rather than being re-derived.
  */
 export function sectionItemCount(data: CVData, id: string): number | null {
   switch (id) {
@@ -78,7 +78,7 @@ export function sectionItemCount(data: CVData, id: string): number | null {
  *
  * The exporters omit an empty section entirely while the canvas still draws
  * its heading and add-button, so the canvas has to say which headings are not
- * going to print — otherwise "what you see is what prints" quietly is not true.
+ * going to print, otherwise "what you see is what prints" quietly is not true.
  */
 export function emptySectionIds(data: CVData): Set<string> {
   const empty = new Set<string>();
@@ -98,7 +98,7 @@ export function emptySectionIds(data: CVData): Set<string> {
  * The same document with every section that would render nothing marked
  * hidden.
  *
- * The canvas keeps empty sections on the page on purpose — a heading with
+ * The canvas keeps empty sections on the page on purpose: a heading with
  * nothing under it is a prompt to fill it in, and the editor flags it as one.
  * Anywhere the document is final, that heading is just a gap: print already
  * drops them, and so should a shared read-only link.

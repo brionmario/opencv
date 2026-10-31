@@ -9,7 +9,7 @@ import { siteUrl } from "@/lib/asset-path";
  * of leaving them to be inferred from marketing copy: that it is free, that
  * it runs in the browser, and that it is open source under MIT.
  *
- * It is the only part of this page a crawler can read — everything below is
+ * It is the only part of this page a crawler can read; everything below is
  * rendered from the visitor's own browser storage.
  */
 const structuredData = {

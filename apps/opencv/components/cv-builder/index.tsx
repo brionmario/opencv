@@ -33,7 +33,7 @@ import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
 
 /** Past this, a share URL is long enough that some apps will mangle it. The
  *  threshold is a rough read of where link-rewriting clients start to break
- *  rather than a hard limit — the fragment itself has no size cap. */
+ *  rather than a hard limit. The fragment itself has no size cap. */
 const LONG_SHARE_URL = 8000;
 
 type DrawerType = "theme" | "history" | "sections" | null;
@@ -200,7 +200,7 @@ function ExportMenu({ onExport }: { onExport: (id: string) => void }) {
 function Brand() {
   return (
     <div className="cv-brand">
-      {/* Both marks ship, and CSS picks one by theme — swapping in JS would
+      {/* Both marks ship, and CSS picks one by theme. Swapping in JS would
           flash the wrong tile before the theme attribute is applied. */}
       <Link className="cv-brand-mark" href="/" aria-label="Dashboard">
         <img className="mark-light" src={assetPath("/brand/logo-mark.png")} alt="" />
@@ -404,9 +404,9 @@ function HistoryDrawer({
 }
 
 /* ── Page break overlay ───────────────────────────────────────────────────── */
-const PAGE_H_PX = (297 / 25.4) * 96; // A4 height (297mm) at 96 dpi — must match template page size and PDF export
+const PAGE_H_PX = (297 / 25.4) * 96; // A4 height (297mm) at 96 dpi; must match template page size and PDF export
 // Divider band drawn BELOW each page boundary. It must never cover the space
-// above the boundary — that is printable page-N area, and hiding it makes the
+// above the boundary, which is printable page-N area, and hiding it makes the
 // canvas lie about how much fits on a page.
 const BREAK_GAP = 80;
 // Extra whitespace after the divider before page N+1's content starts,
@@ -438,7 +438,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
 
       // A card that is the first item in its section's list container has a
       // heading sitting right before that container. If the card gets pushed
-      // to the next page, push the heading along with it — otherwise the
+      // to the next page, push the heading along with it, otherwise the
       // heading is left orphaned at the bottom of the previous page with a
       // large blank gap beneath it.
       const headingFor = new Map<HTMLElement, HTMLElement>();
@@ -479,7 +479,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
           const gapEnd = boundary + BREAK_GAP + PAGE_TOP_MARGIN;
 
           // Only push cards that straddle the actual page boundary, not merely
-          // overlap the gap zone — avoids over-pushing cards that end near the
+          // overlap the gap zone. Avoids over-pushing cards that end near the
           // boundary and leaving large blank gaps on the previous page.
           // A heading can be orphaned without anything straddling: it sits at
           // the foot of page N while its first row already starts on page N+1.
@@ -509,7 +509,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
             const head = headingFor.get(card);
             if (head) {
               // Push the heading (not the card) far enough that the heading
-              // itself clears the gap — the card follows it in normal flow.
+              // itself clears the gap; the card follows it in normal flow.
               // Using the card's own offset here would under-push the heading,
               // leaving it inside the gap zone, hidden behind the divider.
               const headRect = head.getBoundingClientRect();
@@ -521,7 +521,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
               // (the column's space-y gap) rather than adding on top of it.
               // Setting marginTop to just `shift` would therefore fall short by
               // that collapsed baseline, leaving the heading hidden behind the
-              // page-break divider — so measure the real gap to the previous
+              // page-break divider, so measure the real gap to the previous
               // section and add it back in.
               const wrapper = head.parentElement;
               const prevSibling = wrapper?.previousElementSibling ?? null;
@@ -542,7 +542,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
         }
       }
 
-      // Record resulting height — ResizeObserver compares against this to
+      // Record resulting height; ResizeObserver compares against this to
       // distinguish our margin changes from real content changes
       void el.offsetHeight;
       expectedHeightRef.current = el.offsetHeight;
@@ -550,7 +550,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
 
     const ro = new ResizeObserver(() => {
       // ResizeObserver fires asynchronously after layout; by then our margins
-      // are applied and the height matches expectedHeight — so skip our own fires.
+      // are applied and the height matches expectedHeight, so skip our own fires.
       if (el.offsetHeight === expectedHeightRef.current) return;
       requestAnimationFrame(adjust);
     });
@@ -653,7 +653,7 @@ export function CVBuilder() {
   const [paperHeight, setPaperHeight] = useState<number | null>(null);
   useEffect(() => {
     // CVBuilder renders null until isInitialized flips true, so this must
-    // re-run once that happens — otherwise previewContentRef is still null
+    // re-run once that happens, otherwise previewContentRef is still null
     // on the one-and-only pass of an empty-deps effect.
     if (!isInitialized) return;
     const el = previewContentRef.current;
@@ -785,7 +785,7 @@ export function CVBuilder() {
       const tidLoading = pushToast(`Generating <b>PDF</b>…`, "loader", 0);
       // Mirror the canvas page split exactly: any experience card the
       // page-break avoider pushed past the A4 boundary goes to page 2 in
-      // the PDF too. Only the professional canvas carries the markers —
+      // the PDF too. Only the professional canvas carries the markers,
       // other layouts fall back to the PDF document's own estimate.
       let page2ExpIds: string[] | undefined;
       const paper = previewRef.current;
@@ -824,7 +824,7 @@ export function CVBuilder() {
    *
    * There is no server to put the document on, so the link carries it: the
    * whole payload, deflated, in the fragment. That keeps it off the wire and
-   * out of logs, but it does make the URL long — long enough that an embedded
+   * out of logs, but it does make the URL long, long enough that an embedded
    * photo can push it past what a chat app or mail client will keep intact,
    * so the size is reported rather than left to be discovered by a recipient
    * holding half a link.

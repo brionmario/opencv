@@ -4,7 +4,7 @@
  * Light/dark for the app chrome (not the résumé page, which has its own
  * appearance setting in the theme customiser).
  *
- * Every route needs this — the dashboard, the gallery and the editor are
+ * Every route needs this: the dashboard, the gallery and the editor are
  * separate pages, and the attribute lives on <html>, so each has to apply the
  * stored preference on mount or it flashes the default first.
  */
@@ -33,7 +33,7 @@ export function storeChromeTheme(dark: boolean) {
   }
 }
 
-/** Read, apply and return — the usual mount-time sequence. */
+/** Read, apply and return: the usual mount-time sequence. */
 export function initChromeTheme(): boolean {
   const dark = readChromeTheme();
   applyChromeTheme(dark);

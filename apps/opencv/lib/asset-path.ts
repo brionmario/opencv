@@ -4,7 +4,7 @@
  * The GitHub Pages build serves the app from a sub-path (/opencv/) via
  * next.config's `basePath`. Next applies that prefix to <Link> and
  * next/image, but NOT to a raw <img src>, a URL in `metadata.icons`, or a
- * URL that react-pdf fetches itself — those stay root-relative and 404 in
+ * URL that react-pdf fetches itself; those stay root-relative and 404 in
  * production while working fine on localhost, so every such path goes
  * through here.
  */
@@ -38,7 +38,7 @@ export function absoluteAssetUrl<T extends string | undefined>(path: T): T {
  * Metadata needs absolute URLs. Next's `metadataBase` cannot do the job here:
  * resolving a root-relative path like `/brand/og.png` against a base that has
  * its own path drops that path, so every card image would point outside the
- * sub-path and 404 — the same trap the icon URLs above already work around.
+ * sub-path and 404, the same trap the icon URLs above already work around.
  */
 export const SITE_URL = (
   process.env.NEXT_PUBLIC_SITE_URL ?? `https://brionmario.github.io${BASE_PATH}`

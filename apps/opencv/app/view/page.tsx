@@ -21,7 +21,7 @@ import {
 /**
  * The read-only page a share link opens.
  *
- * Everything it renders comes out of the URL — there is no backend, and it
+ * Everything it renders comes out of the URL: there is no backend, and it
  * deliberately does not read the viewer's own localStorage for CV content or
  * theme. A shared CV has to look the way its author left it, not the way the
  * recipient's last editing session happened to be configured.
@@ -34,7 +34,7 @@ interface Loaded {
   /** What gets rendered: empty sections stripped. */
   data: CVData;
   /** What the link actually carried, which is what a copy should start from
-   *  — an empty section the author is still working on is part of their
+   *  because an empty section the author is still working on is part of their
    *  document, even though a reader should not see the bare heading. */
   source: CVData;
   theme: CVTheme;
@@ -109,7 +109,7 @@ export default function ViewPage() {
   useEffect(() => {
     load();
     // Pasting a different link into the same tab only changes the fragment,
-    // which navigates nothing — so the page has to re-read it itself.
+    // which navigates nothing, so the page has to re-read it itself.
     const onHashChange = () => {
       setState({ kind: "loading" });
       load();
@@ -255,13 +255,13 @@ export default function ViewPage() {
  * JavaScript there is genuinely nothing to show: the server was never told
  * which résumé was asked for, and could not have answered if it had been.
  *
- * That is the design working as intended — it is what keeps a résumé out of
- * access logs — but the failure mode is a blank page, which reads as a dead
+ * That is the design working as intended, and it is what keeps a résumé out
+ * of access logs, but the failure mode is a blank page, which reads as a dead
  * link. This says what happened instead.
  *
  * It is also the only thing a non-JavaScript reader ever sees: a screening
  * bot, a link unfurler, or an agent told to fetch the URL. The last
- * paragraph is for them, and costs a human nothing — so it says where the
+ * paragraph is for them, and costs a human nothing, so it says where the
  * data actually is, given they are already holding it.
  */
 function NoScriptNotice() {

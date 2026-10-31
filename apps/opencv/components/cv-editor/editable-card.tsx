@@ -15,8 +15,8 @@ interface EditableCardProps {
 export function EditableCard({ children, onDelete, className = "", dataId }: EditableCardProps) {
   const readOnly = useReadOnly();
 
-  // Read-only keeps the wrapper — the break-inside rule and data-entry-id are
-  // what the page splitter and the PDF export read — but drops the hover ring
+  // Read-only keeps the wrapper (the break-inside rule and data-entry-id are
+  // what the page splitter and the PDF export read) but drops the hover ring
   // and the delete button, which would otherwise invite a click that does
   // nothing on a shared link.
   if (readOnly) {

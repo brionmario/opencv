@@ -13,7 +13,7 @@ const noop = () => {};
 
 /** The templates are editors: they take a full set of mutation handlers. A
  *  preview supplies inert ones and blocks pointer events, so the same
- *  components that render the canvas also render the gallery — the preview
+ *  components that render the canvas also render the gallery, so the preview
  *  can never drift from what you actually get. */
 const INERT = {
   onUpdate: noop,
@@ -41,7 +41,7 @@ const INERT = {
   onDeleteCustomSectionItem: noop,
 };
 
-const A4_W = 210; // mm — the paper width every template is built against
+const A4_W = 210; // mm: the paper width every template is built against
 
 function renderFor(layout: LayoutType, data: CVData, theme: CVTheme) {
   const props = { data, theme, ...INERT };
@@ -60,7 +60,7 @@ function renderFor(layout: LayoutType, data: CVData, theme: CVTheme) {
  * Two modes. The default is a thumbnail: inert, unselectable, hidden from
  * assistive tech, because the gallery shows four of them and they are
  * decoration for a choice made elsewhere. `asDocument` makes it the page's
- * actual content — the share view — where the text must be selectable,
+ * actual content (the share view), where the text must be selectable,
  * copyable, reachable by a screen reader and crawlable, and links must work.
  */
 export function TemplatePreview({

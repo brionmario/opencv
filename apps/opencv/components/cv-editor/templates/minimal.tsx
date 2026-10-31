@@ -69,7 +69,7 @@ export function MinimalWysiwygTemplate({
   const [iconPickerOpenId, setIconPickerOpenId] = useState<string | null>(null);
   const [customIconUrl, setCustomIconUrl] = useState("");
 
-  /* ── Section registry — one renderer per section id. Order/visibility is
+  /* ── Section registry: one renderer per section id. Order/visibility is
      driven entirely by sectionsFlat(); this map only knows how to draw each
      section. ── */
   const sectionRenderers: Record<string, () => React.ReactNode> = {

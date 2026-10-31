@@ -12,7 +12,7 @@ interface CustomSectionBlockProps {
   onUpdateItem: (itemId: string, field: "title" | "subtitle" | "meta" | "description", value: string) => void;
   onDeleteItem: (itemId: string) => void;
   onDeleteSection: () => void;
-  /** Outer wrapper — matches each template's section spacing convention. */
+  /** Outer wrapper: matches each template's section spacing convention. */
   wrapClassName?: string;
   /** Wraps the heading (usually carries the bottom-border/divider). */
   headingWrapClassName?: string;
@@ -26,7 +26,7 @@ interface CustomSectionBlockProps {
 }
 
 /**
- * Renders a user-defined section — title/subtitle/meta/description entries,
+ * Renders a user-defined section: title/subtitle/meta/description entries,
  * the same shape every built-in list section (education, awards,
  * publications, ...) already uses. Shared across all four templates so a
  * custom section looks native to whichever template it's rendered in, via

@@ -1,5 +1,5 @@
 // Fictional sample résumé used by the standalone <CV /> component.
-// Keep this anonymized — it ships in the bundle and is what the demo renders.
+// Keep this anonymized: it ships in the bundle and is what the demo renders.
 export const cvData = {
   personal: {
     name: "Aydan Silva",

@@ -83,7 +83,7 @@ export function ModernWysiwygTemplate({
     onUpdate(`experience.${expId}.highlights`, highlights.filter((_, i) => i !== idx));
   };
 
-  /* ── Section registry — one renderer per section id, reused by both
+  /* ── Section registry: one renderer per section id, reused by both
      columns. Order/visibility/column placement is driven entirely by
      sectionsForColumn(); this map only knows how to draw each section. ── */
   const sectionRenderers: Record<string, () => React.ReactNode> = {
@@ -416,7 +416,7 @@ export function ModernWysiwygTemplate({
             return (
               <EditableCard key={link.id} onDelete={() => onDeleteSocialLink(link.id)}>
                 <div className="flex items-center gap-2">
-                  {/* Icon — click to open picker */}
+                  {/* Icon: click to open picker */}
                   <div className="relative shrink-0">
                     <button
                       onClick={() => {

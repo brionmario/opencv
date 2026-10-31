@@ -82,7 +82,7 @@ export function ClassicWysiwygTemplate({
     onUpdate(`experience.${expId}.highlights`, highlights.filter((_, i) => i !== idx));
   };
 
-  /* ── Section registry — one renderer per section id. Order/visibility is
+  /* ── Section registry: one renderer per section id. Order/visibility is
      driven entirely by sectionsFlat(); this map only knows how to draw
      each section. ── */
   const sectionRenderers: Record<string, () => React.ReactNode> = {
@@ -421,7 +421,7 @@ export function ClassicWysiwygTemplate({
             return (
               <EditableCard key={link.id} onDelete={() => onDeleteSocialLink(link.id)}>
                 <div className="flex items-center gap-2">
-                  {/* Icon — click to open picker */}
+                  {/* Icon: click to open picker */}
                   <div className="relative shrink-0">
                     <button
                       onClick={() => {

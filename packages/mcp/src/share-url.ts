@@ -40,7 +40,7 @@ export async function buildShareUrl(payload: SharePayload): Promise<string> {
  * Reads a share link back into a document.
  *
  * Takes what an agent is likely to be holding: a full share URL, a legacy
- * ?data= URL, or the bare encoded payload on its own — someone pasting "the
+ * ?data= URL, or the bare encoded payload on its own, since someone pasting "the
  * bit after the #" is a predictable thing to receive, and refusing it would
  * be pedantry.
  */
@@ -82,6 +82,6 @@ export async function parseShareUrl(
   return {
     error:
       "No résumé found in that link. A share URL carries the document after a '#', " +
-      "like https://example.com/view#cv=z.… — check nothing after the # was lost.",
+      "like https://example.com/view#cv=z.…, check nothing after the # was lost.",
   };
 }

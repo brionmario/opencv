@@ -1,4 +1,4 @@
-[![openCV — what you see is what prints](docs/assets/images/hero-banner.png)](https://brionmario.github.io/opencv)
+[![OpenCV: what you see is what prints](docs/assets/images/hero-banner.png)](https://brionmario.github.io/opencv)
 
 # OpenCV Resume Builder
 
@@ -40,10 +40,10 @@ OpenCV is a modern, AI-powered resume (CV) builder web application. It helps use
 
 ## Project Structure
 
-- `apps/opencv/` — Main Next.js application
-- `apps/opencv/components/` — UI and CV builder components
-- `apps/opencv/lib/` — Utility libraries and logic
-- `docs/` — Documentation and assets
+- `apps/opencv/`: Main Next.js application
+- `apps/opencv/components/`: UI and CV builder components
+- `apps/opencv/lib/`: Utility libraries and logic
+- `docs/`: Documentation and assets
 
 ## Contributing
 

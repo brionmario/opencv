@@ -24,7 +24,10 @@ structured data, `llms.txt`, exports, commit messages, docs and code comments.
   a true aside. Do not substitute a spaced hyphen (` - `) either; pick real
   punctuation.
 - Hyphens are fine where they belong: compound modifiers (`print-tested`,
-  `open-source`), and ranges in code or data.
+  `open-source`).
+- The one exception to the dash ban is a numeric or date range, where an en
+  dash is correct typography: `2020 – 2024`, a `1–5` scale. Never use one as
+  sentence punctuation.
 - The brand is **OpenCV**, capital O and capital CV. Not `openCV`, not
   `Opencv`. In running prose the package and repo name stays lowercase
   (`opencv`, `@brionmario/opencv-core`) because those are identifiers.

@@ -76,7 +76,7 @@ export function ProfessionalTemplate({
 
   const handleHighlightUpdate = (expId: string, highlights: string[], idx: number, value: string) => {
     if (value.includes("\n")) {
-      // Enter on last char — split at newline into separate bullets
+      // Enter on last char: split at newline into separate bullets
       const lines = value.split("\n").map((l) => l.trim()).filter((l) => l !== "");
       const updated = [...highlights];
       updated.splice(idx, 1, ...(lines.length ? lines : [""]));
@@ -92,7 +92,7 @@ export function ProfessionalTemplate({
     onUpdate(`experience.${expId}.highlights`, highlights.filter((_, i) => i !== idx));
   };
 
-  /* ── Section registry — one renderer per section id, reused by both
+  /* ── Section registry: one renderer per section id, reused by both
      columns. Order/visibility/column placement is driven entirely by
      sectionsForColumn(); this map only knows how to draw each section. ── */
   const sectionRenderers: Record<string, () => React.ReactNode> = {
@@ -459,7 +459,7 @@ export function ProfessionalTemplate({
             return (
               <EditableCard key={link.id} onDelete={() => onDeleteSocialLink(link.id)}>
                 <div className="flex items-center gap-2">
-                  {/* Icon — click to open picker */}
+                  {/* Icon: click to open picker */}
                   <div className="relative shrink-0">
                     <button
                       onClick={() => {
@@ -711,7 +711,7 @@ export function ProfessionalTemplate({
             </div>
           </div>
 
-          {/* Photo — with an avatar set you can replace it or remove it; with
+          {/* Photo: with an avatar set you can replace it or remove it; with
               none, the dashed ring is the upload target. Every control is
               print:hidden so none of it reaches the exported page. */}
           <div className="ml-6 shrink-0">

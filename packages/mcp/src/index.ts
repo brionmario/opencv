@@ -10,7 +10,7 @@
  *
  * Documents are spoken in JSON Resume rather than opencv's internal shape.
  * An agent already knows that schema, and the internal one is full of editor
- * bookkeeping — entry ids, section columns — that would be noise to generate
+ * bookkeeping (entry ids, section columns) that would be noise to generate
  * and a trap to hand-edit.
  */
 
@@ -38,7 +38,7 @@ const layoutArg = z
 /**
  * JSON Resume is accepted loosely on purpose. The schema is large, mostly
  * optional, and an agent assembling one should not be rejected over a field
- * this app has no use for — fromJsonResume already coerces what it reads and
+ * this app has no use for; fromJsonResume already coerces what it reads and
  * ignores what it does not.
  */
 const resumeArg = z
@@ -72,7 +72,7 @@ function failure(body: string) {
 /** What to say about a link once it exists, including when it is unwieldy. */
 function describeLink(url: string, hasPhoto: boolean): string {
   const kb = Math.round(url.length / 1024);
-  const lines = [url, "", `The whole résumé is inside that link (${kb}KB) — there is no server
+  const lines = [url, "", `The whole résumé is inside that link (${kb}KB); there is no server
 holding it, so it works anywhere it is pasted and stops working if it
 is truncated.`];
 
@@ -104,7 +104,7 @@ server.registerTool(
     text(
       LAYOUTS.map(
         (l) =>
-          `${l.id} — ${l.name} (${l.columns} column${l.columns > 1 ? "s" : ""})\n  ${l.desc}`
+          `${l.id}: ${l.name} (${l.columns} column${l.columns > 1 ? "s" : ""})\n  ${l.desc}`
       ).join("\n\n")
     )
 );
@@ -190,7 +190,7 @@ server.registerTool(
     title: "Update a résumé",
     description:
       "Takes an existing share link and returns a new one with changes applied. " +
-      "Because a link IS the document, the original keeps working unchanged — " +
+      "Because a link IS the document, the original keeps working unchanged, " +
       "share the new link to supersede it. Pass only what you are changing.",
     inputSchema: {
       url: z.string().describe("The share link to revise."),
@@ -240,7 +240,7 @@ async function main() {
   const transport = new StdioServerTransport();
   await server.connect(transport);
   // stdout is the protocol channel, so anything diagnostic goes to stderr.
-  console.error(`opencv MCP server ready — links will point at ${BASE_URL}`);
+  console.error(`opencv MCP server ready; links will point at ${BASE_URL}`);
 }
 
 main().catch((err) => {

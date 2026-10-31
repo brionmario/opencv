@@ -177,7 +177,7 @@
 }
 
 /* ============================================================
-   OpenCV Chrome — Design Tokens & Component Styles
+   OpenCV Chrome: Design Tokens & Component Styles
    ============================================================ */
 
 /* ---- OpenCV Design Tokens ---- */
@@ -826,7 +826,7 @@
 }
 
 /* ============================================================
-   Builder frame — tool rail, docked panels, status bar
+   Builder frame: tool rail, docked panels, status bar
    ============================================================ */
 
 .cv-app {
@@ -923,7 +923,7 @@
    The templates are editors, so each one carries hover-revealed controls:
    add-a-bullet, remove-a-skill, the icon picker, the photo upload. Every one
    of them is already marked print:hidden, because none of it belongs on the
-   printed page — which makes that class the templates' own marker for "editor
+   printed page, which makes that class the templates' own marker for "editor
    chrome, not CV content". A read-only render reuses it rather than
    re-tagging a hundred call sites in four templates.
    The pointer-events rule catches the one control that is content as well as
@@ -1212,7 +1212,7 @@
 .cv-home-doc-actions {
   position: absolute; top: 6px; right: 6px;
   /* Above .cv-home-thumb-hit, the overlay that makes the whole card open the
-     document — without this it covers these controls and swallows their
+     document; without this it covers these controls and swallows their
      clicks, so every button opened the résumé instead of acting. */
   z-index: 2;
   display: flex; gap: 2px; padding: 2px;
@@ -1248,7 +1248,7 @@
 }
 
 /* ============================================================
-   Layout map — a draggable wireframe of the page
+   Layout map: a draggable wireframe of the page
    ============================================================ */
 
 .cv-map { display: flex; flex-direction: column; gap: 12px; font-family: var(--cv-font-ui); }
@@ -1611,7 +1611,7 @@
 
 /* The no-JavaScript notice. Wider than the other messages because it has to
    explain something rather than just name it, and left-aligned once it runs
-   past a line or two — centred prose of this length is hard to read. */
+   past a line or two, since centred prose of this length is hard to read. */
 .cv-view-noscript { max-width: 58ch; text-align: left; align-items: flex-start; }
 .cv-view-noscript h1 { align-self: center; }
 .cv-view-noscript code {
@@ -1634,7 +1634,7 @@
 }
 
 /* The editor is a desk-bound tool, but a shared link is opened on whatever
-   the recipient has in their hand — so the view page, and only the view page,
+   the recipient has in their hand, so the view page, and only the view page,
    has to work at phone width. The paper wrap is 210mm and refuses to shrink,
    which is right on the desk and wrong here: released, it lets the preview
    measure the real viewport and scale the page down to fit. */
@@ -1656,7 +1656,7 @@
   .cv-view .cv-doc-name { display: none; }
 }
 
-/* Printing a shared CV should produce the résumé and nothing else — no bar,
+/* Printing a shared CV should produce the résumé and nothing else: no bar,
    no desk tint, no paper shadow or rounding.
    The !important rules are beating inline styles, which is the only way to
    reach them: on screen the view scales the A4 page down to the window with a

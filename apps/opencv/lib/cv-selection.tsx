@@ -13,8 +13,8 @@ import { Settings2 } from "lucide-react";
  * Selection lives in the shell rather than in the templates: templates only
  * wrap each section in a <SectionFrame>, which tags the node with
  * `data-cv-section` and reports clicks. That keeps all four templates free of
- * selection logic, and keeps the exporters — which render from data, not from
- * this tree — completely unaffected.
+ * selection logic, and keeps the exporters (which render from data, not from
+ * this tree) completely unaffected.
  */
 
 interface SelectionCtx {
@@ -64,7 +64,7 @@ export function useSelection() {
  * Wraps one rendered section on the canvas.
  *
  * Clicks select the section, but only when they did not land on something
- * already interactive — the inline editors, add/delete buttons and icon
+ * already interactive: the inline editors, add/delete buttons and icon
  * pickers inside a section must keep working on the first click, so a click
  * that originated in one of those is left alone.
  */

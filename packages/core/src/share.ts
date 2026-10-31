@@ -1,12 +1,12 @@
 /**
  * Share links.
  *
- * This module is the codec only — encoding, decoding and the wire format.
+ * This module is the codec only: encoding, decoding and the wire format.
  * Building an actual URL needs an origin and a base path, which only the app
  * has, so that part stays there.
  *
  * The app is a static export with no backend, so a shared CV has nowhere to
- * live but the link itself. The whole document — data, theme and layout —
+ * live but the link itself. The whole document (data, theme and layout)
  * travels in the URL's **hash**, not the query string: a fragment is never
  * sent to the server, so it escapes the ~8KB request-line limit that would
  * otherwise 414 on GitHub Pages, and the CV never touches an access log.
@@ -38,7 +38,7 @@ export interface SharePayload {
 
 /* ── base64url ────────────────────────────────────────────────────────────── */
 
-/** Backed by a plain ArrayBuffer, which is what Blob and atob/btoa accept —
+/** Backed by a plain ArrayBuffer, which is what Blob and atob/btoa accept;
  *  a bare Uint8Array may be over a SharedArrayBuffer, which they do not. */
 type Bytes = Uint8Array<ArrayBuffer>;
 
@@ -139,7 +139,7 @@ export async function decodeShare(encoded: string): Promise<SharePayload | null>
 
 /**
  * The editor used to write the whole CV into `?data=` as plain base64 of
- * CVData. Those links are already in the wild, so they keep working — they
+ * CVData. Those links are already in the wild, so they keep working, and they
  * just carry no theme or layout.
  */
 export function decodeLegacyQuery(encoded: string): CVData | null {

@@ -2,7 +2,7 @@
  * Share links, app side.
  *
  * The wire format and the codec live in @brionmario/opencv-core, so that a
- * link can be minted or read anywhere — a script, a CLI, an agent — and not
+ * link can be minted or read anywhere (a script, a CLI, an agent) and not
  * only in a page. What stays here is the part that genuinely needs the app:
  * turning an encoded payload into a URL, which takes the origin the page is
  * served from and the base path the build was configured with.

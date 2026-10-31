@@ -16,7 +16,7 @@ function normalizeCVData(raw: CVData): CVData {
   const data: CVData = { ...raw, customSections: raw.customSections ?? [] };
   data.sectionOrder = getEffectiveSectionOrder(data);
   // Languages predate having ids and were addressed by name, so documents
-  // saved before that get one here — by position, which is the only thing
+  // saved before that get one here, by position, which is the only thing
   // that distinguishes two entries sharing a name.
   data.languages = (data.languages ?? []).map((lang, i) =>
     lang.id ? lang : { ...lang, id: `lng-legacy-${i}` }
@@ -80,7 +80,7 @@ export function useCVData() {
     localStorage.setItem("cvBuilderData", JSON.stringify(data));
 
     // The CV is deliberately NOT mirrored into the query string any more.
-    // It used to be, which made the address bar a de facto share link — but a
+    // It used to be, which made the address bar a de facto share link, but a
     // query string is sent to the server on every navigation, so a CV of any
     // substance risked a 414 from the host (GitHub Pages cuts off well before
     // the browser does) and landed in access logs and Referer headers on the
@@ -553,7 +553,7 @@ export function useCVData() {
    *
    * Anchoring to a neighbouring id rather than an index means the caller
    * never has to translate between "third visible box in the right column"
-   * and a position in the flat sectionOrder array — the two can't disagree.
+   * and a position in the flat sectionOrder array, so the two can't disagree.
    */
   const placeSection = useCallback(
     (id: string, column: "left" | "right", beforeId: string | null) => {

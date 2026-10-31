@@ -7,7 +7,7 @@ body:
     attributes:
       label: What problem are you trying to solve?
       description: >
-        Describe the problem rather than the solution — the best fix is often not the one
+        Describe the problem rather than the solution, since the best fix is often not the one
         either of us thought of first.
       placeholder: |
         When I want to [goal], I have to [current workaround], which means [what it costs me].

@@ -31,7 +31,7 @@ _How should people adapt? Include examples where it helps._
 
 ### Checklist
 - [ ] Ran it and verified the change by hand.
-- [ ] Checked it in the editor **and** in an export — the canvas, the PDF and the print
+- [ ] Checked it in the editor **and** in an export: the canvas, the PDF and the print
       path render from different code, so a change can look right in one and break another.
 - [ ] Checked the templates the change touches (Professional, Modern, Classic, Minimal).
 - [ ] Documentation updated, if behaviour changed. (README, `docs/`, `llms.txt`)
@@ -39,5 +39,5 @@ _How should people adapt? Include examples where it helps._
 
 ### Security
 - [ ] No keys, passwords, tokens or other secrets are committed.
-- [ ] No real résumé data is committed — sample content only. Share links and fixtures
+- [ ] No real résumé data is committed; sample content only. Share links and fixtures
       carry a whole document, so it is easy to include one without noticing.

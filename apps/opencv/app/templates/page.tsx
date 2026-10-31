@@ -24,7 +24,7 @@ import { initChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 const SAMPLE: CVData =
   starterTemplates.find((t) => t.id === "professional")?.data ?? starterTemplates[0].data;
 
-/** The same document with nothing written in it — headings and placeholders. */
+/** The same document with nothing written in it: headings and placeholders. */
 const BLANK: CVData =
   starterTemplates.find((t) => t.id === "blank")?.data ?? starterTemplates[0].data;
 
@@ -80,7 +80,7 @@ export default function TemplatesPage() {
   // the toggle below decides whether that content comes with it.
   const previewData = SAMPLE;
   /** Whether opting in would actually destroy something. A document still
-   *  carrying the blank starter's placeholders has nothing to lose — and its
+   *  carrying the blank starter's placeholders has nothing to lose, and its
    *  placeholders are non-empty strings, so "is it filled in?" has to mean
    *  "does it differ from the blank?", not "is it truthy?". */
   const hasOwnContent =
@@ -108,7 +108,7 @@ export default function TemplatesPage() {
     if (!creating) {
       syncActiveDocument({ data: keepSample ? SAMPLE : data, theme, layout: selected });
       // The editor reads the open-document buffer, not the library row, and
-      // writes the buffer back on mount — so updating only the row would be
+      // writes the buffer back on mount, so updating only the row would be
       // immediately overwritten by the stale buffer. Re-open to load it.
       const openId = activeDocumentId();
       if (keepSample && openId) openDocument(openId);
