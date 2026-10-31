@@ -2,9 +2,13 @@
 
 name: ☄️ Deploy Documentation
 
-# Deploys are manual on purpose: pushing to main should not publish. Run this
-# workflow from the Actions tab, or `gh workflow run "☄️ Deploy Documentation"`.
+# main is what is published: every push to it deploys, so the live site is
+# never behind the branch. Manual runs stay available from the Actions tab, or
+# `gh workflow run "☄️ Deploy Documentation"`, which is also the only way to
+# deploy to a base path other than the default.
 on:
+  push:
+    branches: [main]
   workflow_dispatch:
     inputs:
       basePath:
