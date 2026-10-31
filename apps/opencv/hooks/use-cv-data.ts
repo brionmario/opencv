@@ -5,6 +5,7 @@ import type { CVData, ExperienceEntry, EducationEntry, SkillEntry, ProjectEntry,
 import { getEffectiveSectionOrder } from "@/lib/cv-sections";
 import { saveVersion, loadVersionHistory, restoreVersion, deleteVersion, renameVersion, type CVVersion } from "@/lib/cv-versioning";
 import { starterTemplates } from "@/lib/starter-templates";
+import { decodeLegacyQuery, LEGACY_QUERY_KEY } from "@/lib/cv-share";
 
 /**
  * Fills in customSections/sectionOrder for data that predates the section
@@ -23,34 +24,6 @@ function normalizeCVData(raw: CVData): CVData {
   return data;
 }
 
-function encodeDataForUrl(data: CVData): string {
-  try {
-    const json = JSON.stringify(data);
-    const bytes = new TextEncoder().encode(json);
-    const binary = Array.from(bytes, (b) => String.fromCharCode(b)).join('');
-    return btoa(binary);
-  } catch {
-    return '';
-  }
-}
-
-function decodeDataFromUrl(encoded: string): CVData | null {
-  try {
-    const binary = atob(encoded);
-    const bytes = Uint8Array.from(binary, (c) => c.charCodeAt(0));
-    const json = new TextDecoder().decode(bytes);
-    return JSON.parse(json) as CVData;
-  } catch {
-    return null;
-  }
-}
-
-function setUrlParam(key: string, value: string): void {
-  const url = new URL(window.location.href);
-  url.searchParams.set(key, value);
-  window.history.replaceState(null, '', url.toString());
-}
-
 function removeUrlParam(key: string): void {
   const url = new URL(window.location.href);
   url.searchParams.delete(key);
@@ -67,9 +40,13 @@ export function useCVData() {
 
   // Load from URL (priority) or localStorage on mount
   useEffect(() => {
-    const urlParam = new URLSearchParams(window.location.search).get('data');
+    // Legacy share links: the editor used to mirror the whole CV into ?data=
+    // on every keystroke, and those URLs are already in circulation. It no
+    // longer writes the param (see the save effect below), but it still
+    // honours one that arrives.
+    const urlParam = new URLSearchParams(window.location.search).get(LEGACY_QUERY_KEY);
     if (urlParam) {
-      const decoded = decodeDataFromUrl(urlParam);
+      const decoded = decodeLegacyQuery(urlParam);
       if (decoded) {
         setData(normalizeCVData(decoded));
         const history = loadVersionHistory();
@@ -102,10 +79,13 @@ export function useCVData() {
 
     localStorage.setItem("cvBuilderData", JSON.stringify(data));
 
-    const encoded = encodeDataForUrl(data);
-    if (encoded) {
-      setUrlParam('data', encoded);
-    }
+    // The CV is deliberately NOT mirrored into the query string any more.
+    // It used to be, which made the address bar a de facto share link — but a
+    // query string is sent to the server on every navigation, so a CV of any
+    // substance risked a 414 from the host (GitHub Pages cuts off well before
+    // the browser does) and landed in access logs and Referer headers on the
+    // way. Sharing now goes through an explicit Share link, which puts the
+    // same payload, compressed, in the fragment. See lib/cv-share.ts.
 
     // Auto-save version every 30 seconds of inactivity
     if (autoSaveTimerRef.current) {
@@ -260,7 +240,7 @@ export function useCVData() {
   const resetData = useCallback(() => {
     setData(DEFAULT_CV_DATA);
     localStorage.removeItem("cvBuilderData");
-    removeUrlParam('data');
+    removeUrlParam(LEGACY_QUERY_KEY);
   }, []);
 
   const importData = useCallback((importedData: CVData) => {

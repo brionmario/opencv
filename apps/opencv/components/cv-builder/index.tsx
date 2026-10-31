@@ -15,7 +15,7 @@ import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import {
   Download, FileJson, FileText, FileCode, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
-  Layers, Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal,
+  Layers, Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal, Link2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -24,11 +24,17 @@ import { emptySectionIds, sectionItemCount } from "@/lib/cv-sections";
 import { syncActiveDocument } from "@/lib/cv-documents";
 import { assetPath } from "@/lib/asset-path";
 import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
+import { buildShareUrl } from "@/lib/cv-share";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 import { LayoutMap } from "@/components/cv-editor/layout-map";
 import { SectionPicker } from "@/components/cv-editor/section-picker";
 import { ConfirmDelete } from "@/components/cv-editor/confirm-delete";
 import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
+
+/** Past this, a share URL is long enough that some apps will mangle it. The
+ *  threshold is a rough read of where link-rewriting clients start to break
+ *  rather than a hard limit — the fragment itself has no size cap. */
+const LONG_SHARE_URL = 8000;
 
 type DrawerType = "theme" | "history" | "sections" | null;
 type CanvasType = "soft" | "dots" | "grid" | "plain";
@@ -810,6 +816,38 @@ export function CVBuilder() {
     }, 1100);
   };
 
+  /**
+   * Hands out a read-only link to the open résumé.
+   *
+   * There is no server to put the document on, so the link carries it: the
+   * whole payload, deflated, in the fragment. That keeps it off the wire and
+   * out of logs, but it does make the URL long — long enough that an embedded
+   * photo can push it past what a chat app or mail client will keep intact,
+   * so the size is reported rather than left to be discovered by a recipient
+   * holding half a link.
+   */
+  const handleShare = async () => {
+    try {
+      const url = await buildShareUrl({ v: 1, data, theme, layout: selectedLayout });
+      await navigator.clipboard.writeText(url);
+
+      const kb = Math.round(url.length / 1024);
+      if (url.length > LONG_SHARE_URL) {
+        pushToast(
+          `Link copied — but it is <b>${kb}KB</b> long. Some apps shorten long links; ${
+            data.personalInfo.avatar ? "removing the photo cuts it down a lot." : "send it as a plain URL."
+          }`,
+          "check",
+          7000
+        );
+      } else {
+        pushToast(`Read-only link copied <b>(${kb}KB)</b>`, "check");
+      }
+    } catch {
+      pushToast("Could not copy the link — clipboard access was refused", "check");
+    }
+  };
+
   const handleExportVersion = (version: CVVersion) => {
     const name = data.personalInfo.fullName.replace(/\s+/g, "_") || "resume";
     exportToJSON(version.data, `${name}_CV_${version.label.replace(/\s+/g, "_")}.json`);
@@ -941,6 +979,10 @@ export function CVBuilder() {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </IconBtn>
+          <button className="cv-btn" onClick={handleShare}>
+            <Link2 size={15} />
+            Share
+          </button>
           <ExportMenu onExport={handleExport} />
         </div>
       </header>

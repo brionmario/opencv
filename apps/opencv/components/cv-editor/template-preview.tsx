@@ -7,6 +7,7 @@ import { ProfessionalTemplate } from "./templates/professional";
 import { ModernWysiwygTemplate } from "./templates/modern";
 import { ClassicWysiwygTemplate } from "./templates/classic";
 import { MinimalWysiwygTemplate } from "./templates/minimal";
+import { ReadOnlyProvider } from "@/lib/cv-readonly";
 
 const noop = () => {};
 
@@ -55,17 +56,25 @@ function renderFor(layout: LayoutType, data: CVData, theme: CVTheme) {
 /**
  * Renders a template at full A4 width and scales it down to whatever space it
  * is given, so the proportions stay true to the printed page at any size.
+ *
+ * Two modes. The default is a thumbnail: inert, unselectable, hidden from
+ * assistive tech, because the gallery shows four of them and they are
+ * decoration for a choice made elsewhere. `asDocument` makes it the page's
+ * actual content — the share view — where the text must be selectable,
+ * copyable, reachable by a screen reader and crawlable, and links must work.
  */
 export function TemplatePreview({
   layout,
   data,
   theme,
   className,
+  asDocument = false,
 }: {
   layout: LayoutType;
   data: CVData;
   theme: CVTheme;
   className?: string;
+  asDocument?: boolean;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
   const paperRef = useRef<HTMLDivElement>(null);
@@ -93,11 +102,17 @@ export function TemplatePreview({
   }, [layout, data, theme]);
 
   return (
-    <div ref={boxRef} className={className} style={{ width: "100%", overflow: "hidden" }}>
-      <div style={{ height: height ?? undefined, position: "relative" }}>
+    <div
+      ref={boxRef}
+      className={[className, asDocument ? "cv-doc-fit" : null].filter(Boolean).join(" ")}
+      style={{ width: "100%", overflow: "hidden" }}
+    >
+      <div className={asDocument ? "cv-doc-box" : undefined} style={{ height: height ?? undefined, position: "relative" }}>
         <div
           ref={paperRef}
-          aria-hidden="true"
+          className={asDocument ? "cv-doc-page" : undefined}
+          aria-hidden={asDocument ? undefined : "true"}
+          data-cv-readonly="true"
           style={{
             width: `${A4_W}mm`,
             background: theme.backgroundColor,
@@ -107,12 +122,13 @@ export function TemplatePreview({
             position: "absolute",
             top: 0,
             left: 0,
-            // Inert: the gallery is for looking, not editing.
-            pointerEvents: "none",
-            userSelect: "none",
+            // The gallery is for looking. A shared document is for reading,
+            // so it keeps selection and lets its links be followed.
+            pointerEvents: asDocument ? undefined : "none",
+            userSelect: asDocument ? undefined : "none",
           }}
         >
-          {renderFor(layout, data, theme)}
+          <ReadOnlyProvider>{renderFor(layout, data, theme)}</ReadOnlyProvider>
         </div>
       </div>
     </div>

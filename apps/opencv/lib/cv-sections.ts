@@ -93,3 +93,23 @@ export function emptySectionIds(data: CVData): Set<string> {
   }
   return empty;
 }
+
+/**
+ * The same document with every section that would render nothing marked
+ * hidden.
+ *
+ * The canvas keeps empty sections on the page on purpose — a heading with
+ * nothing under it is a prompt to fill it in, and the editor flags it as one.
+ * Anywhere the document is final, that heading is just a gap: print already
+ * drops them, and so should a shared read-only link.
+ */
+export function withoutEmptySections(data: CVData): CVData {
+  const empty = emptySectionIds(data);
+  if (empty.size === 0) return data;
+  return {
+    ...data,
+    sectionOrder: getEffectiveSectionOrder(data).map((s) =>
+      empty.has(s.id) ? { ...s, hidden: true } : s
+    ),
+  };
+}

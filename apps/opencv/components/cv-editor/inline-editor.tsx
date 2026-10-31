@@ -26,6 +26,8 @@ import {
   type LexicalNode,
 } from "lexical";
 import { FloatingToolbar } from "./floating-toolbar";
+import { useReadOnly } from "@/lib/cv-readonly";
+import { HtmlContent } from "@/lib/html-renderer";
 
 function hasHtmlTags(str: string): boolean {
   return /<[^>]+>/.test(str);
@@ -147,6 +149,7 @@ export function InlineEditor({
   className = "",
   multiline = false,
 }: InlineEditorProps) {
+  const readOnly = useReadOnly();
   const lastInternalValue = useRef(value);
 
   const handleChange = useCallback(
@@ -165,6 +168,22 @@ export function InlineEditor({
     },
     [onChange, richText]
   );
+
+  // A read-only render skips Lexical entirely. Mounting an editor per field
+  // just to forbid typing would ship the editor to every viewer of a shared
+  // link and leave contentEditable regions they could type into — edits that
+  // go nowhere, since the handlers are inert. Static markup is also what a
+  // crawler and a screen reader want. The container/content classes are kept
+  // so the metrics (the -mx-0.5 bleed especially) match the canvas exactly.
+  if (readOnly) {
+    return (
+      <div className={`inline-editor-container relative ${multiline ? "block" : ""} ${className}`}>
+        <div className="inline-editor-content rounded px-0.5 -mx-0.5">
+          {richText ? <HtmlContent content={value} /> : value}
+        </div>
+      </div>
+    );
+  }
 
   const initialConfig = {
     namespace: "InlineEditor",

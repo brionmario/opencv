@@ -2,6 +2,7 @@
 
 import { Trash2, Plus } from "lucide-react";
 import type { ReactNode } from "react";
+import { useReadOnly } from "@/lib/cv-readonly";
 
 interface EditableCardProps {
   children: ReactNode;
@@ -12,6 +13,20 @@ interface EditableCardProps {
 }
 
 export function EditableCard({ children, onDelete, className = "", dataId }: EditableCardProps) {
+  const readOnly = useReadOnly();
+
+  // Read-only keeps the wrapper — the break-inside rule and data-entry-id are
+  // what the page splitter and the PDF export read — but drops the hover ring
+  // and the delete button, which would otherwise invite a click that does
+  // nothing on a shared link.
+  if (readOnly) {
+    return (
+      <div data-entry-id={dataId} className={`relative rounded-sm ${className}`} style={{ breakInside: "avoid" }}>
+        {children}
+      </div>
+    );
+  }
+
   return (
     <div
       data-entry-id={dataId}
@@ -36,6 +51,9 @@ interface AddItemButtonProps {
 }
 
 export function AddItemButton({ onAdd, label }: AddItemButtonProps) {
+  const readOnly = useReadOnly();
+  if (readOnly) return null;
+
   return (
     <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2 opacity-0 group-hover/section:opacity-100 transition-opacity print:hidden z-10">
       <button

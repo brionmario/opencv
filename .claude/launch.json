@@ -1,0 +1,11 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "opencv-dev",
+      "runtimeExecutable": "npx",
+      "runtimeArgs": ["nx", "run", "@brionmario/opencv:dev"],
+      "port": 3000
+    }
+  ]
+}

@@ -919,6 +919,20 @@
   .cv-section-frame, .cv-section-frame:hover { outline: none !important; }
 }
 
+/* ---- Read-only renders (the share view) ----
+   The templates are editors, so each one carries hover-revealed controls:
+   add-a-bullet, remove-a-skill, the icon picker, the photo upload. Every one
+   of them is already marked print:hidden, because none of it belongs on the
+   printed page — which makes that class the templates' own marker for "editor
+   chrome, not CV content". A read-only render reuses it rather than
+   re-tagging a hundred call sites in four templates.
+   The pointer-events rule catches the one control that is content as well as
+   a control (the language proficiency dots), so a viewer cannot click at a
+   rating that no handler is listening for. Anchors are left alone: links in a
+   shared CV must stay clickable. */
+[data-cv-readonly="true"] .print\:hidden { display: none; }
+[data-cv-readonly="true"] button { pointer-events: none; cursor: default; }
+
 /* ---- Properties dock ---- */
 .cv-prop-empty {
   display: flex; flex-direction: column; align-items: center; gap: 8px;
@@ -1568,3 +1582,77 @@
   background: var(--cv-accent-soft);
 }
 .cv-keep-sample input { accent-color: var(--cv-accent); width: 14px; height: 14px; cursor: pointer; }
+
+/* ---- Share view ----
+   The read-only page a share link opens. It borrows the app shell (bar, desk,
+   paper wrap) so a shared résumé sits in the same frame the author designed it
+   in, and adds only what the editor has no use for. */
+.cv-view-badge {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 9px;
+  border: 1px solid var(--cv-border-2); border-radius: 999px;
+  background: var(--cv-surface-2);
+  font-family: var(--cv-font-ui); font-size: 11px; font-weight: 600;
+  letter-spacing: 0.02em; text-transform: uppercase;
+  color: var(--cv-text-3);
+}
+.cv-view-paper {
+  border-radius: 4px;
+  box-shadow: var(--cv-shadow-paper);
+  overflow: hidden;
+}
+.cv-view-msg {
+  margin: auto; max-width: 46ch; text-align: center;
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  font-family: var(--cv-font-ui); color: var(--cv-text-2);
+}
+.cv-view-msg h1 { font-size: 19px; font-weight: 650; color: var(--cv-text); }
+.cv-view-msg p { font-size: 13.5px; line-height: 1.6; }
+.cv-view-msg .cv-btn { margin-top: 6px; }
+
+/* The editor is a desk-bound tool, but a shared link is opened on whatever
+   the recipient has in their hand — so the view page, and only the view page,
+   has to work at phone width. The paper wrap is 210mm and refuses to shrink,
+   which is right on the desk and wrong here: released, it lets the preview
+   measure the real viewport and scale the page down to fit. */
+@media (max-width: 880px) {
+  .cv-view .cv-desk { padding: 14px 12px 36px; }
+  .cv-view .cv-paper-wrap { flex-shrink: 1; width: 100%; }
+  /* One column, so the brand takes the first row and the actions the second
+     rather than three zones fighting over 375px. */
+  .cv-view .cv-bar {
+    height: auto;
+    grid-template-columns: 1fr;
+    justify-items: start;
+    row-gap: 8px;
+    padding: 10px var(--cv-pad);
+  }
+  /* The badge is a nicety; the actions are the point. */
+  .cv-view .cv-bar-zone.center { display: none; }
+  .cv-view .cv-bar-zone.right { justify-content: flex-start; flex-wrap: wrap; }
+  .cv-view .cv-doc-name { display: none; }
+}
+
+/* Printing a shared CV should produce the résumé and nothing else — no bar,
+   no desk tint, no paper shadow or rounding.
+   The !important rules are beating inline styles, which is the only way to
+   reach them: on screen the view scales the A4 page down to the window with a
+   JS-measured transform, and a printer already has the page at true size. Left
+   scaled, a print would come out as a small résumé in the corner of the sheet,
+   so print puts the page back to 210mm, unscaled and in normal flow. */
+@media print {
+  .cv-view-paper { box-shadow: none; border-radius: 0; overflow: visible; }
+  .cv-app > .cv-bar { display: none !important; }
+  .cv-app > .cv-desk {
+    padding: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+    background-image: none !important;
+    display: block !important;
+  }
+  .cv-doc-fit { overflow: visible !important; }
+  .cv-doc-box { height: auto !important; }
+  .cv-doc-page {
+    position: static !important;
+    transform: none !important;
+  }
+}
