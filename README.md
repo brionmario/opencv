@@ -1,4 +1,4 @@
-[![OpenCV Banner](docs/assets/images/banner.png)](docs/assets/images/banner.png)
+[![openCV — what you see is what prints](docs/assets/images/hero-banner.png)](https://brionmario.github.io/opencv)
 
 # OpenCV Resume Builder
 
