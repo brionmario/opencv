@@ -282,10 +282,10 @@ function NoScriptNotice() {
         </p>
         <p className="cv-view-noscript-machine">
           Reading this without a browser? The résumé is in the URL fragment as{" "}
-          <code>#cv=z.&lt;base64url&gt;</code> — raw-deflated JSON holding a{" "}
-          <a href="https://jsonresume.org/schema">JSON Resume</a>-compatible document.
-          The fragment never reaches the server, so fetching this URL can never return
-          the content; decode it from the link you already have.
+          <code>#cv=z.&lt;base64url&gt;</code> — raw-deflated JSON. The fragment never
+          reaches the server, so fetching this URL can never return the content; decode
+          it from the link you already have. <a href={assetPath("/llms.txt")}>/llms.txt</a>{" "}
+          gives the format.
         </p>
       </div>
     </noscript>

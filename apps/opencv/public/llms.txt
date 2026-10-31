@@ -1,0 +1,71 @@
+# opencv
+
+> An open-source résumé builder that stores nothing. A résumé lives entirely
+> inside its own URL, so there is no account, no database and no API — which
+> also means fetching a résumé link returns an empty page unless you know how
+> to read it. This file explains how.
+
+opencv is a static site. The editor runs in the browser and keeps documents in
+localStorage; a résumé is shared by encoding the whole document into a link.
+
+## Reading a share link
+
+A share link looks like:
+
+    https://brionmario.github.io/opencv/view#cv=z.q1bKS8xNVbJSKs5…
+
+Everything after `#cv=` is the document. Because it is a URL *fragment*, the
+browser never sends it to the server: every share link in existence arrives at
+the host as the same request for `/view`, and the page is rendered client-side.
+**Fetching a share URL can never return the résumé.** Decode it from the link
+you already hold:
+
+1. Split on `#cv=` and take the part after it.
+2. Split that on the first `.`. The prefix is the codec: `z` = raw DEFLATE
+   (`deflate-raw`, no zlib header), `u` = no compression.
+3. The remainder is base64url (`-` and `_` for `+` and `/`, padding stripped).
+   Decode it, then decompress if the codec was `z`.
+4. The result is UTF-8 JSON: `{ "v": 1, "data": …, "theme": …, "layout": … }`.
+
+`layout` is one of `professional`, `modern`, `classic`, `minimal`.
+
+Older links carry `?data=<base64>` in the query string instead. Those hold the
+bare document with no compression, theme or layout.
+
+## The document format
+
+`data` is opencv's internal shape, not JSON Resume. Top-level keys:
+`personalInfo`, `experience`, `education`, `skills`, `projects`,
+`certifications`, `awards`, `references`, `volunteering`, `strengths`,
+`interests`, `publications`, `languages`, `socialLinks`, `customSections`,
+`sectionOrder`. Entries carry `id` fields the editor uses to address them, and
+text fields may contain inline HTML (`<strong>`, `<em>`, `<u>`, `<a>`).
+
+It converts losslessly enough in both directions with
+[JSON Resume](https://jsonresume.org/schema), which is what the tooling below
+speaks. Prefer JSON Resume unless you specifically need opencv's own shape.
+
+## Working with résumés programmatically
+
+- [@brionmario/opencv-core](https://github.com/brionmario/opencv/tree/main/packages/core):
+  the browser-free half — document model, section rules, the share codec
+  (`encodeShare` / `decodeShare`), and JSON Resume conversion (`toJsonResume` /
+  `fromJsonResume`). Runs under Node; `deflate-raw` and base64 are standard there.
+- [@brionmario/opencv-mcp](https://github.com/brionmario/opencv/tree/main/packages/mcp):
+  an MCP server. Tools: `list_templates`, `get_sample_resume`, `create_resume`,
+  `read_resume`, `update_resume`. Takes and returns JSON Resume, and mints share
+  links pointing at this site (or another, via `OPENCV_BASE_URL`).
+
+## Pages
+
+- [/](https://brionmario.github.io/opencv/): dashboard — the résumés held in this browser.
+- [/templates](https://brionmario.github.io/opencv/templates): the four templates, previewed.
+- [/editor](https://brionmario.github.io/opencv/editor): the editor. Operates on the open document; takes no résumé in the URL.
+- [/view](https://brionmario.github.io/opencv/view): renders a shared résumé read-only. Needs the `#cv=` fragment to show anything.
+
+## Notes
+
+- A link *is* the document. It cannot be revoked, it works for anyone who holds
+  it, and editing produces a new link rather than changing the old one.
+- Links run to a few KB and break if truncated.
+- [Source](https://github.com/brionmario/opencv) · MIT.
