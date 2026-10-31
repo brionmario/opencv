@@ -12,3 +12,22 @@
 - For Nx plugin best practices, check `node_modules/@nx/<plugin>/PLUGIN.md`. Not all plugins have this file - proceed without it if unavailable.
 
 <!-- nx configuration end-->
+
+# Writing style
+
+These apply to everything you write in this repo: UI strings, metadata,
+structured data, `llms.txt`, exports, commit messages, docs and code comments.
+
+- **Never use em dashes (`—`) or en dashes (`–`) in prose.** Reach for what the
+  sentence actually wants instead: a colon before an expansion or a list, a
+  comma for an aside, a full stop for two separate thoughts, or parentheses for
+  a true aside. Do not substitute a spaced hyphen (` - `) either; pick real
+  punctuation.
+- Hyphens are fine where they belong: compound modifiers (`print-tested`,
+  `open-source`), and ranges in code or data.
+- The brand is **OpenCV**, capital O and capital CV. Not `openCV`, not
+  `Opencv`. In running prose the package and repo name stays lowercase
+  (`opencv`, `@brionmario/opencv-core`) because those are identifiers.
+- Page titles separate with `|` (`Resume templates | OpenCV`); a title that
+  pairs the name with the tagline uses a colon (`OpenCV: The resume builder
+  that stores nothing`).
