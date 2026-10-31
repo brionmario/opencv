@@ -224,6 +224,7 @@ export default function ViewPage() {
       </header>
 
       <main className="cv-desk" data-canvas="soft">
+        <NoScriptNotice />
         {state.kind === "ready" ? (
           <div className="cv-paper-wrap">
             <div
@@ -243,6 +244,51 @@ export default function ViewPage() {
         )}
       </main>
     </div>
+  );
+}
+
+/**
+ * What this page says when it cannot run.
+ *
+ * A share link carries the résumé in the URL fragment, which the browser
+ * never sends to the server, and the page decodes it client-side. So without
+ * JavaScript there is genuinely nothing to show: the server was never told
+ * which résumé was asked for, and could not have answered if it had been.
+ *
+ * That is the design working as intended — it is what keeps a résumé out of
+ * access logs — but the failure mode is a blank page, which reads as a dead
+ * link. This says what happened instead.
+ *
+ * It is also the only thing a non-JavaScript reader ever sees: a screening
+ * bot, a link unfurler, or an agent told to fetch the URL. The last
+ * paragraph is for them, and costs a human nothing — so it says where the
+ * data actually is, given they are already holding it.
+ */
+function NoScriptNotice() {
+  return (
+    <noscript>
+      {/* The bar's theme toggle needs JavaScript, and a control that does
+          nothing is worse than no control. */}
+      <style>{`.cv-view .cv-bar-zone.right { display: none; }`}</style>
+      <div className="cv-view-msg cv-view-noscript">
+        <h1>This résumé needs JavaScript</h1>
+        <p>
+          The whole document lives inside this link, after the <code>#</code> — nothing
+          is stored on a server. Decoding it happens in your browser, so with
+          scripts turned off there is nothing to display.
+        </p>
+        <p>
+          Enable JavaScript for this page, or ask whoever sent the link for a PDF.
+        </p>
+        <p className="cv-view-noscript-machine">
+          Reading this without a browser? The résumé is in the URL fragment as{" "}
+          <code>#cv=z.&lt;base64url&gt;</code> — raw-deflated JSON holding a{" "}
+          <a href="https://jsonresume.org/schema">JSON Resume</a>-compatible document.
+          The fragment never reaches the server, so fetching this URL can never return
+          the content; decode it from the link you already have.
+        </p>
+      </div>
+    </noscript>
   );
 }
 
