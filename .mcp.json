@@ -3,7 +3,17 @@
     "nx-mcp": {
       "type": "stdio",
       "command": "npx",
-      "args": ["nx", "mcp"]
+      "args": [
+        "nx",
+        "mcp"
+      ]
+    },
+    "opencv": {
+      "type": "stdio",
+      "command": "node",
+      "args": [
+        "packages/mcp/dist/index.js"
+      ]
     }
   }
 }
