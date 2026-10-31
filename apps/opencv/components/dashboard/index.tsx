@@ -65,7 +65,7 @@ export function Dashboard() {
         <img
           className="cv-home-logo"
           src={assetPath(dark ? "/brand/logo-inverted.png" : "/brand/logo.png")}
-          alt="openCV — Open Source CV Builder"
+          alt="OpenCV: Open Source CV Builder"
         />
         <button
           className="cv-iconbtn cv-home-theme"
@@ -116,7 +116,7 @@ export function Dashboard() {
                 <h1>What you see is what prints.</h1>
                 <p>
                   Four print-tested templates, a live layout editor, and exports
-                  measured against the page — not approximated from it.
+                  measured against the page, not approximated from it.
                 </p>
                 <div className="cv-home-hero-actions">
                   <button className="cv-btn cv-btn-primary" onClick={createBlank}>
@@ -178,7 +178,7 @@ export function Dashboard() {
               <p className="cv-home-empty">
                 {view === "deleted"
                   ? "Nothing deleted."
-                  : "No résumés yet — create one above and it will show up here."}
+                  : "No résumés yet. Create one above and it will show up here."}
               </p>
             ) : density === "list" || view === "deleted" ? (
               <table className="cv-home-table">

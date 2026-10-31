@@ -159,7 +159,7 @@ export function ThemeCustomizer({ theme, onChange, onClose }: ThemeCustomizerPro
         </div>
         <div className="cv-drawer-hd-txt">
           <h3>Theme</h3>
-          <p>Personalize the CV — changes apply live.</p>
+          <p>Personalize the CV. Changes apply live.</p>
         </div>
         <button
           className="cv-iconbtn cv-tip"

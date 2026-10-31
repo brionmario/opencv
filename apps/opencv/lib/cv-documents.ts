@@ -225,7 +225,7 @@ export function migrateLegacyDocument(): CVDocument | null {
   })();
 
   const doc = createDocument({
-    name: data.personalInfo.fullName ? `${data.personalInfo.fullName} — résumé` : "My résumé",
+    name: data.personalInfo.fullName ? `${data.personalInfo.fullName}: résumé` : "My résumé",
     layout,
     data,
     theme: { ...DEFAULT_THEME, ...read<Partial<CVTheme>>(THEME_STORAGE_KEY, {}) },

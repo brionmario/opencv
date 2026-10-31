@@ -123,7 +123,7 @@ export default function ViewPage() {
   useEffect(() => {
     if (state.kind !== "ready") return;
     const name = state.cv.data.personalInfo.fullName?.trim();
-    const title = name ? `${name} — résumé` : "Résumé — opencv";
+    const title = name ? `${name}: résumé` : "Résumé | OpenCV";
 
     // Applied again after paint because the router writes the route's own
     // static metadata title during commit. On a hash change this effect runs
@@ -143,7 +143,7 @@ export default function ViewPage() {
     // A copy, not a takeover: this becomes a new document in the viewer's own
     // library, leaving whatever they already had open untouched.
     const doc = createDocument({
-      name: name ? `${name} — résumé (copy)` : "Shared résumé (copy)",
+      name: name ? `${name}: résumé (copy)` : "Shared résumé (copy)",
       layout,
       data: source,
       theme,
@@ -273,7 +273,7 @@ function NoScriptNotice() {
       <div className="cv-view-msg cv-view-noscript">
         <h1>This résumé needs JavaScript</h1>
         <p>
-          The whole document lives inside this link, after the <code>#</code> — nothing
+          The whole document lives inside this link, after the <code>#</code>. Nothing
           is stored on a server. Decoding it happens in your browser, so with
           scripts turned off there is nothing to display.
         </p>
@@ -282,7 +282,7 @@ function NoScriptNotice() {
         </p>
         <p className="cv-view-noscript-machine">
           Reading this without a browser? The résumé is in the URL fragment as{" "}
-          <code>#cv=z.&lt;base64url&gt;</code> — raw-deflated JSON. The fragment never
+          <code>#cv=z.&lt;base64url&gt;</code>, raw-deflated JSON. The fragment never
           reaches the server, so fetching this URL can never return the content; decode
           it from the link you already have. <a href={assetPath("/llms.txt")}>/llms.txt</a>{" "}
           gives the format.
@@ -304,8 +304,8 @@ function ViewMessage({ kind }: { kind: "loading" | "empty" | "broken" }) {
       <h1>{kind === "empty" ? "Nothing to show" : "This link is broken"}</h1>
       <p>
         {kind === "empty"
-          ? "A share link carries the whole résumé in the URL. This one arrived without it — if it was copied by hand, check that nothing after the # was cut off."
-          : "The résumé in this link could not be read. Links are long, and most often the end has been clipped by whatever passed it along — ask for it again as a plain URL."}
+          ? "A share link carries the whole résumé in the URL. This one arrived without it. If it was copied by hand, check that nothing after the # was cut off."
+          : "The résumé in this link could not be read. Links are long, and most often the end has been clipped by whatever passed it along, so ask for it again as a plain URL."}
       </p>
       <Link className="cv-btn cv-btn-primary" href="/">
         Build your own

@@ -9,11 +9,11 @@ import { siteUrl } from "@/lib/asset-path";
 export const metadata: Metadata = {
   title: "Resume templates",
   description:
-    "Four print-tested resume templates — Professional, Modern, Classic and Minimal. " +
+    "Four print-tested resume templates: Professional, Modern, Classic and Minimal. " +
     "Preview each one filled in, pick a layout, and edit it in the browser. Free and open source.",
   alternates: { canonical: siteUrl("/templates") },
   openGraph: {
-    title: "Resume templates — openCV",
+    title: "Resume templates | OpenCV",
     description:
       "Four print-tested resume templates. Preview each one filled in, then edit it in the browser.",
     url: siteUrl("/templates"),

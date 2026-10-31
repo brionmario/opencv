@@ -15,14 +15,14 @@ import { siteUrl } from "@/lib/asset-path";
 const structuredData = {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  name: "openCV",
-  alternateName: "openCV Resume Builder",
+  name: "OpenCV",
+  alternateName: "OpenCV Resume Builder",
   url: siteUrl("/"),
   applicationCategory: "BusinessApplication",
   operatingSystem: "Any browser",
   description:
     "A free, open-source resume builder. Four print-tested templates, a live editor, " +
-    "and PDF, HTML, Markdown and JSON Resume exports. No account and no database — a " +
+    "and PDF, HTML, Markdown and JSON Resume exports. No account and no database: a " +
     "resume is shared as a link that carries the whole document.",
   offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
   license: "https://opensource.org/licenses/MIT",

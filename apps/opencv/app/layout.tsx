@@ -4,18 +4,18 @@ import { Analytics } from '@vercel/analytics/next'
 import './globals.css'
 import { BASE_PATH, SITE_URL, siteUrl } from '@/lib/asset-path'
 
-const NAME = 'openCV'
+const NAME = 'OpenCV'
 const TAGLINE = 'The resume builder that stores nothing'
 const DESCRIPTION =
   'A free, open-source resume builder. Four print-tested templates, a live editor, ' +
-  'and PDF, HTML, Markdown and JSON Resume exports. No account and no database — ' +
+  'and PDF, HTML, Markdown and JSON Resume exports. No account and no database: ' +
   'your resume is shared as a link that carries the whole document.'
 
 export const metadata: Metadata = {
   // Every page's own title fills the slot; the root keeps a full one of its own.
   title: {
-    default: `${NAME} — ${TAGLINE}`,
-    template: `%s — ${NAME}`,
+    default: `${NAME}: ${TAGLINE}`,
+    template: `%s | ${NAME}`,
   },
   description: DESCRIPTION,
   applicationName: NAME,
@@ -35,7 +35,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     siteName: NAME,
-    title: `${NAME} — ${TAGLINE}`,
+    title: `${NAME}: ${TAGLINE}`,
     description: DESCRIPTION,
     url: siteUrl('/'),
     locale: 'en',
@@ -46,13 +46,13 @@ export const metadata: Metadata = {
         url: siteUrl('/brand/og.png'),
         width: 1200,
         height: 630,
-        alt: `${NAME} — ${TAGLINE}`,
+        alt: `${NAME}: ${TAGLINE}`,
       },
     ],
   },
   twitter: {
     card: 'summary_large_image',
-    title: `${NAME} — ${TAGLINE}`,
+    title: `${NAME}: ${TAGLINE}`,
     description: DESCRIPTION,
     images: [siteUrl('/brand/og.png')],
   },

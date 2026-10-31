@@ -134,7 +134,7 @@ export default function TemplatesPage() {
         <img
           className="cv-gallery-logo"
           src={assetPath(dark ? "/brand/logo-inverted.png" : "/brand/logo.png")}
-          alt="openCV — Open Source CV Builder"
+          alt="OpenCV: Open Source CV Builder"
         />
         <div className="cv-gallery-bar-end">
           <label className="cv-keep-sample" title={creating
@@ -170,9 +170,9 @@ export default function TemplatesPage() {
           title="Replace your content with the sample?"
           body={`Your current résumé${
             data.experience.length
-              ? ` — including ${data.experience.length} experience ${
+              ? `, including ${data.experience.length} experience ${
                   data.experience.length === 1 ? "entry" : "entries"
-                } —`
+                },`
               : ""
           } will be replaced by the sample shown. This cannot be undone.`}
           confirmLabel="Replace content"

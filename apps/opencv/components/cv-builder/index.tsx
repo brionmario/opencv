@@ -837,7 +837,7 @@ export function CVBuilder() {
       const kb = Math.round(url.length / 1024);
       if (url.length > LONG_SHARE_URL) {
         pushToast(
-          `Link copied — but it is <b>${kb}KB</b> long. Some apps shorten long links; ${
+          `Link copied, but it is <b>${kb}KB</b> long. Some apps shorten long links; ${
             data.personalInfo.avatar ? "removing the photo cuts it down a lot." : "send it as a plain URL."
           }`,
           "check",
@@ -847,7 +847,7 @@ export function CVBuilder() {
         pushToast(`Read-only link copied <b>(${kb}KB)</b>`, "check");
       }
     } catch {
-      pushToast("Could not copy the link — clipboard access was refused", "check");
+      pushToast("Could not copy the link: clipboard access was refused", "check");
     }
   };
 
@@ -869,7 +869,7 @@ export function CVBuilder() {
   };
 
   const handleCreateSavepoint = () => {
-    createSavepoint(`Snapshot — ${new Date().toLocaleString()}`);
+    createSavepoint(`Snapshot: ${new Date().toLocaleString()}`);
     pushToast("Snapshot saved", "check");
   };
 

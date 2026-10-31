@@ -126,7 +126,7 @@ export function exportToMarkdown(data: CVData, filename: string) {
         if (ref.title) s += `, ${ref.title}`;
         if (ref.company) s += ` at ${ref.company}`;
         const contact = [ref.phone, ref.email].filter(Boolean).join(", ");
-        if (contact) s += ` — ${contact}`;
+        if (contact) s += `, ${contact}`;
         s += "\n";
       });
       return s + "\n";

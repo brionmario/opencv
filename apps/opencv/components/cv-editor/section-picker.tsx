@@ -141,7 +141,7 @@ export function SectionPicker({ data, onAddBuiltIn, onAddCustom, onClose }: Sect
               <Thumb id="custom" />
               <span className="cv-pick-meta">
                 <b>Custom section</b>
-                <span>Anything else — name it yourself.</span>
+                <span>Anything else, name it yourself.</span>
               </span>
               <form
                 onSubmit={(e) => {

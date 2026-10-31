@@ -1,7 +1,7 @@
 # opencv
 
 > An open-source résumé builder that stores nothing. A résumé lives entirely
-> inside its own URL, so there is no account, no database and no API — which
+> inside its own URL, so there is no account, no database and no API, which
 > also means fetching a résumé link returns an empty page unless you know how
 > to read it. This file explains how.
 
@@ -48,7 +48,7 @@ speaks. Prefer JSON Resume unless you specifically need opencv's own shape.
 ## Working with résumés programmatically
 
 - [@brionmario/opencv-core](https://github.com/brionmario/opencv/tree/main/packages/core):
-  the browser-free half — document model, section rules, the share codec
+  the browser-free half: document model, section rules, the share codec
   (`encodeShare` / `decodeShare`), and JSON Resume conversion (`toJsonResume` /
   `fromJsonResume`). Runs under Node; `deflate-raw` and base64 are standard there.
 - [@brionmario/opencv-mcp](https://github.com/brionmario/opencv/tree/main/packages/mcp):
@@ -58,7 +58,7 @@ speaks. Prefer JSON Resume unless you specifically need opencv's own shape.
 
 ## Pages
 
-- [/](https://brionmario.github.io/opencv/): dashboard — the résumés held in this browser.
+- [/](https://brionmario.github.io/opencv/): dashboard, the résumés held in this browser.
 - [/templates](https://brionmario.github.io/opencv/templates): the four templates, previewed.
 - [/editor](https://brionmario.github.io/opencv/editor): the editor. Operates on the open document; takes no résumé in the URL.
 - [/view](https://brionmario.github.io/opencv/view): renders a shared résumé read-only. Needs the `#cv=` fragment to show anything.
