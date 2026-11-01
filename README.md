@@ -8,8 +8,6 @@ rather than approximated from it. No account, no database, no upload.
 
 ### [Open the app →](https://brionmario.github.io/opencv)
 
-![The OpenCV dashboard](docs/assets/images/screenshots/home.png)
-
 ## What it does
 
 - **Writes to the page, not to a preview.** The canvas is A4 at true scale, and
