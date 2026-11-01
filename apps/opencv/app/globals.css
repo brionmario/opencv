@@ -867,6 +867,12 @@
   background: var(--cv-surface);
   border-left: 1px solid var(--cv-border);
 }
+/* Sheet furniture: on a wide window the dock is simply the third column, so
+   neither the dismiss scrim nor the close button exists. The narrow rules
+   below turn both on. */
+.cv-dock-close { display: none; }
+.cv-dock-scrim { display: none; }
+
 .cv-dock-panel { display: flex; flex-direction: column; min-height: 0; }
 .cv-dock-panel + .cv-dock-panel { border-top: 1px solid var(--cv-border); }
 .cv-dock-panel.grow { flex: 1; }
@@ -988,6 +994,9 @@
 .cv-gallery {
   height: 100vh;
   display: grid;
+  /* See .cv-home: the implicit column has to be capped or the bar sets the
+     page width. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto minmax(0, 1fr);
   background: var(--cv-surface);
   color: var(--cv-text);
@@ -1083,6 +1092,10 @@
 .cv-home {
   min-height: 100vh;
   display: grid;
+  /* Without an explicit track the single implicit column sizes to its widest
+     child, so a bar that does not fit widens the whole page rather than
+     being made to fit. */
+  grid-template-columns: minmax(0, 1fr);
   grid-template-rows: auto 1fr;
   background: var(--cv-desk);
   color: var(--cv-text);
@@ -1679,4 +1692,275 @@
     position: static !important;
     transform: none !important;
   }
+}
+
+/* ============================================================
+   Narrow viewports
+   ------------------------------------------------------------
+   The builder was drawn as a desk: a bar, a tool rail, the page, a dock of
+   panels beside it. None of that survives being folded into 375px as-is, so
+   on a phone the same parts take different places. The rail drops to a
+   toolbar under the thumb, the dock becomes a sheet that rises over the desk,
+   and the page is scaled to the window instead of running off the side of it.
+   Nothing is removed: everything the desk offers is still reachable, which is
+   why the rail moves rather than collapsing into a menu.
+   ============================================================ */
+
+/* The URL bar on a phone eats into 100vh, so a shell sized to it is cut off
+   at the bottom for as long as the bar is showing. Dynamic units track it. */
+@supports (height: 100dvh) {
+  .cv-app     { height: 100dvh; }
+  .cv-gallery { height: 100dvh; }
+  .cv-home    { min-height: 100dvh; }
+}
+
+/* A touch screen has no hover, so anything revealed by one is unreachable:
+   the card actions have to be there already, and a tooltip that only a
+   pointer can summon is dead weight that fires on tap instead. */
+@media (hover: none) {
+  .cv-home-doc-actions { opacity: 1; }
+  .cv-tip::after { content: none; }
+}
+
+/* ---- Builder shell ---- */
+@media (max-width: 860px) {
+  .cv-app {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto minmax(0, 1fr) auto auto;
+    grid-template-areas:
+      "bar"
+      "desk"
+      "stat"
+      "rail";
+  }
+
+  /* Three zones cannot share 375px, so the bar gives the template switcher a
+     row of its own and lets the actions keep the first one. */
+  .cv-app > .cv-bar {
+    height: auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "left right"
+      "center center";
+    row-gap: 8px;
+    padding: 8px var(--cv-pad);
+  }
+  .cv-app > .cv-bar > .cv-bar-zone.left   { grid-area: left; }
+  .cv-app > .cv-bar > .cv-bar-zone.right  { grid-area: right; }
+  .cv-app > .cv-bar > .cv-bar-zone.center {
+    grid-area: center;
+    justify-content: flex-start;
+    /* Four template names outrun the row. Scrolling them keeps all four
+       reachable and readable, where squeezing would leave none of it. */
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cv-app > .cv-bar > .cv-bar-zone.center::-webkit-scrollbar { display: none; }
+  .cv-app > .cv-bar .cv-seg { flex-shrink: 0; }
+
+  .cv-app > .cv-desk { padding: 16px 12px 28px; }
+
+  /* The sheet stops short of the toolbar and the toolbar sits above the
+     scrim, so switching panels is one tap rather than dismiss-then-pick. */
+  .cv-app { --cv-rail-h: calc(50px + env(safe-area-inset-bottom)); }
+
+  /* The rail turns on its side and sits at the foot of the screen, where a
+     thumb reaches without crossing the page. */
+  .cv-app > .cv-rail {
+    position: relative;
+    z-index: 130;
+    width: auto;
+    height: var(--cv-rail-h);
+    flex-direction: row;
+    justify-content: center;
+    gap: 6px;
+    padding: 5px 0 calc(5px + env(safe-area-inset-bottom));
+    border-right: 0;
+    border-top: 1px solid var(--cv-border);
+  }
+  /* 44px of target: a finger is not a cursor. */
+  .cv-app > .cv-rail .cv-iconbtn { width: 46px; height: 40px; }
+  .cv-rail-sep { width: 1px; height: 20px; margin: 0 4px; }
+
+  /* The dock leaves the grid and becomes a sheet over the desk. */
+  .cv-app > .cv-dock {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: var(--cv-rail-h);
+    z-index: 120;
+    width: auto;
+    max-height: 66vh;
+    padding-top: 36px;
+    border-left: 0;
+    border-top: 1px solid var(--cv-border-2);
+    border-radius: var(--cv-radius-lg) var(--cv-radius-lg) 0 0;
+    box-shadow: var(--cv-shadow-lg);
+    /* Its own height plus the strip it stops above, or it peeks over the
+       toolbar when it is meant to be away. */
+    transform: translateY(calc(100% + var(--cv-rail-h)));
+    transition: transform var(--cv-dur) var(--cv-ease);
+    /* One scroll for the sheet rather than one per panel, so the panel under
+       the tool panel is reachable however tall the tool panel grows. */
+    overflow-y: auto;
+  }
+  .cv-app > .cv-dock .cv-dock-panel.grow { flex: 0 0 auto; }
+  .cv-app > .cv-dock .cv-dock-body { overflow: visible; }
+  .cv-app > .cv-dock .cv-dock-hd { position: sticky; top: 0; z-index: 1; }
+  /* The grab handle, so the strip above the first panel reads as a sheet
+     edge rather than as empty padding. */
+  .cv-app > .cv-dock::before {
+    content: "";
+    position: absolute;
+    top: 11px;
+    left: 50%;
+    width: 36px;
+    height: 4px;
+    margin-left: -18px;
+    border-radius: 999px;
+    background: var(--cv-border-2);
+  }
+  .cv-app[data-dock="open"] > .cv-dock { transform: translateY(0); }
+
+  .cv-dock-close {
+    display: inline-flex;
+    position: absolute;
+    top: 2px;
+    right: 6px;
+    z-index: 1;
+  }
+
+  .cv-dock-scrim {
+    display: block;
+    position: fixed;
+    inset: 0;
+    z-index: 110;
+    background: rgba(0, 0, 0, 0.45);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--cv-dur) var(--cv-ease);
+  }
+  .cv-app[data-dock="open"] > .cv-dock-scrim { opacity: 1; pointer-events: auto; }
+
+  /* A fixed-height flex row whose content does not fit wraps out of its own
+     box. Keep it on one line and let the least useful end of it go. */
+  .cv-status {
+    padding-left: var(--cv-pad);
+    padding-right: var(--cv-pad);
+    gap: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+  .cv-status > :last-child { display: none; }
+}
+
+@supports (height: 100dvh) {
+  @media (max-width: 860px) {
+    .cv-app > .cv-dock { max-height: 66dvh; }
+  }
+}
+
+/* Labels go before controls do: the icon still says what each one is, and
+   dropping the words is what keeps all five in one row. */
+@media (max-width: 720px) {
+  .cv-app > .cv-bar .cv-btn-label { display: none; }
+  .cv-app > .cv-bar .cv-btn { padding: 0 11px; gap: 0; }
+}
+
+/* ---- Template gallery ---- */
+@media (max-width: 860px) {
+  /* Two panes that scroll independently is a desk idea. On a phone the page
+     scrolls once, top to bottom: pick from the list, then see the result. */
+  .cv-gallery { height: auto; min-height: 100vh; }
+  /* With the page scrolling as one, "Use <template>" would otherwise be left
+     behind at the top the moment anyone scrolls down to the preview it
+     applies to. */
+  .cv-gallery-bar {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: var(--cv-surface);
+    height: auto;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "back logo"
+      "end  end";
+    row-gap: 10px;
+    padding: 8px var(--cv-pad);
+  }
+  .cv-gallery-bar > .cv-btn { grid-area: back; }
+  .cv-gallery-logo { grid-area: logo; justify-self: end; height: 22px; }
+  .cv-gallery-bar-end {
+    grid-area: end;
+    justify-content: flex-start;
+    flex-wrap: wrap;
+    row-gap: 8px;
+  }
+  .cv-gallery-body { grid-template-rows: auto auto; }
+  .cv-gallery-list { overflow: visible; padding: 18px var(--cv-pad) 22px; }
+  .cv-gallery-stage { min-height: 0; }
+  .cv-gallery-stage-inner { overflow: visible; padding: 18px 12px 28px; }
+  .cv-gallery-stage-ft { height: auto; padding: 7px var(--cv-pad); flex-wrap: wrap; row-gap: 4px; }
+}
+
+@supports (height: 100dvh) {
+  @media (max-width: 860px) {
+    .cv-gallery { min-height: 100dvh; }
+  }
+}
+
+/* ---- Dashboard ---- */
+@media (max-width: 860px) {
+  /* The sidebar's full height of navigation ahead of the content pushed the
+     page itself off the first screen. Laid out as a strip it keeps every
+     destination and costs one row. */
+  .cv-home-side {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    padding: 10px var(--cv-pad);
+  }
+  .cv-home-new,
+  .cv-home-open { flex: 1 1 140px; }
+  .cv-home-nav {
+    flex-direction: row;
+    width: 100%;
+    gap: 4px;
+    margin-top: 0;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .cv-home-nav::-webkit-scrollbar { display: none; }
+  .cv-home-nav button { flex-shrink: 0; white-space: nowrap; padding: 8px 11px; }
+  /* A section heading for a column that is now a row. */
+  .cv-home-nav-label { display: none; }
+  .cv-home-count { margin-left: 5px; }
+  .cv-home-main { padding: 18px var(--cv-pad) 44px; }
+}
+
+@media (max-width: 560px) {
+  .cv-home-cards { grid-template-columns: minmax(0, 1fr); }
+  /* Two thumbnails to a row still reads at this width; the auto-fill minimum
+     was sized for a desk and would leave one wide card per row. */
+  .cv-home-grid { grid-template-columns: repeat(auto-fill, minmax(136px, 1fr)); gap: 14px; }
+  .cv-home-recent-hd { flex-wrap: wrap; }
+  /* Name, when, and the actions are what the list is for. The template name
+     is already on the thumbnail in grid view. */
+  .cv-home-table th:nth-child(2),
+  .cv-home-table td:nth-child(2) { display: none; }
+  .cv-home-table th,
+  .cv-home-table td { padding-left: 6px; padding-right: 6px; }
+  /* The name cell is a flex row, so it needs a floor of zero to be allowed
+     to shrink; a long name then wraps rather than widening the table. */
+  .cv-home-table td:first-child {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
+}
+
+/* ---- Share view ----
+   Already folds at 880px; this only adds what the phone needs on top. */
+@media (max-width: 560px) {
+  .cv-view .cv-bar-zone.right .cv-btn { flex: 1 1 auto; justify-content: center; }
 }

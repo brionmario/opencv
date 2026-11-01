@@ -169,7 +169,7 @@ function ExportMenu({ onExport }: { onExport: (id: string) => void }) {
         onClick={() => setOpen((o) => !o)}
       >
         <Download size={15} />
-        Export
+        <span className="cv-btn-label">Export</span>
         <ChevronDown size={13} style={{ marginRight: -3, opacity: 0.8 }} />
       </button>
       {open && (
@@ -405,6 +405,23 @@ function HistoryDrawer({
 
 /* ── Page break overlay ───────────────────────────────────────────────────── */
 const PAGE_H_PX = (297 / 25.4) * 96; // A4 height (297mm) at 96 dpi; must match template page size and PDF export
+const PAGE_W_PX = (210 / 25.4) * 96; // A4 width (210mm) at 96 dpi; the width every template is built against
+/**
+ * How much the browser is currently shrinking an element on screen.
+ *
+ * The desk scales the page down with `zoom` when the window is narrower than
+ * A4, which is every phone. `getBoundingClientRect` reports the scaled size
+ * while `offsetWidth` stays in the element's own layout pixels, so any
+ * measurement taken from a rect and compared against PAGE_H_PX has to be
+ * divided by this first or the page-break maths comes out wrong by exactly
+ * the zoom factor. It reads 1 on an unscaled desk, so the callers need no
+ * branch of their own, and it also absorbs browser page zoom.
+ */
+function renderScale(el: HTMLElement): number {
+  const w = el.offsetWidth;
+  if (!w) return 1;
+  return el.getBoundingClientRect().width / w || 1;
+}
 // Divider band drawn BELOW each page boundary. It must never cover the space
 // above the boundary, which is printable page-N area, and hiding it makes the
 // canvas lie about how much fits on a page.
@@ -457,6 +474,11 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
 
       const elRect = el.getBoundingClientRect();
       const base = elRect.top;
+      // Rects come back in screen pixels, which the desk's fit-to-width zoom
+      // has already shrunk; PAGE_H_PX and the margins written below are in
+      // layout pixels. Divide every rect-derived offset by this to put both
+      // sides of the comparison in the same space.
+      const z = renderScale(el);
       // Split cards by column (left/right of the container midpoint) so that
       // accumulated push offsets don't bleed across independent flex columns
       const midX = elRect.left + elRect.width / 2;
@@ -469,8 +491,8 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
         let accumulated = 0;
         for (const card of col) {
           const r = card.getBoundingClientRect();
-          const top = r.top - base + accumulated;
-          const bottom = r.bottom - base + accumulated;
+          const top = (r.top - base) / z + accumulated;
+          const bottom = (r.bottom - base) / z + accumulated;
 
           const pageNum = Math.floor(top / PAGE_H_PX);
           const boundary = (pageNum + 1) * PAGE_H_PX;
@@ -488,7 +510,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
           const headOnly = headingFor.get(card);
           if (headOnly && !(top < boundary && bottom > boundary)) {
             const headRect = headOnly.getBoundingClientRect();
-            const headTop = headRect.top - base + accumulated;
+            const headTop = (headRect.top - base) / z + accumulated;
             if (Math.floor(headTop / PAGE_H_PX) < Math.floor(top / PAGE_H_PX)) {
               const headBoundary = (Math.floor(headTop / PAGE_H_PX) + 1) * PAGE_H_PX;
               const shift = Math.ceil(headBoundary + BREAK_GAP + PAGE_TOP_MARGIN - headTop);
@@ -496,7 +518,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
               const prevSibling = wrapper?.previousElementSibling ?? null;
               let marginToSet = shift;
               if (prevSibling) {
-                const prevBottom = prevSibling.getBoundingClientRect().bottom - base + accumulated;
+                const prevBottom = (prevSibling.getBoundingClientRect().bottom - base) / z + accumulated;
                 marginToSet = shift + (headTop - prevBottom);
               }
               headOnly.style.marginTop = `${Math.max(marginToSet, 0)}px`;
@@ -513,7 +535,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
               // Using the card's own offset here would under-push the heading,
               // leaving it inside the gap zone, hidden behind the divider.
               const headRect = head.getBoundingClientRect();
-              const headTop = headRect.top - base + accumulated;
+              const headTop = (headRect.top - base) / z + accumulated;
               const shift = Math.ceil(gapEnd - headTop);
 
               // The heading is the first child of its section wrapper, so its
@@ -527,7 +549,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
               const prevSibling = wrapper?.previousElementSibling ?? null;
               let marginToSet = shift;
               if (prevSibling) {
-                const prevBottom = prevSibling.getBoundingClientRect().bottom - base + accumulated;
+                const prevBottom = (prevSibling.getBoundingClientRect().bottom - base) / z + accumulated;
                 marginToSet = shift + (headTop - prevBottom);
               }
               head.style.marginTop = `${Math.max(marginToSet, 0)}px`;
@@ -642,6 +664,16 @@ export function CVBuilder() {
   const isFirstLayoutSaveRef = useRef(true);
   const previewRef = useRef<HTMLDivElement>(null);
   const previewContentRef = useRef<HTMLDivElement>(null);
+  const deskRef = useRef<HTMLElement>(null);
+  // On a phone the dock is a sheet over the desk rather than a column beside
+  // it, so it needs an open state the desk layout never did. Above the mobile
+  // breakpoint the CSS ignores this and the dock is always in view.
+  const [dockOpen, setDockOpen] = useState(false);
+  /** Pick a tool panel, and raise the sheet it lives in on a narrow window. */
+  const openTool = useCallback((next: DrawerType) => {
+    setTool(next);
+    setDockOpen(true);
+  }, []);
   usePageBreakAvoider(previewRef, isInitialized);
   const { toasts, push: pushToast, drop: dropToast } = useToasts();
 
@@ -665,6 +697,29 @@ export function CVBuilder() {
     update();
     const ro = new ResizeObserver(update);
     ro.observe(el);
+    return () => ro.disconnect();
+  }, [isInitialized]);
+
+  // A4 is 794px wide and a phone is 375px, so on anything narrower than the
+  // page the desk shrinks the paper to fit rather than letting it run off the
+  // side. `zoom` rather than a transform because it reflows: the desk's scroll
+  // extent, the page-break overlay and every hit target come out right without
+  // a second set of measurements. Templates keep their true A4 proportions,
+  // which is the whole point of the canvas.
+  const [pageZoom, setPageZoom] = useState(1);
+  useEffect(() => {
+    if (!isInitialized) return;
+    const desk = deskRef.current;
+    if (!desk) return;
+    const fit = () => {
+      const cs = getComputedStyle(desk);
+      const avail =
+        desk.clientWidth - parseFloat(cs.paddingLeft) - parseFloat(cs.paddingRight);
+      setPageZoom(avail > 0 && avail < PAGE_W_PX ? avail / PAGE_W_PX : 1);
+    };
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(desk);
     return () => ro.disconnect();
   }, [isInitialized]);
 
@@ -791,8 +846,9 @@ export function CVBuilder() {
       const paper = previewRef.current;
       if (paper && paper.querySelector("[data-cv-professional]")) {
         const base = paper.getBoundingClientRect().top;
+        const z = renderScale(paper);
         page2ExpIds = Array.from(paper.querySelectorAll<HTMLElement>("[data-entry-id]"))
-          .filter((el) => el.getBoundingClientRect().top - base >= PAGE_H_PX)
+          .filter((el) => (el.getBoundingClientRect().top - base) / z >= PAGE_H_PX)
           .map((el) => el.dataset.entryId as string);
       }
       exportToPDF("", data, `${name}_CV.pdf`, theme, page2ExpIds).then(() => {
@@ -957,7 +1013,7 @@ export function CVBuilder() {
   if (!isInitialized) return null;
 
   return (
-    <div className="cv-app" data-cv-density="comfortable">
+    <div className="cv-app" data-cv-density="comfortable" data-dock={dockOpen ? "open" : "closed"}>
 
       {/* ── Options bar ── */}
       <header className="cv-bar" role="banner">
@@ -970,13 +1026,13 @@ export function CVBuilder() {
         </div>
 
         <div className="cv-bar-zone right">
-          <Link className="cv-btn" href="/templates">
+          <Link className="cv-btn" href="/templates" aria-label="Templates">
             <LayoutTemplate size={15} />
-            Templates
+            <span className="cv-btn-label">Templates</span>
           </Link>
-          <button className="cv-btn" onClick={handleNewCV}>
+          <button className="cv-btn" onClick={handleNewCV} aria-label="New résumé">
             <Plus size={15} />
-            New
+            <span className="cv-btn-label">New</span>
           </button>
           <IconBtn
             tip={dark ? "Light mode" : "Dark mode"}
@@ -984,9 +1040,9 @@ export function CVBuilder() {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </IconBtn>
-          <button className="cv-btn" onClick={handleShare}>
+          <button className="cv-btn" onClick={handleShare} aria-label="Share">
             <Link2 size={15} />
-            Share
+            <span className="cv-btn-label">Share</span>
           </button>
           <ExportMenu onExport={handleExport} />
         </div>
@@ -997,18 +1053,18 @@ export function CVBuilder() {
         <IconBtn
           tip="Properties"
           active={tool === null}
-          onClick={() => setTool(null)}
+          onClick={() => openTool(null)}
         >
           <SlidersHorizontal size={17} />
         </IconBtn>
         <span className="cv-rail-sep" />
-        <IconBtn tip="Sections" active={tool === "sections"} onClick={() => setTool("sections")}>
+        <IconBtn tip="Sections" active={tool === "sections"} onClick={() => openTool("sections")}>
           <ListOrdered size={17} />
         </IconBtn>
-        <IconBtn tip="Theme" active={tool === "theme"} onClick={() => setTool("theme")}>
+        <IconBtn tip="Theme" active={tool === "theme"} onClick={() => openTool("theme")}>
           <Palette size={17} />
         </IconBtn>
-        <IconBtn tip="Version history" active={tool === "history"} onClick={() => setTool("history")}>
+        <IconBtn tip="Version history" active={tool === "history"} onClick={() => openTool("history")}>
           <History size={17} />
         </IconBtn>
       </nav>
@@ -1016,6 +1072,7 @@ export function CVBuilder() {
       {/* ── Desk canvas ── */}
       <main
         className="cv-desk"
+        ref={deskRef}
         data-canvas={canvas}
         onClick={(e) => {
           // A click on the desk itself (not on the paper) clears the selection.
@@ -1023,7 +1080,7 @@ export function CVBuilder() {
         }}
       >
         <CanvasPicker value={canvas} onChange={setCanvas} />
-        <div className="cv-paper-wrap">
+        <div className="cv-paper-wrap" style={{ zoom: pageZoom }}>
           <div
             id="cv-preview"
             ref={previewRef}
@@ -1041,7 +1098,7 @@ export function CVBuilder() {
               <SelectionProvider
                 selectedId={selectedSection}
                 onSelect={setSelectedSection}
-                onOpenLayout={(id) => { setSelectedSection(id); setTool("sections"); }}
+                onOpenLayout={(id) => { setSelectedSection(id); openTool("sections"); }}
                 emptyIds={emptyIds}
               >
                 {renderTemplate()}
@@ -1053,7 +1110,24 @@ export function CVBuilder() {
       </main>
 
       {/* ── Right dock ── */}
+      {/* Below the desk breakpoint the dock is a sheet, and a sheet needs
+          something to tap to dismiss it. Inert and invisible on a wide
+          window, where the dock is just the third column. */}
+      <div
+        className="cv-dock-scrim"
+        aria-hidden="true"
+        onClick={() => setDockOpen(false)}
+      />
+
       <aside className="cv-dock" aria-label="Panels">
+        <button
+          className="cv-iconbtn cv-dock-close"
+          aria-label="Close panels"
+          onClick={() => setDockOpen(false)}
+        >
+          <X size={18} />
+        </button>
+
         {tool && (
           <section className="cv-dock-panel grow">
             {tool === "sections" && (
@@ -1076,12 +1150,16 @@ export function CVBuilder() {
               </>
             )}
             {tool === "theme" && (
-              <ThemeCustomizer theme={theme} onChange={setTheme} onClose={() => setTool(null)} />
+              <ThemeCustomizer
+                theme={theme}
+                onChange={setTheme}
+                onClose={() => { setTool(null); setDockOpen(false); }}
+              />
             )}
             {tool === "history" && (
               <HistoryDrawer
                 versions={versions}
-                onClose={() => setTool(null)}
+                onClose={() => { setTool(null); setDockOpen(false); }}
                 onRestore={handleRestore}
                 onDelete={removeSavepoint}
                 onRename={updateSavepointLabel}
