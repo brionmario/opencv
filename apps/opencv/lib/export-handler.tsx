@@ -220,7 +220,7 @@ function generateCleanHTML(data: CVData): string {
           <h3>${escapeHtml(exp.jobTitle)}</h3>
           <div class="company">${escapeHtml(exp.company)}</div>
           <div class="meta">
-            <span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${formatDateRange(escapeHtml(exp.startDate), exp.currentlyWorking ? "Present" : escapeHtml(exp.endDate))}</span>
+            ${((range) => (range ? `<span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${range}</span>` : ""))(formatDateRange(escapeHtml(exp.startDate), exp.currentlyWorking ? "Present" : escapeHtml(exp.endDate)))}
             ${exp.location ? `<span class="meta-item">${getIconSvg("location", "#9ca3af")} ${escapeHtml(exp.location)}</span>` : ""}
           </div>
           ${exp.description ? `<p class="description">${sanitizeAndRenderHtml(exp.description)}</p>` : ""}
@@ -244,7 +244,7 @@ function generateCleanHTML(data: CVData): string {
           <h3>${escapeHtml(edu.degree)}</h3>
           <div class="company">${escapeHtml(edu.institution)}</div>
           <div class="meta">
-            <span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${formatDateRange(escapeHtml(edu.startDate), escapeHtml(edu.endDate))}</span>
+            ${((range) => (range ? `<span class="meta-item">${getIconSvg("calendar", "#9ca3af")} ${range}</span>` : ""))(formatDateRange(escapeHtml(edu.startDate), escapeHtml(edu.endDate)))}
             ${edu.gpa ? `<span class="meta-item">${getIconSvg("award", "#9ca3af")} ${escapeHtml(edu.gpa)}</span>` : ""}
           </div>
         </div>`

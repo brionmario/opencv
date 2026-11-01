@@ -7,6 +7,7 @@ import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
 import { CustomSectionBlock } from "../custom-section-block";
+import { MetaRow, useSeparator } from "../meta-row";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsForColumn } from "@/lib/cv-sections";
 import { assetPath } from "@/lib/asset-path";
@@ -68,6 +69,7 @@ export function ProfessionalTemplate({
   onDeleteCustomSectionItem,
 }: ProfessionalTemplateProps) {
   const theme = themeProp ?? DEFAULT_THEME;
+  const separator = useSeparator();
   const [iconPickerOpenId, setIconPickerOpenId] = useState<string | null>(null);
   const [customIconUrl, setCustomIconUrl] = useState("");
   const handleHighlightAdd = (expId: string, highlights: string[]) => {
@@ -137,7 +139,7 @@ export function ProfessionalTemplate({
                 />
               </div>
               <div className="text-xs text-gray-500 mt-0.5">
-                <span className="flex items-center gap-1">
+                <MetaRow values={[edu.startDate, edu.endDate]} className="flex items-center gap-1">
                   <Icon name="calendar" className="text-gray-400" />
                   <InlineEditor
                     value={edu.startDate}
@@ -145,15 +147,15 @@ export function ProfessionalTemplate({
                     placeholder="Start"
                     className="text-xs text-gray-500"
                   />
-                  {edu.endDate && <span>-</span>}
+                  {separator(edu.startDate, edu.endDate) && <span>-</span>}
                   <InlineEditor
                     value={edu.endDate}
                     onChange={(v) => onUpdate(`education.${edu.id}.endDate`, v)}
                     placeholder="End"
                     className="text-xs text-gray-500"
                   />
-                </span>
-                <span className="flex items-center gap-1 mt-0.5">
+                </MetaRow>
+                <MetaRow values={[edu.gpa]} className="flex items-center gap-1 mt-0.5">
                   <Icon name="award" className="text-gray-400" />
                   <InlineEditor
                     value={edu.gpa || ""}
@@ -161,7 +163,7 @@ export function ProfessionalTemplate({
                     placeholder="Result (e.g. GPA, Honors class)"
                     className="text-xs text-gray-500"
                   />
-                </span>
+                </MetaRow>
               </div>
             </EditableCard>
           ))}
@@ -197,7 +199,10 @@ export function ProfessionalTemplate({
                 />
               </div>
               <div className="flex gap-4 text-xs text-gray-500 mt-0.5">
-                <span className="flex items-center gap-1">
+                <MetaRow
+                  values={[exp.startDate, exp.endDate, exp.currentlyWorking ? "Present" : ""]}
+                  className="flex items-center gap-1"
+                >
                   <Icon name="calendar" className="text-gray-400" />
                   <InlineEditor
                     value={exp.startDate}
@@ -205,15 +210,17 @@ export function ProfessionalTemplate({
                     placeholder="Start Date"
                     className="text-xs text-gray-500"
                   />
-                  {(exp.endDate || exp.currentlyWorking) && <span>-</span>}
+                  {separator(exp.startDate, exp.endDate || (exp.currentlyWorking ? "Present" : "")) && (
+                    <span>-</span>
+                  )}
                   <InlineEditor
                     value={exp.endDate || (exp.currentlyWorking ? "Present" : "")}
                     onChange={(v) => onUpdate(`experience.${exp.id}.endDate`, v)}
                     placeholder="End Date"
                     className="text-xs text-gray-500"
                   />
-                </span>
-                <span className="flex items-center gap-1">
+                </MetaRow>
+                <MetaRow values={[exp.location]} className="flex items-center gap-1">
                   <Icon name="location" className="text-gray-400" />
                   <InlineEditor
                     value={exp.location}
@@ -221,7 +228,7 @@ export function ProfessionalTemplate({
                     placeholder="Location"
                     className="text-xs text-gray-500"
                   />
-                </span>
+                </MetaRow>
               </div>
               {exp.description && (
                 <div className="text-sm text-gray-700 mt-1">
@@ -307,7 +314,7 @@ export function ProfessionalTemplate({
         <div className="space-y-3 mt-2">
           {data.awards.map((award) => (
             <EditableCard key={award.id} onDelete={() => onDeleteAward(award.id)}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-start">
                 <Icon name="award" className="text-pink-600 mt-0.5 shrink-0" size={16} />
                 <div className="flex-1">
                   <h4 className="font-bold text-gray-900 text-sm">
@@ -318,14 +325,14 @@ export function ProfessionalTemplate({
                       className="font-bold text-gray-900 text-sm"
                     />
                   </h4>
-                  <div className="text-xs text-gray-600">
+                  <MetaRow values={[award.description]} className="block text-xs text-gray-600">
                     <InlineEditor
                       value={award.description || ""}
                       onChange={(v) => onUpdate(`awards.${award.id}.description`, v)}
                       placeholder="Description..."
                       className="text-xs text-gray-600"
                     />
-                  </div>
+                  </MetaRow>
                 </div>
               </div>
             </EditableCard>
@@ -343,7 +350,7 @@ export function ProfessionalTemplate({
         <div className="space-y-3 mt-2">
           {data.publications.map((pub) => (
             <EditableCard key={pub.id} onDelete={() => onDeletePublication(pub.id)}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-start">
                 <Icon name="link" className="text-pink-600 mt-0.5 shrink-0" size={16} />
                 <div className="flex-1">
                   <h4 className="font-bold text-gray-900 text-sm">
@@ -362,7 +369,7 @@ export function ProfessionalTemplate({
                       placeholder="Publisher"
                       className="text-xs text-gray-600"
                     />
-                    {" • "}
+                    {separator(pub.publisher, pub.date) && " • "}
                     <InlineEditor
                       value={pub.date}
                       onChange={(v) => onUpdate(`publications.${pub.id}.date`, v)}
@@ -422,7 +429,7 @@ export function ProfessionalTemplate({
                 />
               </div>
               <div className="flex flex-wrap gap-3 text-xs text-gray-500 mt-0.5">
-                <span className="flex items-center gap-1">
+                <MetaRow values={[ref.phone]} className="flex items-center gap-1">
                   <Icon name="phone" className="text-gray-400" />
                   <InlineEditor
                     value={ref.phone || ""}
@@ -430,8 +437,8 @@ export function ProfessionalTemplate({
                     placeholder="Contact Number"
                     className="text-xs text-gray-500"
                   />
-                </span>
-                <span className="flex items-center gap-1">
+                </MetaRow>
+                <MetaRow values={[ref.email]} className="flex items-center gap-1">
                   <Icon name="email" className="text-gray-400" />
                   <InlineEditor
                     value={ref.email || ""}
@@ -439,7 +446,7 @@ export function ProfessionalTemplate({
                     placeholder="Email Address"
                     className="text-xs text-gray-500"
                   />
-                </span>
+                </MetaRow>
               </div>
             </EditableCard>
           ))}
@@ -672,7 +679,7 @@ export function ProfessionalTemplate({
               />
             </div>
             <div className="flex flex-wrap gap-x-4 gap-y-1 mt-2 text-sm text-gray-600">
-              <span className="flex items-center gap-1">
+              <MetaRow values={[data.personalInfo.phone]} className="flex items-center gap-1">
                 <Icon name="phone" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.phone}
@@ -680,8 +687,8 @@ export function ProfessionalTemplate({
                   placeholder="+1 555-123-4567"
                   className="text-sm text-gray-600"
                 />
-              </span>
-              <span className="flex items-center gap-1">
+              </MetaRow>
+              <MetaRow values={[data.personalInfo.email]} className="flex items-center gap-1">
                 <Icon name="email" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.email}
@@ -689,8 +696,8 @@ export function ProfessionalTemplate({
                   placeholder="email@example.com"
                   className="text-sm text-gray-600"
                 />
-              </span>
-              <span className="flex items-center gap-1">
+              </MetaRow>
+              <MetaRow values={[data.personalInfo.website]} className="flex items-center gap-1">
                 <Icon name="link" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.website}
@@ -698,8 +705,8 @@ export function ProfessionalTemplate({
                   placeholder="www.example.com"
                   className="text-sm text-gray-600"
                 />
-              </span>
-              <span className="flex items-center gap-1">
+              </MetaRow>
+              <MetaRow values={[data.personalInfo.location]} className="flex items-center gap-1">
                 <Icon name="location" className="text-pink-600" />
                 <InlineEditor
                   value={data.personalInfo.location}
@@ -707,7 +714,7 @@ export function ProfessionalTemplate({
                   placeholder="City, Country"
                   className="text-sm text-gray-600"
                 />
-              </span>
+              </MetaRow>
             </div>
           </div>
 
@@ -786,7 +793,7 @@ export function ProfessionalTemplate({
       </div>
 
       {/* Two Column Layout */}
-      <div className="flex px-10 pb-8 gap-7">
+      <div className="flex px-10 pb-8 gap-7" data-cv-columns="">
         {/* Left Column - 58% */}
         <div className="w-[58%] space-y-[18px]">
           {leftSections.map((s) => (

@@ -7,6 +7,7 @@ import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
 import { CustomSectionBlock } from "../custom-section-block";
+import { useSeparator } from "../meta-row";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsFlat } from "@/lib/cv-sections";
 import { SectionFrame } from "@/lib/cv-selection";
@@ -66,6 +67,7 @@ export function MinimalWysiwygTemplate({
   onDeleteCustomSectionItem,
 }: MinimalWysiwygTemplateProps) {
   const theme = themeProp ?? DEFAULT_THEME;
+  const separator = useSeparator();
   const [iconPickerOpenId, setIconPickerOpenId] = useState<string | null>(null);
   const [customIconUrl, setCustomIconUrl] = useState("");
 
@@ -110,7 +112,9 @@ export function MinimalWysiwygTemplate({
                     placeholder="Start"
                     className="text-xs text-gray-500"
                   />
-                  {(exp.endDate || exp.currentlyWorking) && <span>-</span>}
+                  {separator(exp.startDate, exp.endDate || (exp.currentlyWorking ? "now" : "")) && (
+                    <span>-</span>
+                  )}
                   <InlineEditor
                     value={exp.endDate || (exp.currentlyWorking ? "now" : "")}
                     onChange={(v) => onUpdate(`experience.${exp.id}.endDate`, v)}
@@ -168,7 +172,7 @@ export function MinimalWysiwygTemplate({
                     placeholder="Start"
                     className="text-xs text-gray-500"
                   />
-                  {edu.endDate && <span>-</span>}
+                  {separator(edu.startDate, edu.endDate) && <span>-</span>}
                   <InlineEditor
                     value={edu.endDate}
                     onChange={(v) => onUpdate(`education.${edu.id}.endDate`, v)}
@@ -238,7 +242,7 @@ export function MinimalWysiwygTemplate({
         <div className="space-y-3">
           {data.awards.map((award) => (
             <EditableCard key={award.id} onDelete={() => onDeleteAward(award.id)}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-start">
                 <Icon name="award" className="text-gray-400 mt-0.5 shrink-0" size={14} />
                 <div className="flex-1">
                   <h3 className="font-serif font-bold text-gray-900 text-sm">

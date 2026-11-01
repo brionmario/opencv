@@ -1692,6 +1692,27 @@
     position: static !important;
     transform: none !important;
   }
+
+  /* A flex or grid box does not fragment across printed pages in Chrome: a
+     two-column body that no longer fits under the header is moved to the next
+     page whole, so page one comes out holding nothing but the name. Floats do
+     fragment, so print lays the same two columns out as floats. The widths
+     stay on the elements (58/42 here, 2fr/1fr in modern); only the gap has to
+     be restated, since a float layout has none. */
+  [data-cv-columns] { display: block !important; }
+  [data-cv-columns] > * { box-sizing: border-box; }
+  [data-cv-columns] > :first-child { float: left; padding-right: 14px; }
+  [data-cv-columns] > :last-child { float: right; padding-left: 14px; }
+  [data-cv-columns]::after { content: ""; display: table; clear: both; }
+  /* Modern's sidebar is one grid track wide; without the grid it needs the
+     width spelled out. */
+  .cv-doc-page [data-cv-columns] > .col-span-2 { width: 66.6667%; }
+  .cv-doc-page [data-cv-columns] > .col-span-2 + * { width: 33.3333%; }
+
+  /* Entries already carry break-inside: avoid (EditableCard). A heading needs
+     the same care at the other edge, so a section name is never stranded at
+     the foot of a page. */
+  [data-cv-columns] h2 { break-after: avoid-page; }
 }
 
 /* ============================================================

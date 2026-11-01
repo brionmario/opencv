@@ -7,6 +7,7 @@ import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
 import { CustomSectionBlock } from "../custom-section-block";
+import { useSeparator } from "../meta-row";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsForColumn } from "@/lib/cv-sections";
 import { SectionFrame } from "@/lib/cv-selection";
@@ -67,6 +68,7 @@ export function ModernWysiwygTemplate({
   onDeleteCustomSectionItem,
 }: ModernWysiwygTemplateProps) {
   const theme = themeProp ?? DEFAULT_THEME;
+  const separator = useSeparator();
   const [iconPickerOpenId, setIconPickerOpenId] = useState<string | null>(null);
   const [customIconUrl, setCustomIconUrl] = useState("");
   const handleHighlightAdd = (expId: string, highlights: string[]) => {
@@ -124,7 +126,9 @@ export function ModernWysiwygTemplate({
                     placeholder="Start"
                     className="text-sm text-gray-600"
                   />
-                  {(exp.endDate || exp.currentlyWorking) && <span>-</span>}
+                  {separator(exp.startDate, exp.endDate || (exp.currentlyWorking ? "Present" : "")) && (
+                    <span>-</span>
+                  )}
                   <InlineEditor
                     value={exp.endDate || (exp.currentlyWorking ? "Present" : "")}
                     onChange={(v) => onUpdate(`experience.${exp.id}.endDate`, v)}
@@ -210,7 +214,7 @@ export function ModernWysiwygTemplate({
                     placeholder="Start"
                     className="text-sm text-gray-600"
                   />
-                  {edu.endDate && <span>-</span>}
+                  {separator(edu.startDate, edu.endDate) && <span>-</span>}
                   <InlineEditor
                     value={edu.endDate}
                     onChange={(v) => onUpdate(`education.${edu.id}.endDate`, v)}
@@ -280,7 +284,7 @@ export function ModernWysiwygTemplate({
         <div className="space-y-3">
           {data.awards.map((award) => (
             <EditableCard key={award.id} onDelete={() => onDeleteAward(award.id)}>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-start">
                 <Icon name="award" className="text-blue-600 mt-0.5 shrink-0" size={16} />
                 <div className="flex-1">
                   <h4 className="font-serif font-bold text-gray-900 text-sm">
@@ -645,7 +649,7 @@ export function ModernWysiwygTemplate({
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-8">
+        <div className="grid grid-cols-3 gap-8" data-cv-columns="">
           {/* Main Content */}
           <div className="col-span-2 space-y-8">
             {sectionsForColumn(data, "left").map((s) => (

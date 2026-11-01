@@ -241,7 +241,9 @@ export function toJsonResume(data: CVData): JsonResume {
           studyType: e.degree,
           startDate: e.startDate,
           endDate: e.endDate,
-          score: plain(e.description),
+          // The result line lives in `gpa`; `description` is only a fallback
+          // for documents written before the import filled `gpa`.
+          score: e.gpa || plain(e.description),
         })
       ),
     awards: (data.awards ?? [])
@@ -336,7 +338,10 @@ export function fromJsonResume(resume: JsonResume): CVData {
       field: str(e.area),
       startDate: str(e.startDate),
       endDate: str(e.endDate),
-      description: str(e.score),
+      // `score` is the result line (a GPA, an honours class, a grade list),
+      // which the templates read from `gpa`; `description` is not rendered.
+      gpa: str(e.score),
+      description: "",
     })),
     skills: arr(resume.skills).map((s) => ({ id: freshId("skl"), name: str(s.name) })),
     projects: [],

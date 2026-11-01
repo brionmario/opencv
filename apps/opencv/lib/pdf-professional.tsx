@@ -423,12 +423,14 @@ export function ProfessionalPDFDocument({
       <Text style={S.entryTitle}>{exp.jobTitle}</Text>
       <Text style={S.entryCompany}>{exp.company}</Text>
       <View style={S.entryMeta}>
-        <View style={S.metaItem}>
-          <PdfIcon name="calendar" size={7.5} color="#9ca3af" />
-          <Text style={S.metaTxt}>
-            {fmtDateRange(exp.startDate, exp.currentlyWorking ? "Present" : exp.endDate)}
-          </Text>
-        </View>
+        {fmtDateRange(exp.startDate, exp.currentlyWorking ? "Present" : exp.endDate) ? (
+          <View style={S.metaItem}>
+            <PdfIcon name="calendar" size={7.5} color="#9ca3af" />
+            <Text style={S.metaTxt}>
+              {fmtDateRange(exp.startDate, exp.currentlyWorking ? "Present" : exp.endDate)}
+            </Text>
+          </View>
+        ) : null}
         {exp.location ? (
           <View style={S.metaItem}>
             <PdfIcon name="location" size={7.5} color="#9ca3af" />
@@ -500,10 +502,12 @@ export function ProfessionalPDFDocument({
           <View key={edu.id} style={S.eduEntry} wrap={false}>
             <Text style={S.eduDegree}>{edu.degree}</Text>
             <Text style={S.eduInst}>{edu.institution}</Text>
-            <View style={[S.metaItem, { marginTop: 2 }]}>
-              <PdfIcon name="calendar" size={7.5} color="#9ca3af" />
-              <Text style={S.metaTxt}>{fmtDateRange(edu.startDate, edu.endDate)}</Text>
-            </View>
+            {fmtDateRange(edu.startDate, edu.endDate) ? (
+              <View style={[S.metaItem, { marginTop: 2 }]}>
+                <PdfIcon name="calendar" size={7.5} color="#9ca3af" />
+                <Text style={S.metaTxt}>{fmtDateRange(edu.startDate, edu.endDate)}</Text>
+              </View>
+            ) : null}
             {edu.gpa ? (
               <View style={[S.metaItem, { marginTop: 2 }]}>
                 <PdfIcon name="award" size={7.5} color="#9ca3af" />
