@@ -88,9 +88,6 @@ const PAD_H = 27;
 const PAD_SIDE = 30;
 const COL_GAP = 21;
 
-// Approx header height (name + title + contacts + padding)
-const HEADER_H = 80;
-
 // ── Height estimation constants ───────────────────────────────────────────────
 // Conservative (narrower than actual rendered width) so estimates are slightly
 // tall, which biases the split to put FEWER entries on page 1, matching the

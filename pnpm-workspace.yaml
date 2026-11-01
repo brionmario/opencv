@@ -6,3 +6,6 @@ allowBuilds:
   core-js: true
   nx: true
   sharp: true
+  # eslint-import-resolver-typescript's native resolver, pulled in by
+  # eslint-config-next. Unbuilt, eslint cannot resolve imports.
+  unrs-resolver: true

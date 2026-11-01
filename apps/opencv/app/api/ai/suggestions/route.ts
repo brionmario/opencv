@@ -46,7 +46,7 @@ export async function POST(request: Request) {
       model: "openai/gpt-4o-mini",
       prompt,
       temperature: 0.7,
-      maxTokens: 500,
+      maxOutputTokens: 500,
     });
 
     const text = result.text.trim();

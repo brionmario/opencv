@@ -10,13 +10,13 @@ interface EditorProps {
   data: CVData;
   onPersonalInfoChange: (updates: Partial<CVData["personalInfo"]>) => void;
   onAddExperience: () => void;
-  onUpdateExperience: (id: string, updates: any) => void;
+  onUpdateExperience: (id: string, updates: Partial<CVData["experience"][number]>) => void;
   onDeleteExperience: (id: string) => void;
   onAddEducation: () => void;
-  onUpdateEducation: (id: string, updates: any) => void;
+  onUpdateEducation: (id: string, updates: Partial<CVData["education"][number]>) => void;
   onDeleteEducation: (id: string) => void;
   onAddSkill: () => void;
-  onUpdateSkill: (id: string, updates: any) => void;
+  onUpdateSkill: (id: string, updates: Partial<CVData["skills"][number]>) => void;
   onDeleteSkill: (id: string) => void;
 }
 
@@ -188,7 +188,7 @@ export function CVEditor({ data, onPersonalInfoChange, ...handlers }: EditorProp
 
         {expandedSections.experience && (
           <div className="p-4 border-t space-y-4">
-            {data.experience.map((exp, idx) => (
+            {data.experience.map((exp) => (
               <div key={exp.id} className="p-4 border border-gray-200 rounded-lg space-y-3 hover:border-teal-400 transition-colors">
                 <div className="flex justify-between items-start">
                   <h3 className="font-serif font-bold">{exp.jobTitle || "Job Title"}</h3>

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useRef } from 'react';
 import { Bold, Italic, Underline, List } from 'lucide-react';
 
 interface RichTextEditorProps {
@@ -17,7 +17,6 @@ export function RichTextEditor({
   className = '',
 }: RichTextEditorProps) {
   const editorRef = useRef<HTMLDivElement>(null);
-  const [isActive, setIsActive] = useState(false);
 
   const applyFormat = (command: string, value?: string) => {
     document.execCommand(command, false, value);
@@ -79,8 +78,6 @@ export function RichTextEditor({
         ref={editorRef}
         contentEditable
         onInput={handleInput}
-        onFocus={() => setIsActive(true)}
-        onBlur={() => setIsActive(false)}
         className="w-full px-3 py-2 min-h-24 outline-none focus:ring-0 empty:before:content-[attr(data-placeholder)] empty:before:text-gray-400"
         data-placeholder={placeholder}
         dangerouslySetInnerHTML={{ __html: value }}

@@ -174,7 +174,7 @@ interface InterestsSectionProps {
 export function InterestsSection({
   interests,
   onAdd,
-  onUpdate,
+  onUpdate: _onUpdate,
   onDelete,
   expanded,
   onToggle,

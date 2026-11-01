@@ -5,7 +5,7 @@ import { Sparkles, X, Copy, Check } from "lucide-react";
 
 interface AISuggestionsProps {
   type: "jobDescription" | "summary" | "skills" | "achievement";
-  context: Record<string, any>;
+  context: Record<string, unknown>;
   onSelect: (suggestion: string) => void;
   placeholder?: string;
 }

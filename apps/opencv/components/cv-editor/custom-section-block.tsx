@@ -1,6 +1,6 @@
 "use client";
 
-import { X as XIcon, Trash2 } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import type { CustomSection } from "@/lib/cv-builder-types";
 import { InlineEditor } from "./inline-editor";
 import { EditableCard, AddItemButton } from "./editable-card";

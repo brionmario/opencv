@@ -103,17 +103,17 @@ function SetInitialValuePlugin({ value, richText }: { value: string; richText: b
 
 function ExternalValuePlugin({
   value,
-  lastInternalValue,
+  lastInternalValueRef,
   richText,
 }: {
   value: string;
-  lastInternalValue: React.RefObject<string>;
+  lastInternalValueRef: React.RefObject<string>;
   richText: boolean;
 }) {
   const [editor] = useLexicalComposerContext();
 
   useEffect(() => {
-    if (value !== lastInternalValue.current) {
+    if (value !== lastInternalValueRef.current) {
       editor.update(() => {
         if (richText && value && hasHtmlTags(value)) {
           initEditorWithHtml(editor, value);
@@ -125,9 +125,9 @@ function ExternalValuePlugin({
           root.append(paragraph);
         }
       });
-      lastInternalValue.current = value;
+      lastInternalValueRef.current = value;
     }
-  }, [editor, value, lastInternalValue, richText]);
+  }, [editor, value, lastInternalValueRef, richText]);
 
   return null;
 }
@@ -150,18 +150,18 @@ export function InlineEditor({
   multiline = false,
 }: InlineEditorProps) {
   const readOnly = useReadOnly();
-  const lastInternalValue = useRef(value);
+  const lastInternalValueRef = useRef(value);
 
   const handleChange = useCallback(
     (editorState: EditorState, _editor: LexicalEditor) => {
       editorState.read(() => {
         if (richText) {
           const html = serializeToCleanHtml($getRoot().getChildren());
-          lastInternalValue.current = html;
+          lastInternalValueRef.current = html;
           onChange(html);
         } else {
           const text = $getRoot().getTextContent();
-          lastInternalValue.current = text;
+          lastInternalValueRef.current = text;
           onChange(text);
         }
       });
@@ -247,7 +247,7 @@ export function InlineEditor({
         {richText && <LinkPlugin />}
         {richText && <FloatingToolbar />}
         <SetInitialValuePlugin value={value} richText={richText} />
-        <ExternalValuePlugin value={value} lastInternalValue={lastInternalValue} richText={richText} />
+        <ExternalValuePlugin value={value} lastInternalValueRef={lastInternalValueRef} richText={richText} />
       </div>
     </LexicalComposer>
   );

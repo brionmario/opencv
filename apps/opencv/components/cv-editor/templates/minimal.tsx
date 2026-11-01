@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { X as XIcon } from "lucide-react";
-import type { CVData, CVTheme } from "@/lib/cv-builder-types";
+import type { CVData, CVTheme, FieldValue } from "@/lib/cv-builder-types";
 import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
@@ -14,7 +14,7 @@ import { SectionFrame } from "@/lib/cv-selection";
 interface MinimalWysiwygTemplateProps {
   data: CVData;
   theme?: CVTheme;
-  onUpdate: (path: string, value: any) => void;
+  onUpdate: (path: string, value: FieldValue) => void;
   onAddExperience: () => void;
   onDeleteExperience: (id: string) => void;
   onAddEducation: () => void;

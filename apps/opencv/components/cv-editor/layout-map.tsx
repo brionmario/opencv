@@ -49,9 +49,12 @@ export function LayoutMap({
   onRequestDelete,
   onAddSection,
 }: LayoutMapProps) {
-  const order = getEffectiveSectionOrder(data);
-  const visible = order.filter((s) => !s.hidden);
-  const hidden = order.filter((s) => s.hidden);
+  // All three are rebuilt only when the document changes. Derived fresh on
+  // every render, they made the memos below depend on new arrays each time,
+  // so none of that memoisation ever held.
+  const order = useMemo(() => getEffectiveSectionOrder(data), [data]);
+  const visible = useMemo(() => order.filter((s) => !s.hidden), [order]);
+  const hidden = useMemo(() => order.filter((s) => s.hidden), [order]);
 
   const [dragId, setDragId] = useState<string | null>(null);
   const [drop, setDrop] = useState<Drop | null>(null);
@@ -60,7 +63,12 @@ export function LayoutMap({
   // One column when the template has one; otherwise split by the section's
   // own column. A single-column template still stores a column per section,
   // so read everything as "left" to avoid losing entries.
-  const columns: Column[] = layoutColumns === 2 ? ["left", "right"] : ["left"];
+  // Memoised because the scale memo below depends on it: rebuilt every render,
+  // this array made that dependency change every time and the memo never held.
+  const columns: Column[] = useMemo(
+    () => (layoutColumns === 2 ? ["left", "right"] : ["left"]),
+    [layoutColumns]
+  );
   const inColumn = useCallback(
     (col: Column): SectionMeta[] =>
       layoutColumns === 1 ? visible : visible.filter((s) => s.column === col),

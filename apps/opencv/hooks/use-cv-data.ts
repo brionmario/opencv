@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import type { CVData, ExperienceEntry, EducationEntry, SkillEntry, ProjectEntry, CertificationEntry, AwardEntry, ReferenceEntry, VolunteeringEntry, StrengthEntry, InterestEntry, PublicationEntry, SocialLinkEntry, CustomSection, CustomSectionItem, SectionMeta } from "@/lib/cv-builder-types";
+import type { CVData, ExperienceEntry, EducationEntry, SkillEntry, ProjectEntry, CertificationEntry, AwardEntry, ReferenceEntry, VolunteeringEntry, StrengthEntry, InterestEntry, PublicationEntry, SocialLinkEntry, CustomSection, CustomSectionItem, FieldValue } from "@/lib/cv-builder-types";
 import { getEffectiveSectionOrder } from "@/lib/cv-sections";
 import { saveVersion, loadVersionHistory, restoreVersion, deleteVersion, renameVersion, type CVVersion } from "@/lib/cv-versioning";
 import { starterTemplates } from "@/lib/starter-templates";
@@ -35,7 +35,7 @@ const DEFAULT_CV_DATA: CVData = starterTemplates.find((t) => t.id === "professio
 export function useCVData() {
   const [data, setData] = useState<CVData>(DEFAULT_CV_DATA);
   const [versions, setVersions] = useState<CVVersion[]>([]);
-  const autoSaveTimerRef = useRef<NodeJS.Timeout>();
+  const autoSaveTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isFirstSaveRef = useRef(true);
 
   // Load from URL (priority) or localStorage on mount
@@ -612,7 +612,7 @@ export function useCVData() {
   }, []);
 
   // Generic path-based update for WYSIWYG inline editing
-  const updateField = useCallback((path: string, value: any) => {
+  const updateField = useCallback((path: string, value: FieldValue) => {
     setData((prev) => {
       const newData = { ...prev };
       const parts = path.split(".");
@@ -628,10 +628,19 @@ export function useCVData() {
           newData.languages = newData.languages.map((lang) =>
             lang.id === id ? { ...lang, [field]: value } : lang
           );
-        } else if (Array.isArray(newData[collection])) {
-          (newData as any)[collection] = (newData[collection] as any[]).map((item: any) =>
-            item.id === id ? { ...item, [field]: value } : item
-          );
+        } else {
+          const list = newData[collection];
+          if (Array.isArray(list)) {
+            // The path names a collection and a field on one of its entries.
+            // No index signature on CVData can express that pair, so the
+            // entry is narrowed to the one thing every collection shares, an
+            // id, and the field name is trusted: it comes from a template
+            // that built the path out of its own typed data.
+            const updated = (list as { id: string }[]).map((item) =>
+              item.id === id ? { ...item, [field]: value } : item
+            );
+            Object.assign(newData, { [collection]: updated });
+          }
         }
       }
 

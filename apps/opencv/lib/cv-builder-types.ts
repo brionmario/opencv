@@ -7,3 +7,13 @@
  * package is cheaper and less error-prone than rewriting the imports.
  */
 export * from "@brionmario/opencv-core";
+
+/**
+ * What an inline edit can write into the document.
+ *
+ * A field edit carries text; a repeated field, such as an experience entry's
+ * highlights, carries the whole replacement array; the language proficiency
+ * dots carry a rating. `undefined` clears an optional field, which is how
+ * "remove photo" is written. Nothing else reaches updateField.
+ */
+export type FieldValue = string | number | boolean | string[] | undefined;

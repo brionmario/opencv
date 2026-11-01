@@ -1,3 +1,4 @@
+import type { DocumentProps } from "@react-pdf/renderer";
 import type { CVData, CVTheme, CustomSection } from "@/lib/cv-builder-types";
 import { toJsonResume } from "@brionmario/opencv-core";
 import { absoluteAssetUrl } from "@/lib/asset-path";
@@ -692,7 +693,14 @@ export async function exportToPDF(
       import("@/lib/pdf-professional"),
     ]);
 
-    const element = React.createElement(ProfessionalPDFDocument, { data, theme, page2ExpIds }) as any;
+    // createElement cannot see that the component returns a <Document>,
+    // which is what pdf() asks for. The type-only import keeps the heavy
+    // renderer out of the bundle; it is still loaded lazily above.
+    const element = React.createElement(ProfessionalPDFDocument, {
+      data,
+      theme,
+      page2ExpIds,
+    }) as React.ReactElement<DocumentProps>;
     const blob = await pdf(element).toBlob();
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");

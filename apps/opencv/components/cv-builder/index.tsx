@@ -15,7 +15,7 @@ import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import {
   Download, FileJson, FileText, FileCode, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
-  Layers, Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal, Link2,
+  Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal, Link2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -120,6 +120,19 @@ function useClickOutside(cb: () => void) {
     };
   }, [cb]);
   return ref;
+}
+
+/** A terse "x ago" for the version list. Reads the clock, so it lives out
+ *  here rather than in a component body, which has to stay pure. */
+function getRelativeTime(ts: number) {
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  const h = Math.floor(m / 60);
+  const d = Math.floor(h / 24);
+  if (d > 0) return `${d} day${d > 1 ? "s" : ""} ago`;
+  if (h > 0) return `${h}h ago`;
+  if (m > 0) return `${m}m ago`;
+  return "just now";
 }
 
 /* ── Segmented template switcher ──────────────────────────────────────────── */
@@ -265,7 +278,7 @@ function HistoryDrawer({
   versions,
   onClose,
   onRestore,
-  onDelete,
+  onDelete: _onDelete,
   onRename,
   onExport,
   onCreateSavepoint,
@@ -280,17 +293,6 @@ function HistoryDrawer({
 }) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editLabel, setEditLabel] = useState("");
-
-  const getRelativeTime = (ts: number) => {
-    const diff = Date.now() - ts;
-    const m = Math.floor(diff / 60000);
-    const h = Math.floor(m / 60);
-    const d = Math.floor(h / 24);
-    if (d > 0) return `${d} day${d > 1 ? "s" : ""} ago`;
-    if (h > 0) return `${h}h ago`;
-    if (m > 0) return `${m}m ago`;
-    return "just now";
-  };
 
   const saveEdit = (id: string) => {
     if (editLabel.trim()) onRename(id, editLabel.trim());
@@ -441,7 +443,7 @@ const PAGE_TOP_MARGIN = 32;
  * the current height against that expectation, so only real content edits
  * trigger a re-calculation.
  */
-function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enabled: boolean) {
+function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement | null>, enabled: boolean) {
   const expectedHeightRef = useRef(-1);
 
   useEffect(() => {
@@ -591,7 +593,7 @@ function usePageBreakAvoider(containerRef: React.RefObject<HTMLDivElement>, enab
   }, [containerRef, enabled]);
 }
 
-function PageBreakOverlay({ targetRef }: { targetRef: React.RefObject<HTMLDivElement> }) {
+function PageBreakOverlay({ targetRef }: { targetRef: React.RefObject<HTMLDivElement | null> }) {
   const [contentHeight, setContentHeight] = useState(0);
 
   useEffect(() => {
@@ -647,7 +649,6 @@ function PageBreakOverlay({ targetRef }: { targetRef: React.RefObject<HTMLDivEle
 ══════════════════════════════════════════════════════════════════════════ */
 export function CVBuilder() {
   const [selectedLayout, setSelectedLayout] = useState<LayoutType>("professional");
-  const [drawer, setDrawer] = useState<DrawerType>(null);
   const router = useRouter();
   const [theme, setTheme] = useState<CVTheme>(DEFAULT_THEME);
   // Dark is the default register: the chrome recedes so the paper is the
@@ -754,8 +755,6 @@ export function CVBuilder() {
     moveSection,
     placeSection,
     updateField,
-    resetData,
-    importData,
     versions,
     createSavepoint,
     restoreSavepoint,
@@ -800,6 +799,10 @@ export function CVBuilder() {
     if (!hasSavedData) router.replace("/");
 
     setIsInitialized(true);
+    // Mount only, deliberately. router is the one thing missing, and letting
+    // this re-run would re-read the saved layout and theme over whatever the
+    // user has since chosen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
