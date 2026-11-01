@@ -1,12 +1,31 @@
-[![OpenCV: what you see is what prints](docs/assets/images/hero-banner.png)](https://brionmario.github.io/opencv)
+<p align="center">
+  <a href="https://brionmario.github.io/opencv">
+    <img src="docs/assets/images/hero-banner.png" alt="OpenCV: what you see is what prints">
+  </a>
+</p>
 
-# OpenCV
+<h1 align="center">OpenCV</h1>
 
-**The resume builder that stores nothing.** Four print-tested templates, a live
-editor that renders A4 at true scale, and exports measured against the page
-rather than approximated from it. No account, no database, no upload.
+<p align="center">
+  The resume builder that stores nothing.<br>
+  Four print-tested templates, a live editor that renders A4 at true scale, and<br>
+  exports measured against the page rather than approximated from it.
+</p>
 
-### [Open the app →](https://brionmario.github.io/opencv)
+<div align="center">
+
+[![Deploy](https://github.com/brionmario/opencv/actions/workflows/deploy-gh-pages.yaml/badge.svg)](https://github.com/brionmario/opencv/actions/workflows/deploy-gh-pages.yaml)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![PRs welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
+[![No account](https://img.shields.io/badge/account-not%20required-0ea5e9.svg)](#privacy)
+[![MCP ready](https://img.shields.io/badge/MCP-ready-7c3aed.svg)](packages/mcp/README.md)
+[![Next.js](https://img.shields.io/badge/Next.js-16-black.svg?logo=next.js)](https://nextjs.org)
+
+</div>
+
+<p align="center">
+  <a href="https://brionmario.github.io/opencv"><b>Open the app →</b></a>
+</p>
 
 ## What it does
 
