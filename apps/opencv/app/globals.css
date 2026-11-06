@@ -839,11 +839,14 @@
 .cv-canvas-plain { background: var(--cv-desk); }
 
 /* ---- Bar compression ---- */
-@media (max-width: 1180px) {
+@media (max-width: 1300px) {
   .cv-doc-name { display: none; }
   /* Below this the right-hand group outgrows an equal side track and would
      overlap the switcher, so let the side tracks size to their content
-     instead. The switcher gives up true centring to stay legible. */
+     instead. The switcher gives up true centring to stay legible.
+     The threshold tracks the width of that group: adding the ATS button
+     moved it, and an equal-track bar clips rather than wraps, so the number
+     has to move with it. */
   .cv-bar { grid-template-columns: auto minmax(0, 1fr) auto; }
 }
 @media (max-width: 1040px) {
@@ -915,6 +918,85 @@
   text-transform: uppercase; color: var(--cv-text-3);
 }
 .cv-dock-body { overflow-y: auto; min-height: 0; padding: 12px; }
+/* A two-faced panel is header, scrolling body, pinned footer. The footer
+   holds the way through to Ask AI, which should not scroll out of reach at
+   the end of a long list of findings. */
+.cv-dock-panel.grow .cv-dock-body { flex: 1; }
+.cv-dock-foot {
+  flex-shrink: 0; padding: 10px 12px;
+  border-top: 1px solid var(--cv-border);
+  background: var(--cv-surface);
+}
+.cv-dock-back {
+  display: inline-flex; align-items: center; gap: 4px;
+  font: inherit; color: inherit; letter-spacing: inherit;
+  text-transform: inherit;
+  background: transparent; border: 0; padding: 0; cursor: pointer;
+}
+.cv-dock-back:hover { color: var(--cv-text); }
+.cv-dock-back:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: 2px; }
+
+/* Turning a page, not cross-fading two. The findings leave to the left and
+   Ask AI arrives from the right, which is the direction the back button
+   then undoes. */
+@keyframes cv-face-in-right {
+  from { opacity: 0; transform: translateX(14px); }
+  to   { opacity: 1; transform: none; }
+}
+@keyframes cv-face-in-left {
+  from { opacity: 0; transform: translateX(-14px); }
+  to   { opacity: 1; transform: none; }
+}
+.cv-flip[data-face="ask"] { animation: cv-face-in-right var(--cv-dur) var(--cv-ease); }
+.cv-flip[data-face="ats"] { animation: cv-face-in-left var(--cv-dur) var(--cv-ease); }
+
+/* The way through to Ask AI. The only full-width button in the dock, and
+   the only one that carries the accent, because it is the one action the
+   panel is recommending. */
+.cv-sparkle-btn {
+  display: flex; align-items: center; justify-content: center; gap: 7px;
+  width: 100%; padding: 9px 12px;
+  border-radius: var(--cv-radius);
+  border: 1px solid transparent;
+  background: linear-gradient(110deg, var(--cv-accent), #8b5cf6);
+  color: #fff;
+  font-family: var(--cv-font-ui); font-size: 12.5px; font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 2px 10px -3px color-mix(in srgb, var(--cv-accent) 70%, transparent);
+  transition: filter var(--cv-dur) var(--cv-ease), box-shadow var(--cv-dur) var(--cv-ease);
+}
+.cv-sparkle-btn:hover {
+  filter: brightness(1.08);
+  box-shadow: 0 3px 16px -3px color-mix(in srgb, var(--cv-accent) 85%, transparent);
+}
+.cv-sparkle-btn:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: 2px; }
+.cv-sparkle-btn svg { animation: cv-spark-pulse 2.6s var(--cv-ease) infinite; }
+
+/* ---- The sparkle on the ATS button ----
+   The hint that a model is one step past this button. Small, slow and
+   never in the way: it pulses rather than blinks, and it holds still for
+   anyone who has asked motion to stop. */
+.cv-btn-ats { position: relative; }
+.cv-spark {
+  display: inline-flex; margin-left: 1px;
+  color: #a78bfa;
+  filter: drop-shadow(0 0 3px color-mix(in srgb, #a78bfa 80%, transparent));
+  animation: cv-spark-pulse 2.6s var(--cv-ease) infinite;
+}
+@keyframes cv-spark-pulse {
+  0%, 100% { opacity: 0.6; transform: scale(0.92); }
+  50%      { opacity: 1;   transform: scale(1.08); }
+}
+.cv-btn-ats[data-active="true"] {
+  border-color: var(--cv-accent-line);
+  background: var(--cv-accent-soft);
+  color: var(--cv-accent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cv-spark, .cv-sparkle-btn svg { animation: none; opacity: 1; transform: none; }
+  .cv-flip[data-face] { animation: none; }
+}
 
 /* A drawer rendered inside the dock drops its overlay behaviour. */
 .cv-dock .cv-drawer {
@@ -2066,6 +2148,10 @@
   .cv-app > .cv-dock .cv-dock-panel.grow { flex: 0 0 auto; }
   .cv-app > .cv-dock .cv-dock-body { overflow: visible; }
   .cv-app > .cv-dock .cv-dock-hd { position: sticky; top: 0; z-index: 1; }
+  /* The sheet scrolls as one piece here, so the footer would otherwise sit
+     past every finding. Sticky keeps the way through to Ask AI in reach
+     without pinning it over the content it belongs to. */
+  .cv-app > .cv-dock .cv-dock-foot { position: sticky; bottom: 0; z-index: 1; }
   /* The grab handle, so the strip above the first panel reads as a sheet
      edge rather than as empty padding. */
   .cv-app > .cv-dock::before {

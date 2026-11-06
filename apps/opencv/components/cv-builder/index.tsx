@@ -16,7 +16,7 @@ import {
   Download, FileJson, FileText, FileCode, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
   Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal, Link2,
-  Undo2, Redo2, ShieldCheck,
+  Undo2, Redo2, ShieldCheck, ChevronLeft,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -40,11 +40,16 @@ import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
  *  rather than a hard limit. The fragment itself has no size cap. */
 const LONG_SHARE_URL = 8000;
 
-type DrawerType = "theme" | "history" | "sections" | "ats" | "ask" | null;
+type DrawerType = "theme" | "history" | "sections" | "ats" | null;
+
+/** The ATS panel has two faces. Ask AI is reached from the first, not from
+ *  the rail, because it is what you do about a finding rather than a
+ *  separate tool. */
+type AtsView = "ats" | "ask";
 
 /** Tools that take the whole dock: long panels with their own scroll, and
  *  nothing to say about whichever section happens to be selected. */
-const FULL_HEIGHT_TOOLS = new Set<DrawerType>(["ats", "ask"]);
+const FULL_HEIGHT_TOOLS = new Set<DrawerType>(["ats"]);
 type CanvasType = "soft" | "dots" | "grid" | "plain";
 
 interface Toast {
@@ -737,9 +742,18 @@ export function CVBuilder() {
   // it, so it needs an open state the desk layout never did. Above the mobile
   // breakpoint the CSS ignores this and the dock is always in view.
   const [dockOpen, setDockOpen] = useState(false);
+  /** Which face of the ATS panel is showing. */
+  const [atsView, setAtsView] = useState<AtsView>("ats");
   /** Pick a tool panel, and raise the sheet it lives in on a narrow window. */
   const openTool = useCallback((next: DrawerType) => {
     setTool(next);
+    setDockOpen(true);
+  }, []);
+  /** The one way in. Always lands on the findings, never on the face you
+   *  happened to leave it on, so the button means the same thing twice. */
+  const openAts = useCallback(() => {
+    setAtsView("ats");
+    setTool("ats");
     setDockOpen(true);
   }, []);
   usePageBreakAvoider(previewRef, isInitialized);
@@ -1203,6 +1217,22 @@ export function CVBuilder() {
           >
             {dark ? <Sun size={18} /> : <Moon size={18} />}
           </IconBtn>
+          <button
+            className="cv-btn cv-btn-ats"
+            onClick={openAts}
+            aria-label="ATS check"
+            data-active={tool === "ats" ? "true" : undefined}
+          >
+            <ShieldCheck size={15} />
+            <span className="cv-btn-label">ATS</span>
+            {/* The sparkle is the only hint that there is a model behind
+                this button. It sits on the ATS button rather than beside it
+                because the check is the way in and Ask AI is one step past
+                it, not a second destination. */}
+            <span className="cv-spark" aria-hidden="true">
+              <Sparkles size={11} />
+            </span>
+          </button>
           <button className="cv-btn" onClick={handleShare} aria-label="Share">
             <Link2 size={15} />
             <span className="cv-btn-label">Share</span>
@@ -1221,14 +1251,6 @@ export function CVBuilder() {
           <SlidersHorizontal size={17} />
         </IconBtn>
         <span className="cv-rail-sep" />
-        {/* First of the tools, because it is the one that tells you whether
-            to go and use any of the others. */}
-        <IconBtn tip="ATS check" active={tool === "ats"} onClick={() => openTool("ats")}>
-          <ShieldCheck size={17} />
-        </IconBtn>
-        <IconBtn tip="Ask AI" active={tool === "ask"} onClick={() => openTool("ask")}>
-          <Sparkles size={17} />
-        </IconBtn>
         <IconBtn tip="Sections" active={tool === "sections"} onClick={() => openTool("sections")}>
           <ListOrdered size={17} />
         </IconBtn>
@@ -1329,21 +1351,38 @@ export function CVBuilder() {
             )}
             {tool === "ats" && (
               <>
-                <div className="cv-dock-hd">ATS check</div>
-                <div className="cv-dock-body">
-                  <AtsPanel report={atsReport} onSelectSection={(id) => setSelectedSection(id)} />
+                <div className="cv-dock-hd">
+                  {atsView === "ask" ? (
+                    <button
+                      type="button"
+                      className="cv-dock-back"
+                      onClick={() => setAtsView("ats")}
+                    >
+                      <ChevronLeft size={14} />
+                      Ask AI
+                    </button>
+                  ) : (
+                    "ATS check"
+                  )}
                 </div>
-              </>
-            )}
-            {tool === "ask" && (
-              <>
-                <div className="cv-dock-hd">Ask AI</div>
-                <div className="cv-dock-body">
-                  <AskAiPanel
-                    buildPrompt={buildReviewPrompt}
-                    onNotify={(msg) => pushToast(msg, "sparkles")}
-                  />
+                <div className="cv-dock-body cv-flip" data-face={atsView}>
+                  {atsView === "ats" ? (
+                    <AtsPanel report={atsReport} onSelectSection={(id) => setSelectedSection(id)} />
+                  ) : (
+                    <AskAiPanel
+                      buildPrompt={buildReviewPrompt}
+                      onNotify={(msg) => pushToast(msg, "sparkles")}
+                    />
+                  )}
                 </div>
+                {atsView === "ats" && (
+                  <div className="cv-dock-foot">
+                    <button type="button" className="cv-sparkle-btn" onClick={() => setAtsView("ask")}>
+                      <Sparkles size={15} />
+                      Ask AI
+                    </button>
+                  </div>
+                )}
               </>
             )}
             {tool === "history" && (
@@ -1391,7 +1430,7 @@ export function CVBuilder() {
           type="button"
           className="cv-status-btn"
           data-verdict={atsVerdict(atsReport.score)}
-          onClick={() => openTool("ats")}
+          onClick={openAts}
           title="Open the ATS check"
         >
           ATS <b>{atsReport.score}</b>
