@@ -28,14 +28,18 @@ Font.registerHyphenationCallback((word) => [word]);
 // heights in the PDF match the editor (Helvetica is narrower and desyncs
 // the WYSIWYG page split). Registered lazily; this module is only imported
 // client-side by the export handler.
+//
+// react-pdf fetches these URLs itself, so they need the base path spelled
+// out: root-relative they 404 on the sub-path build and the whole export
+// throws before a single page renders.
 if (typeof window !== "undefined") {
   Font.register({
     family: "Inter",
     fonts: [
-      { src: "/fonts/inter-regular.ttf", fontWeight: 400 },
-      { src: "/fonts/inter-italic.ttf", fontWeight: 400, fontStyle: "italic" },
-      { src: "/fonts/inter-semibold.ttf", fontWeight: 600 },
-      { src: "/fonts/inter-bold.ttf", fontWeight: 700 },
+      { src: assetPath("/fonts/inter-regular.ttf"), fontWeight: 400 },
+      { src: assetPath("/fonts/inter-italic.ttf"), fontWeight: 400, fontStyle: "italic" },
+      { src: assetPath("/fonts/inter-semibold.ttf"), fontWeight: 600 },
+      { src: assetPath("/fonts/inter-bold.ttf"), fontWeight: 700 },
     ],
   });
 }

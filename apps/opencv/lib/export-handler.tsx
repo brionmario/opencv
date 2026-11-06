@@ -702,12 +702,7 @@ export async function exportToPDF(
       page2ExpIds,
     }) as React.ReactElement<DocumentProps>;
     const blob = await pdf(element).toBlob();
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = filename;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadFile(blob, filename);
   } catch (error) {
     console.error("PDF export failed:", error);
     alert("Failed to export PDF. Please try again.");
