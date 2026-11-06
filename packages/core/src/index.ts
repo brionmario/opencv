@@ -14,4 +14,6 @@ export * from "./layouts.js";
 export * from "./sections.js";
 export * from "./starter-templates.js";
 export * from "./share.js";
+export * from "./ats.js";
+export * from "./ats-prompt.js";
 export * from "./json-resume.js";

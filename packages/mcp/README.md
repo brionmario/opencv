@@ -22,6 +22,13 @@ one is full of editor bookkeeping that would be noise to generate.
 | `create_resume` | JSON Resume → a read-only share link. |
 | `read_resume` | A share link → JSON Resume, plus its template. |
 | `update_resume` | A share link + changes → a new link. |
+| `check_resume` | A share link *or* a JSON Resume → an ATS score and findings. |
+
+`check_resume` runs the same static check the editor's ATS panel shows, from
+the same rules in `@brionmario/opencv-core`, so a résumé revised through
+`update_resume` can be re-checked without anyone opening a browser. It reads the
+document and nothing else: it cannot see the job being applied for, and it
+cannot count pages, because nothing renders in this process.
 
 ## Using it
 

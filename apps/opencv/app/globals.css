@@ -215,6 +215,15 @@
   --cv-danger-soft: color-mix(in srgb, var(--cv-danger) 14%, transparent);
   --cv-danger-line: color-mix(in srgb, var(--cv-danger) 45%, transparent);
 
+  /* The three states a check can be in. Only the ATS panel and the inline
+     field warnings use these, and they are tokens so the two agree. */
+  --cv-warning: #d97706;
+  --cv-warning-soft: color-mix(in srgb, var(--cv-warning) 15%, transparent);
+  --cv-warning-line: color-mix(in srgb, var(--cv-warning) 45%, transparent);
+  --cv-ok: #18794e;
+  --cv-ok-soft: color-mix(in srgb, var(--cv-ok) 14%, transparent);
+  --cv-ok-line: color-mix(in srgb, var(--cv-ok) 45%, transparent);
+
   /* Tool chrome, not marketing chrome: small radii, flat surfaces. */
   --cv-radius: 6px;
   --cv-radius-sm: 4px;
@@ -248,6 +257,8 @@
   --cv-border:    #e2e5ea;
   --cv-border-2:  #cfd4db;
   --cv-danger:    #cf2b30;
+  --cv-warning:   #b45309;
+  --cv-ok:        #18794e;
   --cv-hover:     rgba(21,24,29,.045);
   --cv-hover-2:   rgba(21,24,29,.075);
   --cv-shadow-sm: 0 1px 2px rgba(16,20,26,.06);
@@ -270,6 +281,8 @@
   --cv-border:    #2b3038;
   --cv-border-2:  #3a4049;
   --cv-danger:    #f0595e;
+  --cv-warning:   #e0a040;
+  --cv-ok:        #4cc38a;
   --cv-hover:     rgba(255,255,255,.045);
   --cv-hover-2:   rgba(255,255,255,.08);
   --cv-shadow-sm: 0 1px 2px rgba(0,0,0,.40);
@@ -926,6 +939,146 @@
 .cv-status .sep { width: 1px; height: 12px; background: var(--cv-border-2); }
 .cv-status .grow { flex: 1; }
 .cv-status b { color: var(--cv-text-2); font-weight: 500; }
+
+/* The ATS score sits in the status bar because it is a running read on the
+   document, not a thing you go and ask for. It is a button, since the one
+   sensible response to a low number is to open the panel. */
+.cv-status-btn {
+  display: inline-flex; align-items: center; gap: 5px;
+  font: inherit; color: inherit;
+  background: transparent; border: 0; padding: 0 2px;
+  cursor: pointer; border-radius: var(--cv-radius-sm);
+}
+.cv-status-btn:hover { color: var(--cv-text-2); }
+.cv-status-btn:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: 2px; }
+.cv-status-btn[data-verdict="strong"] b { color: var(--cv-ok); }
+.cv-status-btn[data-verdict="fair"] b    { color: var(--cv-warning); }
+.cv-status-btn[data-verdict="weak"] b    { color: var(--cv-danger); }
+
+/* ---- ATS panel ----
+   Findings first, the agent handoff last. The panel is advisory throughout:
+   nothing in it refuses an export, and the copy says so. */
+.cv-ats { display: flex; flex-direction: column; gap: 14px; }
+
+.cv-ats-head { display: flex; align-items: center; gap: 12px; }
+.cv-ats-head-txt { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.cv-ats-head-txt b { font-size: 13.5px; font-weight: 600; }
+.cv-ats-head-txt b[data-verdict="strong"] { color: var(--cv-ok); }
+.cv-ats-head-txt b[data-verdict="fair"]   { color: var(--cv-warning); }
+.cv-ats-head-txt b[data-verdict="weak"]   { color: var(--cv-danger); }
+.cv-ats-head-txt span {
+  font-size: 11.5px; color: var(--cv-text-3);
+  font-family: var(--cv-font-mono); font-variant-numeric: tabular-nums;
+}
+
+.cv-ats-dial { position: relative; width: 56px; height: 56px; flex-shrink: 0; }
+.cv-ats-dial svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+.cv-ats-dial-track {
+  fill: none; stroke: var(--cv-border); stroke-width: 6;
+}
+.cv-ats-dial-arc {
+  fill: none; stroke-width: 6; stroke-linecap: round;
+  transition: stroke-dasharray var(--cv-dur) var(--cv-ease);
+}
+.cv-ats-dial[data-verdict="strong"] .cv-ats-dial-arc { stroke: var(--cv-ok); }
+.cv-ats-dial[data-verdict="fair"] .cv-ats-dial-arc   { stroke: var(--cv-warning); }
+.cv-ats-dial[data-verdict="weak"] .cv-ats-dial-arc   { stroke: var(--cv-danger); }
+.cv-ats-dial b {
+  position: absolute; inset: 0;
+  display: grid; place-items: center;
+  font-size: 16px; font-weight: 650; color: var(--cv-text);
+  font-variant-numeric: tabular-nums;
+}
+
+.cv-ats-note {
+  margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--cv-text-3);
+}
+
+.cv-ats-clear {
+  display: flex; gap: 8px; align-items: flex-start;
+  padding: 10px; border-radius: var(--cv-radius);
+  background: var(--cv-ok-soft); border: 1px solid var(--cv-ok-line);
+  color: var(--cv-ok);
+}
+.cv-ats-clear p { margin: 0; font-size: 12px; line-height: 1.5; }
+
+.cv-ats-group { display: flex; flex-direction: column; gap: 7px; }
+.cv-ats-group h4 {
+  margin: 0; font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--cv-text-3);
+}
+.cv-ats-group ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 6px; }
+
+.cv-ats-row {
+  display: flex; gap: 8px;
+  padding: 8px 9px; border-radius: var(--cv-radius);
+  background: var(--cv-surface-2); border: 1px solid var(--cv-border);
+}
+.cv-ats-row-ic { flex-shrink: 0; margin-top: 1px; }
+.cv-ats-row[data-severity="fail"] .cv-ats-row-ic { color: var(--cv-danger); }
+.cv-ats-row[data-severity="warn"] .cv-ats-row-ic { color: var(--cv-warning); }
+.cv-ats-row[data-severity="pass"] .cv-ats-row-ic { color: var(--cv-ok); }
+.cv-ats-row[data-severity="fail"] { border-color: var(--cv-danger-line); background: var(--cv-danger-soft); }
+
+.cv-ats-row-txt { min-width: 0; display: flex; flex-direction: column; gap: 3px; }
+.cv-ats-row-hd { margin: 0; font-size: 12px; }
+.cv-ats-row-hd b { font-weight: 600; color: var(--cv-text); }
+.cv-ats-row-jump {
+  display: inline-flex; align-items: center; gap: 2px;
+  font: inherit; font-weight: 600; color: var(--cv-text);
+  background: transparent; border: 0; padding: 0; cursor: pointer;
+  text-align: left;
+}
+.cv-ats-row-jump:hover { color: var(--cv-accent); }
+.cv-ats-row-jump:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: 2px; }
+.cv-ats-row-detail { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--cv-text-2); }
+.cv-ats-row-fix { margin: 0; font-size: 11.5px; line-height: 1.5; color: var(--cv-text-3); }
+
+.cv-ats-disclose {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 10.5px; font-weight: 650; letter-spacing: 0.06em;
+  text-transform: uppercase; color: var(--cv-text-3);
+  background: transparent; border: 0; padding: 0; cursor: pointer;
+}
+.cv-ats-disclose:hover { color: var(--cv-text-2); }
+.cv-ats-disclose:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: 2px; }
+
+.cv-ats-handoff {
+  display: flex; flex-direction: column; gap: 9px;
+  padding-top: 13px; border-top: 1px solid var(--cv-border);
+}
+.cv-ats-handoff h4 {
+  margin: 0; font-size: 12.5px; font-weight: 600; color: var(--cv-text);
+}
+.cv-ats-handoff > p {
+  margin: 0; font-size: 11.5px; line-height: 1.55; color: var(--cv-text-3);
+}
+
+.cv-ats-field { display: flex; flex-direction: column; gap: 4px; }
+.cv-ats-field > span {
+  font-size: 10.5px; font-weight: 650; letter-spacing: 0.05em;
+  text-transform: uppercase; color: var(--cv-text-3);
+}
+.cv-ats-field input, .cv-ats-field textarea {
+  font-family: var(--cv-font-ui); font-size: 12px; color: var(--cv-text);
+  background: var(--cv-surface-2); border: 1px solid var(--cv-border-2);
+  border-radius: var(--cv-radius); padding: 7px 9px;
+  width: 100%; resize: vertical;
+}
+.cv-ats-field input::placeholder, .cv-ats-field textarea::placeholder { color: var(--cv-text-3); }
+.cv-ats-field input:focus-visible, .cv-ats-field textarea:focus-visible {
+  outline: 2px solid var(--cv-accent); outline-offset: 1px; border-color: var(--cv-accent-line);
+}
+
+.cv-ats-actions { display: flex; gap: 7px; flex-wrap: wrap; }
+
+.cv-ats-preview {
+  margin: 0; max-height: 280px; overflow: auto;
+  padding: 10px; border-radius: var(--cv-radius);
+  background: var(--cv-surface-3); border: 1px solid var(--cv-border);
+  font-family: var(--cv-font-mono); font-size: 10.5px; line-height: 1.55;
+  color: var(--cv-text-2); white-space: pre-wrap; word-break: break-word;
+}
 
 /* ---- Canvas selection ---- */
 .cv-section-frame { position: relative; border-radius: 2px; }

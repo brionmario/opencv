@@ -16,7 +16,7 @@ import {
   Download, FileJson, FileText, FileCode, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
   Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal, Link2,
-  Undo2, Redo2,
+  Undo2, Redo2, ShieldCheck,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,8 @@ import { syncActiveDocument } from "@/lib/cv-documents";
 import { assetPath } from "@/lib/asset-path";
 import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 import { buildShareUrl } from "@/lib/cv-share";
+import { runAtsChecks, buildAtsPrompt, atsVerdict } from "@/lib/cv-ats";
+import { AtsPanel } from "@/components/cv-builder/ats-panel";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 import { LayoutMap } from "@/components/cv-editor/layout-map";
 import { SectionPicker } from "@/components/cv-editor/section-picker";
@@ -37,7 +39,7 @@ import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
  *  rather than a hard limit. The fragment itself has no size cap. */
 const LONG_SHARE_URL = 8000;
 
-type DrawerType = "theme" | "history" | "sections" | null;
+type DrawerType = "theme" | "history" | "sections" | "ats" | null;
 type CanvasType = "soft" | "dots" | "grid" | "plain";
 
 interface Toast {
@@ -1089,6 +1091,41 @@ export function CVBuilder() {
   const layoutColumns: 1 | 2 = selectedLayout === "professional" || selectedLayout === "modern" ? 2 : 1;
   const pageCount = Math.max(1, Math.ceil((paperHeight ?? PAGE_H_PX) / PAGE_H_PX));
 
+  /**
+   * The ATS read on the open document.
+   *
+   * Recomputed from the document, the template and the measured page count,
+   * all of which the checker needs: a two-column template and a four-page
+   * résumé are both findings, and neither is visible in the data alone.
+   * Cheap enough to run on every edit, so there is no "check now" button to
+   * forget to press.
+   */
+  const atsReport = useMemo(
+    () => runAtsChecks(data, { layout: selectedLayout, pageCount }),
+    [data, selectedLayout, pageCount]
+  );
+
+  /**
+   * The prompt for whatever agent the person already uses.
+   *
+   * The share link goes in it, because a link is the document: an agent can
+   * read the real résumé rather than a description of it. If minting the
+   * link fails, the prompt still builds and says there is no document
+   * attached, which is more useful than refusing to produce anything.
+   */
+  const buildReviewPrompt = useCallback(
+    async (targetRole: string, jobDescription: string) => {
+      let shareUrl: string | undefined;
+      try {
+        shareUrl = await buildShareUrl({ v: 1, data, theme, layout: selectedLayout });
+      } catch {
+        shareUrl = undefined;
+      }
+      return buildAtsPrompt({ report: atsReport, shareUrl, targetRole, jobDescription });
+    },
+    [atsReport, data, theme, selectedLayout]
+  );
+
   // The layout map sizes its blocks from what the page actually renders, so
   // it can never imply a different document than the one on screen.
   const [sectionHeights, setSectionHeights] = useState<Record<string, number>>({});
@@ -1188,6 +1225,9 @@ export function CVBuilder() {
         <IconBtn tip="Version history" active={tool === "history"} onClick={() => openTool("history")}>
           <History size={17} />
         </IconBtn>
+        <IconBtn tip="ATS check" active={tool === "ats"} onClick={() => openTool("ats")}>
+          <ShieldCheck size={17} />
+        </IconBtn>
       </nav>
 
       {/* ── Desk canvas ── */}
@@ -1277,6 +1317,19 @@ export function CVBuilder() {
                 onClose={() => { setTool(null); setDockOpen(false); }}
               />
             )}
+            {tool === "ats" && (
+              <>
+                <div className="cv-dock-hd">ATS check</div>
+                <div className="cv-dock-body">
+                  <AtsPanel
+                    report={atsReport}
+                    onSelectSection={(id) => setSelectedSection(id)}
+                    buildPrompt={buildReviewPrompt}
+                    onNotify={(msg) => pushToast(msg, "check")}
+                  />
+                </div>
+              </>
+            )}
             {tool === "history" && (
               <HistoryDrawer
                 versions={versions}
@@ -1312,6 +1365,16 @@ export function CVBuilder() {
         <span><b>{LAYOUTS.find((l) => l.id === selectedLayout)?.name}</b></span>
         <span className="sep" />
         <span>A4 · {pageCount} page{pageCount === 1 ? "" : "s"}</span>
+        <span className="sep" />
+        <button
+          type="button"
+          className="cv-status-btn"
+          data-verdict={atsVerdict(atsReport.score)}
+          onClick={() => openTool("ats")}
+          title="Open the ATS check"
+        >
+          ATS <b>{atsReport.score}</b>
+        </button>
         <span className="sep" />
         <span>{layoutColumns === 2 ? "2 columns" : "1 column"}</span>
         <span className="grow" />

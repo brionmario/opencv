@@ -20,9 +20,17 @@ import { z } from "zod";
 import {
   LAYOUTS,
   DEFAULT_THEME,
+  ATS_GROUP_LABELS,
+  atsVerdict,
+  bySeverity,
   fromJsonResume,
+  runAtsChecks,
   toJsonResume,
   starterTemplates,
+  type AtsCheck,
+  type AtsGroup,
+  type AtsReport,
+  type CVData,
   type CVTheme,
   type LayoutType,
 } from "@brionmario/opencv-core";
@@ -231,6 +239,132 @@ server.registerTool(
       `Updated ${changed}.\n\n${describeLink(next, !!data.personalInfo.avatar)}\n\n` +
         `The link you passed in still resolves to the previous version.`
     );
+  }
+);
+
+/* ── Check ────────────────────────────────────────────────────────────────── */
+
+const VERDICT_LINE = {
+  strong: "reads cleanly",
+  fair: "some risk",
+  weak: "likely to be misread",
+} as const;
+
+/** One finding, as a line an agent can act on without parsing anything. */
+function findingLine(check: AtsCheck): string {
+  const mark = check.severity === "fail" ? "FAIL" : "WARN";
+  return check.fix
+    ? `- [${mark}] ${check.label}: ${check.detail}\n      Fix: ${check.fix}`
+    : `- [${mark}] ${check.label}: ${check.detail}`;
+}
+
+/**
+ * The report as text rather than JSON.
+ *
+ * An agent is going to read this and decide what to change, not deserialize
+ * it, and the fix lines are the useful part. The check ids are included so a
+ * follow-up call can be compared against this one without matching on prose.
+ */
+function describeReport(report: AtsReport, measuredLength: boolean): string {
+  const flagged = bySeverity(report.checks).filter((c) => c.severity !== "pass");
+  const lines: string[] = [
+    `ATS score: ${report.score}/100 (${VERDICT_LINE[atsVerdict(report.score)]})`,
+    `${report.counts.fail} failing, ${report.counts.warn} warnings, ${report.counts.pass} passing.`,
+    "",
+  ];
+
+  if (flagged.length === 0) {
+    lines.push("Nothing is flagged. Every mechanical check passes.");
+  } else {
+    for (const group of ["contact", "structure", "content", "formatting"] as AtsGroup[]) {
+      const inGroup = flagged.filter((c) => c.group === group);
+      if (inGroup.length === 0) continue;
+      lines.push(`${ATS_GROUP_LABELS[group]}:`, ...inGroup.map(findingLine), "");
+    }
+  }
+
+  lines.push(
+    `Passing: ${report.checks
+      .filter((c) => c.severity === "pass")
+      .map((c) => c.id)
+      .join(", ")}`,
+    ""
+  );
+
+  // Being explicit about the edges of the check, so neither a clean report
+  // nor a poor one gets read as more than it is.
+  lines.push("What this check cannot see:");
+  if (!measuredLength) {
+    lines.push(
+      "- Page count. Nothing renders here, so length is not checked. Open the link in a browser for that."
+    );
+  }
+  lines.push(
+    "- The job being applied for. Keyword coverage against a posting is judgement, not a rule, and is yours to make.",
+    "- How any particular tracking system behaves. These are the ways parsers are known to fail, not one vendor's rules.",
+    "",
+    "Nothing here blocks anything. A low score is an opinion about one hiring pipeline."
+  );
+
+  return lines.join("\n");
+}
+
+server.registerTool(
+  "check_resume",
+  {
+    title: "Check a résumé for ATS readiness",
+    description:
+      "Runs the same static check the opencv editor shows: contact fields, section structure, " +
+      "dates, phrasing, columns and formatting. Returns a score out of 100 and a list of " +
+      "findings with suggested fixes. Takes either a share link or a JSON Resume, so a draft " +
+      "can be checked before create_resume mints a link for it. It reads the document only; " +
+      "it knows nothing about the job being applied for.",
+    inputSchema: {
+      url: z
+        .string()
+        .optional()
+        .describe("An opencv share link to check. Pass this or resume, not both."),
+      resume: resumeArg
+        .optional()
+        .describe("A JSON Resume to check before it has a link. Pass this or url, not both."),
+      layout: z
+        .enum(LAYOUT_IDS)
+        .optional()
+        .describe(
+          "Template to check against, when passing a resume rather than a url. " +
+            "Column count is one of the checks, so this changes the result."
+        ),
+    },
+  },
+  async ({ url, resume, layout }) => {
+    if (!url && !resume) {
+      return failure("Pass either a share link (url) or a JSON Resume (resume) to check.");
+    }
+    if (url && resume) {
+      return failure("Pass a url or a resume, not both; otherwise it is unclear which to check.");
+    }
+
+    let data: CVData;
+    let checkedLayout: LayoutType;
+    let label: string;
+
+    if (url) {
+      const result = await parseShareUrl(url);
+      if ("error" in result) return failure(result.error);
+      data = result.payload.data;
+      // A link carries its own template, and the one in the link is the one
+      // that will be read, so an argument would only be a way to get a
+      // misleading answer.
+      checkedLayout = result.payload.layout ?? "professional";
+      label = `“${data.personalInfo.fullName || "Untitled"}”, ${checkedLayout} template`;
+    } else {
+      data = fromJsonResume(resume as never);
+      checkedLayout = layout ?? "professional";
+      label = `a draft résumé, checked against the ${checkedLayout} template`;
+    }
+
+    const report = runAtsChecks(data, { layout: checkedLayout });
+    return text(`Checked ${label}.\n\n${describeReport(report, false)}`);
   }
 );
 
