@@ -429,6 +429,11 @@
 .cv-btn:hover { background: var(--cv-surface-2); border-color: var(--cv-text-3); }
 .cv-btn:active { background: var(--cv-surface-3); }
 .cv-btn:focus-visible { outline: 2px solid var(--cv-accent); outline-offset: 2px; }
+/* Every disabled button in the chrome, not only the ones a panel remembers
+   to style. A control that looks live and does nothing reads as a bug. */
+.cv-btn:disabled, .cv-iconbtn:disabled {
+  opacity: 0.4; cursor: default; pointer-events: none;
+}
 
 /* Destructive variant: outlined at rest so it does not shout from the panel,
    filled on hover once the pointer has committed to it. */
@@ -1162,6 +1167,23 @@
 .cv-ask-mark {
   display: inline-flex; flex-shrink: 0;
 }
+/* Why four buttons are dead. Sits above them, not under, so it is read
+   before they are reached for. */
+.cv-ask-gate {
+  margin: 0; padding: 8px 10px;
+  border-radius: var(--cv-radius);
+  background: var(--cv-warning-soft);
+  border: 1px solid var(--cv-warning-line);
+  color: var(--cv-warning);
+  font-size: 11.5px; line-height: 1.5;
+}
+
+/* The required marker on a field label. */
+.cv-ats-field > span > i {
+  font-style: normal; font-weight: 600; margin-left: 5px;
+  color: var(--cv-warning); letter-spacing: 0.04em;
+}
+
 .cv-ask-hint {
   margin: 0; font-size: 11px; line-height: 1.5; color: var(--cv-text-3);
 }

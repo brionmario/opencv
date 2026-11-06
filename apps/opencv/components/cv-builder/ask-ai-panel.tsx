@@ -19,25 +19,74 @@ export interface AskAiPanelProps {
 /**
  * Where to send the prompt.
  *
- * Each entry is the service's own new-chat page and nothing more. There is
- * no prefill: the prompt carries a share link, which carries the whole
- * résumé, and that runs to several KB. Services that accept a `?q=`
- * truncate it well before that, and a truncated share link is not a short
- * link, it is a broken one that decodes to nothing. The agent would then
- * review a résumé it never read, which is the one outcome worse than an
- * extra paste. So the prompt goes via the clipboard, every time, and the
- * button opens a tab to paste it into.
+ * `prefill` puts the prompt straight into the composer, so the usual case is
+ * one click and the question is already asked. Gemini has no such parameter,
+ * so it opens plain.
  *
- * Each carries its own mark, drawn in the service's colour, so the button
- * is recognisable before the label is read. The marks label a link to that
+ * Every path copies to the clipboard first regardless. A prefilled URL is a
+ * request like any other, and a request line has a length limit: the prompt
+ * carries a share link, the link carries the whole résumé, and a document
+ * with a photo in it can push the URL past what a server will accept. When
+ * that happens the service is opened plain rather than handed a URL that
+ * would 414, and the prompt is already on the clipboard either way. The one
+ * outcome worth engineering against is a link that arrives clipped, because
+ * a clipped share link decodes to nothing and the agent would then review a
+ * résumé it never read while sounding just as sure as if it had.
+ *
+ * Each carries its own mark, drawn in the service's colour, so the button is
+ * recognisable before the label is read. The marks label a link to that
  * service and claim nothing beyond it.
  */
 const SERVICES = [
-  { id: "chatgpt", name: "ChatGPT", url: "https://chatgpt.com/", tint: "#0da37f", Mark: ChatGptMark },
-  { id: "claude", name: "Claude", url: "https://claude.ai/new", tint: "#d97757", Mark: ClaudeMark },
-  { id: "gemini", name: "Gemini", url: "https://gemini.google.com/app", tint: "#4285f4", Mark: GeminiMark },
-  { id: "perplexity", name: "Perplexity", url: "https://www.perplexity.ai/", tint: "#20b8cd", Mark: PerplexityMark },
+  {
+    id: "chatgpt",
+    name: "ChatGPT",
+    url: "https://chatgpt.com/",
+    prefill: (p: string) => `https://chatgpt.com/?prompt=${encodeURIComponent(p)}`,
+    tint: "#0da37f",
+    Mark: ChatGptMark,
+  },
+  {
+    id: "claude",
+    name: "Claude",
+    url: "https://claude.ai/new",
+    prefill: (p: string) => `https://claude.ai/new?q=${encodeURIComponent(p)}`,
+    tint: "#d97757",
+    Mark: ClaudeMark,
+  },
+  {
+    id: "gemini",
+    name: "Gemini",
+    url: "https://gemini.google.com/app",
+    prefill: null,
+    tint: "#4285f4",
+    Mark: GeminiMark,
+  },
+  {
+    id: "perplexity",
+    name: "Perplexity",
+    url: "https://www.perplexity.ai/",
+    prefill: (p: string) => `https://www.perplexity.ai/search?q=${encodeURIComponent(p)}`,
+    tint: "#20b8cd",
+    Mark: PerplexityMark,
+  },
 ] as const;
+
+/**
+ * The longest URL worth sending.
+ *
+ * Measured rather than guessed: a filled résumé with no photo and a typical
+ * posting comes to a 7.7K prompt and a 9.9K URL, most of which is the share
+ * link. An 8K cap, which is where a bare nginx stops reading a request line,
+ * would therefore refuse to prefill in the ordinary case, which defeats the
+ * point. 16K sits inside the 32K a URL is allowed through the CDNs these
+ * services run behind, and still catches the case worth catching: a résumé
+ * with a photo embedded, where the link alone runs past 50K.
+ *
+ * Over the cap the tab opens empty and the prompt is on the clipboard, so
+ * the cost of being wrong in either direction is one paste.
+ */
+const URL_LIMIT = 16000;
 
 export function AskAiPanel({ buildPrompt, onNotify }: AskAiPanelProps) {
   const [targetRole, setTargetRole] = useState("");
@@ -54,17 +103,18 @@ export function AskAiPanel({ buildPrompt, onNotify }: AskAiPanelProps) {
 
   const shownPrompt = preview && preview.from === buildPrompt ? preview.text : null;
 
-  /** Builds and copies. Returns false when nothing reached the clipboard. */
-  const copyPrompt = async (): Promise<boolean> => {
-    const prompt = await buildPrompt(targetRole.trim(), jobDescription.trim());
-    await navigator.clipboard.writeText(prompt);
-    return true;
-  };
+  // Nothing is sendable until there is a role and a posting to send it
+  // against. The static check already covers the document on its own; what
+  // this panel adds is the comparison, and a review with nothing to compare
+  // to is the generic résumé advice that is already all over the internet.
+  const ready = targetRole.trim() !== "" && jobDescription.trim() !== "";
+  const blocked = busy || !ready;
 
   const handleCopy = async () => {
     setBusy(true);
     try {
-      await copyPrompt();
+      const prompt = await buildPrompt(targetRole.trim(), jobDescription.trim());
+      await navigator.clipboard.writeText(prompt);
       onNotify("Review prompt copied, résumé link included");
     } catch {
       onNotify("Could not copy the prompt: clipboard access was refused");
@@ -76,14 +126,30 @@ export function AskAiPanel({ buildPrompt, onNotify }: AskAiPanelProps) {
   const handleOpen = async (service: (typeof SERVICES)[number]) => {
     setBusy(true);
     try {
-      await copyPrompt();
-      // The copy is the part that must succeed; the tab is a convenience. If
-      // a popup blocker eats it, the prompt is still on the clipboard and the
-      // toast says so, so nothing is lost.
-      window.open(service.url, "_blank", "noopener,noreferrer");
-      onNotify(`Prompt copied. Paste it into ${service.name}.`);
+      const prompt = await buildPrompt(targetRole.trim(), jobDescription.trim());
+
+      // Best effort, and never a reason not to open the tab: a refused
+      // clipboard should not cost the user the prefill as well.
+      let copied = true;
+      try {
+        await navigator.clipboard.writeText(prompt);
+      } catch {
+        copied = false;
+      }
+
+      const prefilled = service.prefill?.(prompt);
+      const sendable = prefilled && prefilled.length <= URL_LIMIT ? prefilled : null;
+      window.open(sendable ?? service.url, "_blank", "noopener,noreferrer");
+
+      onNotify(
+        sendable
+          ? `Asked in ${service.name}.`
+          : copied
+            ? `Prompt copied. Paste it into ${service.name}.`
+            : `Opened ${service.name}, but the prompt could not be copied. Use Copy prompt and paste it.`
+      );
     } catch {
-      onNotify("Could not copy the prompt: clipboard access was refused");
+      onNotify(`Could not build the prompt for ${service.name}`);
     } finally {
       setBusy(false);
     }
@@ -117,7 +183,7 @@ export function AskAiPanel({ buildPrompt, onNotify }: AskAiPanelProps) {
       </p>
 
       <label className="cv-ats-field">
-        <span>Target role</span>
+        <span>Target role<i aria-hidden="true">required</i></span>
         <input
           type="text"
           value={targetRole}
@@ -127,26 +193,33 @@ export function AskAiPanel({ buildPrompt, onNotify }: AskAiPanelProps) {
       </label>
 
       <label className="cv-ats-field">
-        <span>Job description (optional)</span>
+        <span>Job description<i aria-hidden="true">required</i></span>
         <textarea
           rows={5}
           value={jobDescription}
           placeholder="Paste the posting. This is the part a static check cannot stand in for."
+          required
           onChange={(e) => setJobDescription(e.target.value)}
         />
       </label>
+
+      {!ready && (
+        <p className="cv-ask-gate">
+          Add the role and paste the posting to enable the buttons below.
+        </p>
+      )}
 
       <div className="cv-ats-actions">
         <button
           type="button"
           className="cv-btn cv-btn-primary"
           onClick={handleCopy}
-          disabled={busy}
+          disabled={blocked}
         >
           <Clipboard size={14} />
           Copy prompt
         </button>
-        <button type="button" className="cv-btn" onClick={togglePreview} disabled={busy}>
+        <button type="button" className="cv-btn" onClick={togglePreview} disabled={blocked}>
           {shownPrompt ? <EyeOff size={14} /> : <Eye size={14} />}
           {shownPrompt ? "Hide" : "Preview"}
         </button>
@@ -161,7 +234,7 @@ export function AskAiPanel({ buildPrompt, onNotify }: AskAiPanelProps) {
               type="button"
               className="cv-ask-service"
               onClick={() => handleOpen(service)}
-              disabled={busy}
+              disabled={blocked}
             >
               <span className="cv-ask-mark" style={{ color: service.tint }}>
                 <service.Mark size={15} />
@@ -172,9 +245,10 @@ export function AskAiPanel({ buildPrompt, onNotify }: AskAiPanelProps) {
           ))}
         </div>
         <p className="cv-ask-hint">
-          Each of these copies the prompt and opens a new chat for you to paste it into.
-          The prompt carries the whole résumé, which is far longer than a URL will hold
-          intact, so it travels on the clipboard rather than in the link.
+          Each opens a new chat with the prompt already asked, and copies it as well.
+          Gemini has no way to prefill a chat, and a résumé carrying a photo can outgrow
+          what a URL will hold; in either case the tab opens empty and the prompt is on
+          your clipboard.
         </p>
       </section>
 
