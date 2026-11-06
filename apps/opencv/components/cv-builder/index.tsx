@@ -28,6 +28,7 @@ import { readChromeTheme, setChromeTheme } from "@/lib/chrome-theme";
 import { buildShareUrl } from "@/lib/cv-share";
 import { runAtsChecks, buildAtsPrompt, atsVerdict } from "@/lib/cv-ats";
 import { AtsPanel } from "@/components/cv-builder/ats-panel";
+import { AskAiPanel } from "@/components/cv-builder/ask-ai-panel";
 import { PropertiesPanel } from "@/components/cv-editor/properties-panel";
 import { LayoutMap } from "@/components/cv-editor/layout-map";
 import { SectionPicker } from "@/components/cv-editor/section-picker";
@@ -39,7 +40,11 @@ import { SECTION_LABELS, type BuiltInSectionId } from "@/lib/cv-builder-types";
  *  rather than a hard limit. The fragment itself has no size cap. */
 const LONG_SHARE_URL = 8000;
 
-type DrawerType = "theme" | "history" | "sections" | "ats" | null;
+type DrawerType = "theme" | "history" | "sections" | "ats" | "ask" | null;
+
+/** Tools that take the whole dock: long panels with their own scroll, and
+ *  nothing to say about whichever section happens to be selected. */
+const FULL_HEIGHT_TOOLS = new Set<DrawerType>(["ats", "ask"]);
 type CanvasType = "soft" | "dots" | "grid" | "plain";
 
 interface Toast {
@@ -1216,6 +1221,14 @@ export function CVBuilder() {
           <SlidersHorizontal size={17} />
         </IconBtn>
         <span className="cv-rail-sep" />
+        {/* First of the tools, because it is the one that tells you whether
+            to go and use any of the others. */}
+        <IconBtn tip="ATS check" active={tool === "ats"} onClick={() => openTool("ats")}>
+          <ShieldCheck size={17} />
+        </IconBtn>
+        <IconBtn tip="Ask AI" active={tool === "ask"} onClick={() => openTool("ask")}>
+          <Sparkles size={17} />
+        </IconBtn>
         <IconBtn tip="Sections" active={tool === "sections"} onClick={() => openTool("sections")}>
           <ListOrdered size={17} />
         </IconBtn>
@@ -1224,9 +1237,6 @@ export function CVBuilder() {
         </IconBtn>
         <IconBtn tip="Version history" active={tool === "history"} onClick={() => openTool("history")}>
           <History size={17} />
-        </IconBtn>
-        <IconBtn tip="ATS check" active={tool === "ats"} onClick={() => openTool("ats")}>
-          <ShieldCheck size={17} />
         </IconBtn>
       </nav>
 
@@ -1321,11 +1331,17 @@ export function CVBuilder() {
               <>
                 <div className="cv-dock-hd">ATS check</div>
                 <div className="cv-dock-body">
-                  <AtsPanel
-                    report={atsReport}
-                    onSelectSection={(id) => setSelectedSection(id)}
+                  <AtsPanel report={atsReport} onSelectSection={(id) => setSelectedSection(id)} />
+                </div>
+              </>
+            )}
+            {tool === "ask" && (
+              <>
+                <div className="cv-dock-hd">Ask AI</div>
+                <div className="cv-dock-body">
+                  <AskAiPanel
                     buildPrompt={buildReviewPrompt}
-                    onNotify={(msg) => pushToast(msg, "check")}
+                    onNotify={(msg) => pushToast(msg, "sparkles")}
                   />
                 </div>
               </>
@@ -1344,6 +1360,10 @@ export function CVBuilder() {
           </section>
         )}
 
+        {/* ATS and Ask AI take the whole dock. Both are long, both scroll,
+            and neither has anything to say about the selected section, so
+            squeezing Properties under them costs height for nothing. */}
+        {!FULL_HEIGHT_TOOLS.has(tool) && (
         <section className="cv-dock-panel">
           <div className="cv-dock-hd">Properties</div>
           <div className="cv-dock-body">
@@ -1358,6 +1378,7 @@ export function CVBuilder() {
             />
           </div>
         </section>
+        )}
       </aside>
 
       {/* ── Status bar ── */}

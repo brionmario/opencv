@@ -1,27 +1,22 @@
 "use client";
 
 import { useState } from "react";
-import {
-  AlertTriangle,
-  Check,
-  ChevronDown,
-  ChevronRight,
-  Clipboard,
-  Eye,
-  EyeOff,
-  XCircle,
-} from "lucide-react";
+import { AlertTriangle, Check, ChevronDown, ChevronRight, XCircle } from "lucide-react";
 import type { AtsCheck, AtsGroup, AtsReport, AtsSeverity } from "@/lib/cv-ats";
 import { ATS_GROUP_LABELS, atsVerdict, bySeverity } from "@/lib/cv-ats";
 
+/**
+ * The ATS panel: findings, and nothing else.
+ *
+ * Deliberately free of any model, prompt or service. What the static check
+ * knows it states plainly, and the judgement it cannot make belongs to the
+ * Ask AI panel. Mixing the two would blur the line between a rule that ran
+ * here and an opinion formed somewhere else.
+ */
 export interface AtsPanelProps {
   report: AtsReport;
   /** Selects the section a finding is about, so the page scrolls to it. */
   onSelectSection: (id: string) => void;
-  /** Mints the prompt, which needs a share link and so has to be async. */
-  buildPrompt: (targetRole: string, jobDescription: string) => Promise<string>;
-  /** Reported through the app's toasts rather than inside the panel. */
-  onNotify: (message: string) => void;
 }
 
 const VERDICT_LABEL = {
@@ -95,52 +90,12 @@ function Finding({
   );
 }
 
-export function AtsPanel({ report, onSelectSection, buildPrompt, onNotify }: AtsPanelProps) {
+export function AtsPanel({ report, onSelectSection }: AtsPanelProps) {
   const [showPassing, setShowPassing] = useState(false);
-  const [targetRole, setTargetRole] = useState("");
-  const [jobDescription, setJobDescription] = useState("");
-  // A built prompt is a snapshot: it embeds the document itself. Rather than
-  // let one sit on screen after the résumé moves under it, the snapshot
-  // remembers which buildPrompt it came from and stops being shown once that
-  // is no longer the current one.
-  const [preview, setPreview] = useState<{ from: AtsPanelProps["buildPrompt"]; text: string } | null>(
-    null
-  );
-  const [busy, setBusy] = useState(false);
-
-  const shownPrompt = preview && preview.from === buildPrompt ? preview.text : null;
 
   const flagged = bySeverity(report.checks).filter((c) => c.severity !== "pass");
   const passing = report.checks.filter((c) => c.severity === "pass");
   const verdict = atsVerdict(report.score);
-
-  const copyPrompt = async () => {
-    setBusy(true);
-    try {
-      const prompt = await buildPrompt(targetRole.trim(), jobDescription.trim());
-      await navigator.clipboard.writeText(prompt);
-      onNotify("Review prompt copied, résumé link included");
-    } catch {
-      onNotify("Could not copy the prompt: clipboard access was refused");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const togglePreview = async () => {
-    if (shownPrompt) {
-      setPreview(null);
-      return;
-    }
-    setBusy(true);
-    try {
-      setPreview({ from: buildPrompt, text: await buildPrompt(targetRole.trim(), jobDescription.trim()) });
-    } catch {
-      onNotify("Could not build the prompt");
-    } finally {
-      setBusy(false);
-    }
-  };
 
   return (
     <div className="cv-ats">
@@ -163,7 +118,7 @@ export function AtsPanel({ report, onSelectSection, buildPrompt, onNotify }: Ats
       {flagged.length === 0 ? (
         <div className="cv-ats-clear">
           <Check size={16} />
-          <p>Every mechanical check passes. What is left is substance, and that is what the prompt below is for.</p>
+          <p>Every mechanical check passes. What is left is substance, which is what Ask AI is for.</p>
         </div>
       ) : (
         GROUPS.map((group) => {
@@ -202,54 +157,6 @@ export function AtsPanel({ report, onSelectSection, buildPrompt, onNotify }: Ats
           )}
         </section>
       )}
-
-      {/* ── Handoff ───────────────────────────────────────────────────────── */}
-      <section className="cv-ats-handoff">
-        <h4>Have an agent check the rest</h4>
-        <p>
-          The prompt below carries a read-only link to this résumé. The link <i>is</i> the
-          document, so an agent with the opencv MCP server reads it with one call, and an
-          agent with a browser just opens it. Nothing to upload.
-        </p>
-
-        <label className="cv-ats-field">
-          <span>Target role</span>
-          <input
-            type="text"
-            value={targetRole}
-            placeholder="Senior Backend Engineer"
-            onChange={(e) => setTargetRole(e.target.value)}
-          />
-        </label>
-
-        <label className="cv-ats-field">
-          <span>Job description (optional)</span>
-          <textarea
-            rows={4}
-            value={jobDescription}
-            placeholder="Paste the posting. This is the part a static check cannot stand in for."
-            onChange={(e) => setJobDescription(e.target.value)}
-          />
-        </label>
-
-        <div className="cv-ats-actions">
-          <button
-            type="button"
-            className="cv-btn cv-btn-primary"
-            onClick={copyPrompt}
-            disabled={busy}
-          >
-            <Clipboard size={14} />
-            Copy prompt
-          </button>
-          <button type="button" className="cv-btn" onClick={togglePreview} disabled={busy}>
-            {shownPrompt ? <EyeOff size={14} /> : <Eye size={14} />}
-            {shownPrompt ? "Hide" : "Preview"}
-          </button>
-        </div>
-
-        {shownPrompt && <pre className="cv-ats-preview">{shownPrompt}</pre>}
-      </section>
     </div>
   );
 }
