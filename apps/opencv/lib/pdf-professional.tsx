@@ -111,7 +111,7 @@ const P1_BUDGET = 690;
 function stripHtml(html: string): string {
   if (!html) return "";
   return html
-    .replace(/<br\s*\/?>/gi, "\n").replace(/<\/p>/gi, "\n")
+    .replace(/<br\s*\/?>/gi, "\n").replace(/<\/(p|li)>/gi, "\n")
     .replace(/<[^>]+>/g, "")
     .replace(/&amp;/g, "&").replace(/&lt;/g, "<").replace(/&gt;/g, ">")
     .replace(/&nbsp;/g, " ").replace(/&quot;/g, '"').replace(/&#39;/g, "'")
@@ -167,8 +167,95 @@ function fontFor(bold: boolean, italic: boolean) {
   };
 }
 
+// ── Block structure ───────────────────────────────────────────────────────────
+// Fields may carry paragraphs, bullet and numbered lists, and an alignment on
+// each, the same vocabulary the canvas allows (lib/rich-text.ts). The PDF has
+// to lay these out itself: react-pdf has no <ul>, so a list is drawn as a row
+// per item with its own marker.
+
+type BlockAlign = "left" | "center" | "right" | "justify";
+
+interface Block {
+  kind: "p" | "li";
+  align?: BlockAlign;
+  /** The bullet or number drawn in the gutter, for a list item. */
+  marker?: string;
+  /** How deeply nested the item is, for its indent. */
+  depth: number;
+  html: string;
+}
+
+function readAlign(attrs: string): BlockAlign | undefined {
+  const m = attrs.match(/text-align\s*:\s*(left|center|right|justify)/i);
+  return m ? (m[1].toLowerCase() as BlockAlign) : undefined;
+}
+
+function parseBlocks(html: string): Block[] {
+  const blocks: Block[] = [];
+  const tagRe = /<\/?(p|ul|ol|li)\b([^>]*)>/gi;
+  const lists: { ordered: boolean; n: number }[] = [];
+
+  let current: Omit<Block, "html"> | null = null;
+  let buf = "";
+  let last = 0;
+  let match: RegExpExecArray | null;
+
+  const flush = () => {
+    if (current && buf.trim()) blocks.push({ ...current, html: buf });
+    buf = "";
+    current = null;
+  };
+
+  while ((match = tagRe.exec(html))) {
+    if (current) buf += html.slice(last, match.index);
+    last = tagRe.lastIndex;
+
+    const tag = match[1].toLowerCase();
+    const attrs = match[2] ?? "";
+    const closing = match[0].startsWith("</");
+
+    if (tag === "p") {
+      flush();
+      if (!closing) current = { kind: "p", align: readAlign(attrs), depth: 0 };
+    } else if (tag === "ul" || tag === "ol") {
+      // A list opening inside an item ends that item's own text, so the
+      // nested items come out as their own rows under it.
+      flush();
+      if (closing) lists.pop();
+      else lists.push({ ordered: tag === "ol", n: 0 });
+    } else if (tag === "li") {
+      flush();
+      if (!closing) {
+        const level = lists[lists.length - 1];
+        if (level) level.n += 1;
+        current = {
+          kind: "li",
+          align: readAlign(attrs),
+          marker: level ? (level.ordered ? `${level.n}.` : "\u2022") : "\u2022",
+          depth: Math.max(0, lists.length - 1),
+        };
+      }
+    }
+  }
+
+  if (current) {
+    buf += html.slice(last);
+    flush();
+  } else if (blocks.length === 0 && html.slice(last).trim()) {
+    // No block tags at all: the whole value is one implicit paragraph.
+    blocks.push({ kind: "p", depth: 0, html: html.slice(last) });
+  }
+
+  return blocks;
+}
+
+/** Indent per nesting level, in points. */
+const LIST_INDENT = 10;
+/** Gutter the bullet or number sits in. */
+const MARKER_W = 10;
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-function RichText({ html, style }: { html: string; style: any }) {
+function InlineRun({ html, style }: { html: string; style: any }) {
   const segs = parseInline(html);
   if (!segs.length) return null;
   if (segs.every(s => !s.bold && !s.italic && !s.href)) {
@@ -191,6 +278,46 @@ function RichText({ html, style }: { html: string; style: any }) {
         )
       )}
     </Text>
+  );
+}
+
+/**
+ * Renders a rich-text field, block structure and all.
+ *
+ * The overwhelmingly common case is a field holding one bare line, and that
+ * still renders as a single <Text> exactly as before, so nothing about the
+ * existing page geometry moves. Only a value that carries real blocks takes
+ * the longer path below.
+ */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function RichText({ html, style }: { html: string; style: any }) {
+  if (!/<(p|ul|ol|li)\b/i.test(html)) return <InlineRun html={html} style={style} />;
+
+  const blocks = parseBlocks(html);
+  if (blocks.length === 0) return null;
+
+  return (
+    <View>
+      {blocks.map((block, i) => {
+        const align = block.align ? { textAlign: block.align } : null;
+
+        if (block.kind === "li") {
+          return (
+            <View
+              key={i}
+              style={{ flexDirection: "row", marginLeft: block.depth * LIST_INDENT }}
+            >
+              <Text style={[style, { width: MARKER_W }]}>{block.marker}</Text>
+              <View style={{ flex: 1 }}>
+                <InlineRun html={block.html} style={[style, align].filter(Boolean)} />
+              </View>
+            </View>
+          );
+        }
+
+        return <InlineRun key={i} html={block.html} style={[style, align].filter(Boolean)} />;
+      })}
+    </View>
   );
 }
 

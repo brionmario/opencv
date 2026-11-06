@@ -6,6 +6,7 @@ import { getEffectiveSectionOrder } from "@/lib/cv-sections";
 import { saveVersion, loadVersionHistory, restoreVersion, deleteVersion, renameVersion, type CVVersion } from "@/lib/cv-versioning";
 import { starterTemplates } from "@/lib/starter-templates";
 import { decodeLegacyQuery, LEGACY_QUERY_KEY } from "@/lib/cv-share";
+import { useHistoryState } from "@/hooks/use-history-state";
 
 /**
  * Fills in customSections/sectionOrder for data that predates the section
@@ -33,7 +34,21 @@ function removeUrlParam(key: string): void {
 const DEFAULT_CV_DATA: CVData = starterTemplates.find((t) => t.id === "professional")!.data;
 
 export function useCVData() {
-  const [data, setData] = useState<CVData>(DEFAULT_CV_DATA);
+  // Undo/redo lives here rather than around each mutator: everything below
+  // changes the document through `setData`, so routing that one setter
+  // through a history stack covers every edit, including the deletes this
+  // was asked for. `loadData` is the same setter for the cases that are not
+  // edits (opening a document), which must not be undoable back to the
+  // starter template the editor happened to boot with.
+  const {
+    value: data,
+    set: setData,
+    replace: loadData,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+  } = useHistoryState<CVData>(DEFAULT_CV_DATA);
   const [versions, setVersions] = useState<CVVersion[]>([]);
   const autoSaveTimerRef = useRef<NodeJS.Timeout | undefined>(undefined);
   const isFirstSaveRef = useRef(true);
@@ -48,7 +63,7 @@ export function useCVData() {
     if (urlParam) {
       const decoded = decodeLegacyQuery(urlParam);
       if (decoded) {
-        setData(normalizeCVData(decoded));
+        loadData(normalizeCVData(decoded));
         const history = loadVersionHistory();
         setVersions(history.versions);
         return;
@@ -58,7 +73,7 @@ export function useCVData() {
     const saved = localStorage.getItem("cvBuilderData");
     if (saved) {
       try {
-        setData(normalizeCVData(JSON.parse(saved)));
+        loadData(normalizeCVData(JSON.parse(saved)));
       } catch (err) {
         console.error("Failed to load CV data:", err);
       }
@@ -67,7 +82,7 @@ export function useCVData() {
     // Load version history
     const history = loadVersionHistory();
     setVersions(history.versions);
-  }, []);
+  }, [loadData]);
 
   // Save to localStorage and URL whenever data changes
   useEffect(() => {
@@ -109,143 +124,143 @@ export function useCVData() {
       ...prev,
       personalInfo: { ...prev.personalInfo, ...info },
     }));
-  }, []);
+  }, [setData]);
 
   const addExperience = useCallback((entry: Omit<ExperienceEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       experience: [...prev.experience, { ...entry, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateExperience = useCallback((id: string, updates: Partial<ExperienceEntry>) => {
     setData((prev) => ({
       ...prev,
       experience: prev.experience.map((exp) => (exp.id === id ? { ...exp, ...updates } : exp)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteExperience = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       experience: prev.experience.filter((exp) => exp.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addEducation = useCallback((entry: Omit<EducationEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       education: [...prev.education, { ...entry, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateEducation = useCallback((id: string, updates: Partial<EducationEntry>) => {
     setData((prev) => ({
       ...prev,
       education: prev.education.map((edu) => (edu.id === id ? { ...edu, ...updates } : edu)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteEducation = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       education: prev.education.filter((edu) => edu.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addSkill = useCallback((skill: Omit<SkillEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       skills: [...prev.skills, { ...skill, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateSkill = useCallback((id: string, updates: Partial<SkillEntry>) => {
     setData((prev) => ({
       ...prev,
       skills: prev.skills.map((skill) => (skill.id === id ? { ...skill, ...updates } : skill)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteSkill = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       skills: prev.skills.filter((skill) => skill.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addProject = useCallback((project: Omit<ProjectEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       projects: [...prev.projects, { ...project, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateProject = useCallback((id: string, updates: Partial<ProjectEntry>) => {
     setData((prev) => ({
       ...prev,
       projects: prev.projects.map((proj) => (proj.id === id ? { ...proj, ...updates } : proj)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteProject = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       projects: prev.projects.filter((proj) => proj.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addCertification = useCallback((cert: Omit<CertificationEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       certifications: [...prev.certifications, { ...cert, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateCertification = useCallback((id: string, updates: Partial<CertificationEntry>) => {
     setData((prev) => ({
       ...prev,
       certifications: prev.certifications.map((cert) => (cert.id === id ? { ...cert, ...updates } : cert)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteCertification = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       certifications: prev.certifications.filter((cert) => cert.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addLanguage = useCallback((lang: { name: string; proficiency: 1 | 2 | 3 | 4 | 5 }) => {
     setData((prev) => ({
       ...prev,
       languages: [...prev.languages, { id: `lng-${Date.now().toString(36)}-${prev.languages.length}`, ...lang }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateLanguage = useCallback((id: string, proficiency: 1 | 2 | 3 | 4 | 5) => {
     setData((prev) => ({
       ...prev,
       languages: prev.languages.map((lang) => (lang.id === id ? { ...lang, proficiency } : lang)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteLanguage = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       languages: prev.languages.filter((lang) => lang.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const resetData = useCallback(() => {
     setData(DEFAULT_CV_DATA);
     localStorage.removeItem("cvBuilderData");
     removeUrlParam(LEGACY_QUERY_KEY);
-  }, []);
+  }, [setData]);
 
   const importData = useCallback((importedData: CVData) => {
     setData(importedData);
-  }, []);
+  }, [setData]);
 
   const createSavepoint = useCallback((label?: string) => {
     const version = saveVersion(data, label);
@@ -260,7 +275,7 @@ export function useCVData() {
       setData(restoredData);
       localStorage.setItem("cvBuilderData", JSON.stringify(restoredData));
     }
-  }, []);
+  }, [setData]);
 
   const removeSavepoint = useCallback((versionId: string) => {
     deleteVersion(versionId);
@@ -277,147 +292,147 @@ export function useCVData() {
       ...prev,
       awards: [...prev.awards, { ...award, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateAward = useCallback((id: string, updates: Partial<AwardEntry>) => {
     setData((prev) => ({
       ...prev,
       awards: prev.awards.map((award) => (award.id === id ? { ...award, ...updates } : award)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteAward = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       awards: prev.awards.filter((award) => award.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addReference = useCallback((ref: Omit<ReferenceEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       references: [...prev.references, { ...ref, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateReference = useCallback((id: string, updates: Partial<ReferenceEntry>) => {
     setData((prev) => ({
       ...prev,
       references: prev.references.map((ref) => (ref.id === id ? { ...ref, ...updates } : ref)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteReference = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       references: prev.references.filter((ref) => ref.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addVolunteering = useCallback((vol: Omit<VolunteeringEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       volunteering: [...prev.volunteering, { ...vol, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateVolunteering = useCallback((id: string, updates: Partial<VolunteeringEntry>) => {
     setData((prev) => ({
       ...prev,
       volunteering: prev.volunteering.map((vol) => (vol.id === id ? { ...vol, ...updates } : vol)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteVolunteering = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       volunteering: prev.volunteering.filter((vol) => vol.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addStrength = useCallback((strength: Omit<StrengthEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       strengths: [...prev.strengths, { ...strength, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateStrength = useCallback((id: string, updates: Partial<StrengthEntry>) => {
     setData((prev) => ({
       ...prev,
       strengths: prev.strengths.map((strength) => (strength.id === id ? { ...strength, ...updates } : strength)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteStrength = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       strengths: prev.strengths.filter((strength) => strength.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addInterest = useCallback((interest: Omit<InterestEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       interests: [...prev.interests, { ...interest, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateInterest = useCallback((id: string, updates: Partial<InterestEntry>) => {
     setData((prev) => ({
       ...prev,
       interests: prev.interests.map((interest) => (interest.id === id ? { ...interest, ...updates } : interest)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteInterest = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       interests: prev.interests.filter((interest) => interest.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addPublication = useCallback((pub: Omit<PublicationEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       publications: [...prev.publications, { ...pub, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updatePublication = useCallback((id: string, updates: Partial<PublicationEntry>) => {
     setData((prev) => ({
       ...prev,
       publications: prev.publications.map((pub) => (pub.id === id ? { ...pub, ...updates } : pub)),
     }));
-  }, []);
+  }, [setData]);
 
   const deletePublication = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       publications: prev.publications.filter((pub) => pub.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const addSocialLink = useCallback((link: Omit<SocialLinkEntry, "id">) => {
     setData((prev) => ({
       ...prev,
       socialLinks: [...(prev.socialLinks || []), { ...link, id: Date.now().toString() }],
     }));
-  }, []);
+  }, [setData]);
 
   const updateSocialLink = useCallback((id: string, updates: Partial<SocialLinkEntry>) => {
     setData((prev) => ({
       ...prev,
       socialLinks: (prev.socialLinks || []).map((link) => (link.id === id ? { ...link, ...updates } : link)),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteSocialLink = useCallback((id: string) => {
     setData((prev) => ({
       ...prev,
       socialLinks: (prev.socialLinks || []).filter((link) => link.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   // ── Custom sections ──
   const addCustomSection = useCallback((title: string) => {
@@ -430,7 +445,7 @@ export function useCVData() {
         sectionOrder: [...getEffectiveSectionOrder(prev), { id, column: "left" }],
       };
     });
-  }, []);
+  }, [setData]);
 
   /**
    * Removes a section from the résumé, whatever kind it is.
@@ -477,7 +492,7 @@ export function useCVData() {
         ),
       };
     });
-  }, []);
+  }, [setData]);
 
   const deleteCustomSection = useCallback((id: string) => {
     setData((prev) => ({
@@ -485,14 +500,14 @@ export function useCVData() {
       customSections: prev.customSections.filter((s) => s.id !== id),
       sectionOrder: getEffectiveSectionOrder(prev).filter((s) => s.id !== id),
     }));
-  }, []);
+  }, [setData]);
 
   const updateCustomSectionTitle = useCallback((id: string, title: string) => {
     setData((prev) => ({
       ...prev,
       customSections: prev.customSections.map((s) => (s.id === id ? { ...s, title } : s)),
     }));
-  }, []);
+  }, [setData]);
 
   const addCustomSectionItem = useCallback((sectionId: string) => {
     setData((prev) => ({
@@ -503,7 +518,7 @@ export function useCVData() {
           : s
       ),
     }));
-  }, []);
+  }, [setData]);
 
   const updateCustomSectionItem = useCallback((sectionId: string, itemId: string, field: keyof Omit<CustomSectionItem, "id">, value: string) => {
     setData((prev) => ({
@@ -514,7 +529,7 @@ export function useCVData() {
           : s
       ),
     }));
-  }, []);
+  }, [setData]);
 
   const deleteCustomSectionItem = useCallback((sectionId: string, itemId: string) => {
     setData((prev) => ({
@@ -523,7 +538,7 @@ export function useCVData() {
         s.id === sectionId ? { ...s, items: s.items.filter((it) => it.id !== itemId) } : s
       ),
     }));
-  }, []);
+  }, [setData]);
 
   // ── Section visibility / order ──
   const toggleSectionHidden = useCallback((id: string) => {
@@ -531,14 +546,14 @@ export function useCVData() {
       const order = getEffectiveSectionOrder(prev);
       return { ...prev, sectionOrder: order.map((s) => (s.id === id ? { ...s, hidden: !s.hidden } : s)) };
     });
-  }, []);
+  }, [setData]);
 
   const setSectionColumn = useCallback((id: string, column: "left" | "right") => {
     setData((prev) => {
       const order = getEffectiveSectionOrder(prev);
       return { ...prev, sectionOrder: order.map((s) => (s.id === id ? { ...s, column } : s)) };
     });
-  }, []);
+  }, [setData]);
 
   /**
    * Moves a section one slot earlier/later. "column" mode swaps with the
@@ -582,7 +597,7 @@ export function useCVData() {
         return { ...prev, sectionOrder: next };
       });
     },
-    []
+    [setData]
   );
 
   const moveSection = useCallback((id: string, direction: -1 | 1, mode: "flat" | "column") => {
@@ -609,7 +624,7 @@ export function useCVData() {
       [next[idx], next[swapIdx]] = [next[swapIdx], next[idx]];
       return { ...prev, sectionOrder: next };
     });
-  }, []);
+  }, [setData]);
 
   // Generic path-based update for WYSIWYG inline editing
   const updateField = useCallback((path: string, value: FieldValue) => {
@@ -646,10 +661,14 @@ export function useCVData() {
 
       return newData;
     });
-  }, []);
+  }, [setData]);
 
   return {
     data,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     updatePersonalInfo,
     addExperience,
     updateExperience,

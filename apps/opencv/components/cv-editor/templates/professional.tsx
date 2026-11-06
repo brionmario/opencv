@@ -11,6 +11,7 @@ import { MetaRow, useSeparator } from "../meta-row";
 import { Icon, resolveSocialLinkIcon, ICON_PICKER_OPTIONS } from "@/lib/icons";
 import { sectionsForColumn } from "@/lib/cv-sections";
 import { assetPath } from "@/lib/asset-path";
+import { validateEmail, validatePhone } from "@/lib/contact-validation";
 import { SectionFrame } from "@/lib/cv-selection";
 
 interface ProfessionalTemplateProps {
@@ -684,6 +685,7 @@ export function ProfessionalTemplate({
                 <InlineEditor
                   value={data.personalInfo.phone}
                   onChange={(v) => onUpdate("personalInfo.phone", v)}
+                  validate={validatePhone}
                   placeholder="+1 555-123-4567"
                   className="text-sm text-gray-600"
                 />
@@ -693,6 +695,7 @@ export function ProfessionalTemplate({
                 <InlineEditor
                   value={data.personalInfo.email}
                   onChange={(v) => onUpdate("personalInfo.email", v)}
+                  validate={validateEmail}
                   placeholder="email@example.com"
                   className="text-sm text-gray-600"
                 />

@@ -2,6 +2,7 @@ import type { DocumentProps } from "@react-pdf/renderer";
 import type { CVData, CVTheme, CustomSection } from "@/lib/cv-builder-types";
 import { toJsonResume } from "@brionmario/opencv-core";
 import { absoluteAssetUrl } from "@/lib/asset-path";
+import { escapeHtml, sanitizeRichText } from "@/lib/rich-text";
 import { getIconSvg, getSocialIconSvg, resolveSocialLinkIcon } from "@/lib/icons";
 import { sectionsFlat } from "@/lib/cv-sections";
 
@@ -447,8 +448,13 @@ function generateCleanHTML(data: CVData): string {
     }
     .meta-item svg { flex-shrink: 0; }
     .description { font-size: 10.5px; color: #374151; margin-top: 4px; line-height: 1.5; }
-    ul { margin-left: 14px; margin-top: 5px; }
+    ul, ol { margin-left: 14px; margin-top: 5px; }
+    ul { list-style: disc; }
+    ol { list-style: decimal; }
     li { font-size: 10.5px; color: #374151; margin-bottom: 2px; line-height: 1.45; }
+    /* A rich-text field holding more than one line writes real paragraphs. */
+    .description p, .summary p { margin: 0 0 4px; }
+    .description p:last-child, .summary p:last-child { margin-bottom: 0; }
     strong { font-weight: 700; color: #111827; }
     em { font-style: italic; color: inherit; }
     a { color: #db2777; text-decoration: underline; }
@@ -557,109 +563,15 @@ function generateCleanHTML(data: CVData): string {
 </html>`;
 }
 
-function escapeHtml(str: string): string {
-  if (!str) return "";
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 /**
- * Sanitizes and renders HTML content for display in CV templates.
- * 
- * This function is designed to work with WYSIWYG editors like Lexical.
- * It allows safe HTML formatting tags while preventing XSS attacks.
- * Also supports markdown syntax as a fallback for backward compatibility.
- * 
- * Allowed tags: <strong>, <em>, <b>, <i>, <u>, <br>, <sup>, <sub>, <a>
- * Anchor tags: Only http://, https://, and mailto: protocols are allowed
- * 
- * Security:
- * - Strips dangerous tags (script, iframe, style)
- * - Removes event handlers (onclick, onload, etc.)
- * - Removes attributes from allowed tags (except href/target for <a>)
- * - Plain text content is automatically escaped
- * 
- * @param str - The HTML or markdown string to sanitize
- * @returns Sanitized HTML safe for rendering
+ * Sanitizes rich-text field content for an exported file.
+ *
+ * Shares its rules with the canvas (lib/rich-text.ts), so what the editor
+ * shows and what the export writes cannot drift apart. Exported files carry
+ * no stylesheet of ours for links, so no class is added here.
  */
 function sanitizeAndRenderHtml(str: string): string {
-  if (!str) return "";
-  
-  // Check if content has markdown syntax (**, *, __, _)
-  const hasMarkdown = /(\*\*|__|\*|_)/.test(str);
-  const hasHtmlTags = /<[^>]+>/.test(str);
-  
-  // If it has markdown but no HTML, convert markdown to HTML first
-  if (hasMarkdown && !hasHtmlTags) {
-    // Convert markdown to HTML
-    // Bold: **text** or __text__ (process first to avoid conflicts)
-    str = str.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
-    str = str.replace(/__(.+?)__/g, '<strong>$1</strong>');
-    
-    // Italic: *text* or _text_ (process after bold to avoid conflicts)
-    // Match single * or _ not preceded/followed by another
-    str = str.replace(/([^*]|^)\*([^*]+?)\*([^*]|$)/g, '$1<em>$2</em>$3');
-    str = str.replace(/([^_]|^)_([^_]+?)_([^_]|$)/g, '$1<em>$2</em>$3');
-  }
-  
-  // Now process HTML
-  const stillHasHtmlTags = /<[^>]+>/.test(str);
-  
-  if (!stillHasHtmlTags) {
-    // Plain text - escape it
-    return escapeHtml(str);
-  }
-  
-  // Basic HTML sanitization - allow only specific formatting tags
-  // Remove any potentially dangerous tags/attributes
-  let sanitized = str
-    .replace(/<script[^>]*>.*?<\/script>/gi, '')
-    .replace(/<iframe[^>]*>.*?<\/iframe>/gi, '')
-    .replace(/on\w+="[^"]*"/gi, '')
-    .replace(/on\w+='[^']*'/gi, '')
-    .replace(/<\s*style[^>]*>.*?<\/style>/gi, '');
-  
-  // Allow only safe formatting tags: strong, b, em, i, u, br, a
-  // Remove all other tags by escaping them
-  const allowedTags = ['strong', 'em', 'b', 'i', 'u', 'br', 'sup', 'sub', 'a'];
-  const tagPattern = /<\/?([a-z][a-z0-9]*)\b[^>]*>/gi;
-  
-  sanitized = sanitized.replace(tagPattern, (match, tagName) => {
-    if (allowedTags.includes(tagName.toLowerCase())) {
-      // Closing tags - keep as is
-      if (match.startsWith('</')) {
-        return `</${tagName}>`;
-      }
-      
-      // Special handling for anchor tags - preserve href and target attributes
-      if (tagName.toLowerCase() === 'a') {
-        const hrefMatch = match.match(/href=(["'])([^"']*)\1/i);
-        const targetMatch = match.match(/target=(["'])([^"']*)\1/i);
-        
-        if (hrefMatch) {
-          const href = hrefMatch[2];
-          // Sanitize href - only allow http, https, and mailto protocols
-          if (/^(https?:\/\/|mailto:)/i.test(href)) {
-            const targetAttr = targetMatch ? ` target="${escapeHtml(targetMatch[2])}"` : '';
-            return `<a href="${escapeHtml(href)}"${targetAttr}>`;
-          }
-        }
-        // If no valid href, strip the tag
-        return '';
-      }
-      
-      // Other tags - remove attributes
-      return `<${tagName}>`;
-    }
-    // Escape disallowed tags
-    return escapeHtml(match);
-  });
-  
-  return sanitized;
+  return sanitizeRichText(str);
 }
 
 export function exportToHTML(htmlContent: string, data: CVData, filename: string) {
@@ -719,6 +631,10 @@ function wrapForExport(innerHTML: string, name: string): string {
   <script src="https://cdn.tailwindcss.com"><\/script>
   <style>
     body { margin: 0; padding: 20px 0; background: #f5f5f5; }
+    /* Tailwind's preflight strips list markers, and the canvas gets them
+       back from utility classes that a bare exported <ul> does not carry. */
+    .cv-rich ul, [data-cv-section] ul { list-style: disc; margin-left: 1.1em; }
+    .cv-rich ol, [data-cv-section] ol { list-style: decimal; margin-left: 1.1em; }
     /* Hide editor-only controls in export */
     .print\\:hidden,
     [contenteditable="true"] ~ button,

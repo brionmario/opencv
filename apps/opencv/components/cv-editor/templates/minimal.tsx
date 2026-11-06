@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X as XIcon } from "lucide-react";
 import type { CVData, CVTheme, FieldValue } from "@/lib/cv-builder-types";
+import { validateEmail, validatePhone } from "@/lib/contact-validation";
 import { DEFAULT_THEME } from "@/lib/cv-builder-types";
 import { InlineEditor } from "../inline-editor";
 import { EditableCard, AddItemButton } from "../editable-card";
@@ -566,12 +567,14 @@ export function MinimalWysiwygTemplate({
             <InlineEditor
               value={data.personalInfo.email}
               onChange={(v) => onUpdate("personalInfo.email", v)}
+              validate={validateEmail}
               placeholder="Email"
               className="text-xs text-gray-500"
             />
             <InlineEditor
               value={data.personalInfo.phone}
               onChange={(v) => onUpdate("personalInfo.phone", v)}
+              validate={validatePhone}
               placeholder="Phone"
               className="text-xs text-gray-500"
             />

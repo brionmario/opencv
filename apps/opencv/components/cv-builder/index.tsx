@@ -16,6 +16,7 @@ import {
   Download, FileJson, FileText, FileCode, History,
   Palette, Plus, Sun, Moon, Check, RotateCcw, Eye, ChevronDown,
   Sparkles, X, ListOrdered, LayoutTemplate, SlidersHorizontal, Link2,
+  Undo2, Redo2,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -232,12 +233,13 @@ function Brand() {
 
 /* ── Icon button ──────────────────────────────────────────────────────────── */
 function IconBtn({
-  children, tip, onClick, active,
+  children, tip, onClick, active, disabled,
 }: {
   children: React.ReactNode;
   tip: string;
   onClick?: () => void;
   active?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <button
@@ -246,6 +248,7 @@ function IconBtn({
       data-active={active ? "true" : undefined}
       aria-label={tip}
       onClick={onClick}
+      disabled={disabled}
     >
       {children}
     </button>
@@ -423,6 +426,57 @@ function renderScale(el: HTMLElement): number {
   const w = el.offsetWidth;
   if (!w) return 1;
   return el.getBoundingClientRect().width / w || 1;
+}
+
+/**
+ * The height this document will actually occupy once printed.
+ *
+ * A section with nothing in it still draws its heading on the canvas, so you
+ * have somewhere to add content, but the exporters drop it (see
+ * `.cv-section-frame[data-empty="true"]` in globals.css, hidden under
+ * `@media print`). Counting that dimmed furniture towards the page height
+ * opened a second page on résumés whose real content stops well inside the
+ * first, which is both wrong and the one thing this editor promises not to
+ * get wrong.
+ *
+ * Measured from the printable leaves rather than from any container, because
+ * every ancestor of an empty section is stretched by it and would hand back
+ * the inflated height we are trying to avoid. Leaves also mean a column
+ * layout needs no special case: whichever column reaches lowest wins.
+ */
+function printableHeight(root: HTMLElement): number {
+  // Everything the canvas draws for the editor's benefit and the export
+  // leaves out: empty section headings, and warnings hung under a field.
+  const editorOnly = root.querySelectorAll<HTMLElement>(
+    '.cv-section-frame[data-empty="true"], .cv-field-warning',
+  );
+  // Nothing is being hidden from the export, so the plain height is right
+  // and costs one read instead of a walk.
+  if (editorOnly.length === 0) return root.offsetHeight;
+
+  const skip = new Set<Element>(editorOnly);
+  const rootTop = root.getBoundingClientRect().top;
+  const scale = renderScale(root);
+
+  let lowest = 0;
+  const stack: Element[] = [root];
+  while (stack.length > 0) {
+    const el = stack.pop()!;
+    if (el !== root && skip.has(el)) continue;
+    if (el.childElementCount > 0) {
+      for (const child of el.children) stack.push(child);
+      continue;
+    }
+    const rect = el.getBoundingClientRect();
+    if (rect.height > 0) lowest = Math.max(lowest, rect.bottom);
+  }
+  if (lowest === 0) return 0;
+
+  // The leaves sit inside the template's page padding, which prints too.
+  const page = root.firstElementChild;
+  const padBottom = page ? parseFloat(getComputedStyle(page).paddingBottom) || 0 : 0;
+
+  return (lowest - rootTop) / scale + padBottom;
 }
 // Divider band drawn BELOW each page boundary. It must never cover the space
 // above the boundary, which is printable page-N area, and hiding it makes the
@@ -606,7 +660,13 @@ function PageBreakOverlay({ targetRef }: { targetRef: React.RefObject<HTMLDivEle
     return () => ro.disconnect();
   }, [targetRef]);
 
-  const pageCount = Math.ceil(contentHeight / PAGE_H_PX);
+  // The paper is always sized to a whole number of pages, so this is a
+  // division that should come out exact. It does not: offsetHeight is an
+  // integer and a page is 1122.52px, so a one-page sheet measures 1123 and
+  // `ceil` read that half-pixel as a second page, drawing a page-2 divider
+  // under a document that ends on page 1. Rounding asks the question
+  // actually being asked, which is how many whole pages this sheet is.
+  const pageCount = Math.max(1, Math.round(contentHeight / PAGE_H_PX));
   if (pageCount <= 1) return null;
 
   return (
@@ -692,7 +752,7 @@ export function CVBuilder() {
     const el = previewContentRef.current;
     if (!el) return;
     const update = () => {
-      const pages = Math.max(1, Math.ceil(el.offsetHeight / PAGE_H_PX));
+      const pages = Math.max(1, Math.ceil(printableHeight(el) / PAGE_H_PX));
       setPaperHeight(pages * PAGE_H_PX);
     };
     update();
@@ -755,6 +815,10 @@ export function CVBuilder() {
     moveSection,
     placeSection,
     updateField,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
     versions,
     createSavepoint,
     restoreSavepoint,
@@ -865,7 +929,7 @@ export function CVBuilder() {
     setTimeout(() => {
       dropToast(tidLoading);
       if (id === "html") {
-        const html = document.getElementById("cv-preview")?.innerHTML;
+        const html = capturePrintableHtml();
         if (html) exportToHTML(html, data, `${name}_CV.html`);
       } else if (id === "md") {
         exportToMarkdown(data, `${name}_CV.md`);
@@ -876,6 +940,26 @@ export function CVBuilder() {
       }
       pushToast(`Downloaded <b>${name}${e.ext}</b>`, "download");
     }, 1100);
+  };
+
+  /**
+   * The page's markup with the editor's own furniture taken out.
+   *
+   * The HTML export is a snapshot of the live canvas, which also carries
+   * things drawn only for the person editing: the "empty · won't print"
+   * sections and the warnings under a contact field. The export stylesheet
+   * hides them, but hidden is not gone, and text a reader cannot see is
+   * exactly what résumé screeners treat as keyword stuffing. So they are
+   * removed from a copy rather than hidden in the original.
+   */
+  const capturePrintableHtml = (): string | null => {
+    const source = document.getElementById("cv-preview");
+    if (!source) return null;
+    const copy = source.cloneNode(true) as HTMLElement;
+    copy
+      .querySelectorAll('.cv-field-warning, .cv-section-frame[data-empty="true"]')
+      .forEach((el) => el.remove());
+    return copy.innerHTML;
   };
 
   /**
@@ -973,6 +1057,34 @@ export function CVBuilder() {
     onDeleteCustomSectionItem: deleteCustomSectionItem,
   };
 
+  // Ctrl/Cmd+Z and Ctrl/Cmd+Shift+Z for document-level undo.
+  //
+  // Text fields are left alone. Every editable field on the canvas runs its
+  // own Lexical history, and the browser has one for plain inputs, so
+  // undoing inside a field has to keep meaning "take back what I typed".
+  // Only a press with no field focused reaches the document, where it takes
+  // back the last structural change, a deleted section included.
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (!(e.metaKey || e.ctrlKey) || e.altKey) return;
+      if (e.key.toLowerCase() !== "z" && e.key.toLowerCase() !== "y") return;
+
+      const el = document.activeElement as HTMLElement | null;
+      if (el?.isContentEditable || el instanceof HTMLInputElement || el instanceof HTMLTextAreaElement) {
+        return;
+      }
+
+      // Ctrl+Y is the other redo people reach for on Windows.
+      const isRedo = e.key.toLowerCase() === "y" || e.shiftKey;
+      e.preventDefault();
+      if (isRedo) redo();
+      else undo();
+    };
+
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [undo, redo]);
+
   // professional/modern render two columns; classic/minimal flow as one
   const layoutColumns: 1 | 2 = selectedLayout === "professional" || selectedLayout === "modern" ? 2 : 1;
   const pageCount = Math.max(1, Math.ceil((paperHeight ?? PAGE_H_PX) / PAGE_H_PX));
@@ -1037,6 +1149,12 @@ export function CVBuilder() {
             <Plus size={15} />
             <span className="cv-btn-label">New</span>
           </button>
+          <IconBtn tip="Undo (Ctrl+Z)" onClick={undo} disabled={!canUndo}>
+            <Undo2 size={17} />
+          </IconBtn>
+          <IconBtn tip="Redo (Ctrl+Shift+Z)" onClick={redo} disabled={!canRedo}>
+            <Redo2 size={17} />
+          </IconBtn>
           <IconBtn
             tip={dark ? "Light mode" : "Dark mode"}
             onClick={() => setDark((d) => !d)}

@@ -6,8 +6,11 @@ import {
   $getSelection,
   $isRangeSelection,
   FORMAT_TEXT_COMMAND,
+  FORMAT_ELEMENT_COMMAND,
   SELECTION_CHANGE_COMMAND,
   COMMAND_PRIORITY_LOW,
+  $isElementNode,
+  type ElementFormatType,
 } from "lexical";
 import {
   INSERT_UNORDERED_LIST_COMMAND,
@@ -22,6 +25,10 @@ import {
   List,
   ListOrdered,
   Link as LinkIcon,
+  AlignLeft,
+  AlignCenter,
+  AlignRight,
+  AlignJustify,
 } from "lucide-react";
 
 function getSelectedLinkUrl(): string | null {
@@ -35,6 +42,30 @@ function getSelectedLinkUrl(): string | null {
   return null;
 }
 
+const ALIGNMENTS = [
+  { value: "left" as const, label: "Align Left", Icon: AlignLeft },
+  { value: "center" as const, label: "Align Center", Icon: AlignCenter },
+  { value: "right" as const, label: "Align Right", Icon: AlignRight },
+  { value: "justify" as const, label: "Justify", Icon: AlignJustify },
+];
+
+/**
+ * Lexical reports "" for a block nobody has aligned, which renders as left,
+ * so the left button is the one lit for an untouched block.
+ */
+function isAligned(current: ElementFormatType | null, value: string): boolean {
+  if (value === "left") return current === "left" || current === "" || current === "start";
+  return current === value;
+}
+
+function getSelectedAlignment(): ElementFormatType | null {
+  const selection = $getSelection();
+  if (!$isRangeSelection(selection)) return null;
+  const node = selection.anchor.getNode();
+  const block = $isElementNode(node) && !node.isInline() ? node : node.getParent();
+  return block ? block.getFormatType() : null;
+}
+
 export function FloatingToolbar() {
   const [editor] = useLexicalComposerContext();
   const toolbarRef = useRef<HTMLDivElement>(null);
@@ -45,6 +76,7 @@ export function FloatingToolbar() {
   const [isUnderline, setIsUnderline] = useState(false);
   const [isStrikethrough, setIsStrikethrough] = useState(false);
   const [isLink, setIsLink] = useState(false);
+  const [alignment, setAlignment] = useState<ElementFormatType | null>(null);
 
   const updateToolbar = useCallback(() => {
     const selection = $getSelection();
@@ -54,6 +86,7 @@ export function FloatingToolbar() {
       setIsUnderline(selection.hasFormat("underline"));
       setIsStrikethrough(selection.hasFormat("strikethrough"));
       setIsLink(getSelectedLinkUrl() !== null);
+      setAlignment(getSelectedAlignment());
 
       const isCollapsed = selection.isCollapsed();
       if (!isCollapsed) {
@@ -173,6 +206,19 @@ export function FloatingToolbar() {
       >
         <ListOrdered size={14} />
       </button>
+      <div className="w-px h-4 bg-gray-600 mx-0.5" />
+      {ALIGNMENTS.map(({ value, label, Icon }) => (
+        <button
+          key={value}
+          onClick={() => editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, value)}
+          className={`p-1.5 rounded hover:bg-gray-700 transition-colors ${
+            isAligned(alignment, value) ? "bg-gray-700 text-blue-400" : ""
+          }`}
+          title={label}
+        >
+          <Icon size={14} />
+        </button>
+      ))}
     </div>
   );
 }
