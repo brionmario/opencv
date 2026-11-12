@@ -157,9 +157,20 @@ export function buildAtsPrompt(options: AtsPromptOptions): string {
     "4. **The honest gaps.** Name the requirements I genuinely do not meet, and " +
       "say whether they are worth applying around or worth skipping the role " +
       "over. Do not pad the résumé to cover them, and do not invent experience.",
-    "5. **Rewrites.** For the five weakest lines, give me a replacement. Keep " +
-      "every number and fact as it stands; if a stronger line would need a figure " +
-      "I have not given you, leave a clearly marked blank for me to fill.",
+    "5. **Rewrites.** For the five weakest lines, give me a replacement, as a " +
+      "before and after pair so I can see what changed. Open each one on a verb, " +
+      "and end it on a result rather than on the task. Keep every number and fact " +
+      "as it stands; if a stronger line would need a figure I have not given you, " +
+      "leave a clearly marked blank for me to fill.",
+    "6. **Proofreading.** List every spelling mistake, grammatical error and " +
+      "inconsistency you find: a job title capitalized two ways, a date format " +
+      "that changes between entries, a tense that moves around inside one role, " +
+      "a company name spelled differently in two places. Quote each one and give " +
+      "the correction. This is the failure mode I cannot see in my own writing.",
+    "7. **The six-second read.** Look at the document the way a screener does on " +
+      "the first pass, and tell me what you came away with: who I am, what I do " +
+      "now, what I am good at, and what I have achieved. If any of those four did " +
+      "not survive the first read, say which, and say what is crowding it out.",
     "",
     "Be direct about what is weak. A review that tells me the résumé is fine is " +
       "worth nothing to me."

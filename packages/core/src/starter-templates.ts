@@ -1,4 +1,4 @@
-import type { CVData } from "./types.js";
+import type { CVData, SectionMeta } from "./types.js";
 import { DEFAULT_SECTION_ORDER } from "./types.js";
 
 export interface StarterTemplate {
@@ -37,6 +37,19 @@ const emptyBase: CVData = {
   sectionOrder: DEFAULT_SECTION_ORDER,
 };
 
+/**
+ * The default order with the named sections switched off.
+ *
+ * A starter that leaves a section visible and empty opens the editor on a
+ * heading with nothing under it, which the ATS check flags and the exports
+ * drop anyway. Hiding it is not hiding the feature: the section picker still
+ * offers it, and turning it on is one click.
+ */
+function hiding(...ids: string[]): SectionMeta[] {
+  const off = new Set(ids);
+  return DEFAULT_SECTION_ORDER.map((s) => (off.has(s.id) ? { ...s, hidden: true } : s));
+}
+
 export const starterTemplates: StarterTemplate[] = [
   {
     id: "professional",
@@ -57,7 +70,7 @@ export const starterTemplates: StarterTemplate[] = [
         email: "aydan.silva@example.com",
         phone: "+94 (77) 123 4567",
         location: "Colombo, Sri Lanka",
-        website: "www.aydansilva.dev",
+        website: "https://www.aydansilva.dev",
         summary:
           "<strong>Fullstack Engineer with 7+ years of experience</strong> in building scalable, high-performant and secure software solutions. Proficient in <strong>Frontend</strong> development, <strong>Backend</strong> development and <strong>Experience Design</strong>. Currently contributing to identity and access management products, focusing on building secure and reliable platforms with <strong>Developer & User experience</strong> in mind.",
         // Vendored from https://avatar.vercel.sh/brion?rounded=60, served
@@ -76,8 +89,8 @@ export const starterTemplates: StarterTemplate[] = [
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Handled the open-source release process as part of the platform core team.",
-            "Currently working on the next generation identity platform <a href='https://example.com' target='_blank'>Lighthouse</a>"
+            "Ran the open-source release process for the platform core team, shipping 24 releases across 6 repositories.",
+            "Leading the next generation identity platform <a href='https://example.com' target='_blank'>Lighthouse</a>, now built on by 40 engineers across 4 teams."
           ],
         },
         {
@@ -90,8 +103,8 @@ export const starterTemplates: StarterTemplate[] = [
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Designed & implemented the system architecture of the <strong>company design system</strong>.",
-            "Lead the developer experience team maintaining the public SDKs."
+            "Designed and implemented the system architecture of the <strong>company design system</strong>, adopted by 12 product teams.",
+            "Led the developer experience team maintaining 9 public SDKs."
           ],
         },
         {
@@ -104,8 +117,8 @@ export const starterTemplates: StarterTemplate[] = [
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Implemented the key <strong>Branding feature</strong> of the customer-facing console.",
-            "Among the <strong>top 5%</strong> of high performers for the year 2022.",
+            "Implemented the <strong>Branding feature</strong> of the customer-facing console, cutting first-run setup time by 30%.",
+            "Ranked in the <strong>top 5%</strong> of performers for 2022.",
           ],
         },
         {
@@ -118,8 +131,8 @@ export const starterTemplates: StarterTemplate[] = [
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Implemented application management, consent management and many more features in the admin portals.",
-            "Involved in flagship analyst demos, by developing frontend apps.",
+            "Implemented application and consent management across 3 admin portals.",
+            "Built the frontend apps behind 5 flagship analyst demos.",
           ],
         },
         {
@@ -132,8 +145,8 @@ export const starterTemplates: StarterTemplate[] = [
           location: "Colombo, Sri Lanka",
           description: "",
           highlights: [
-            "Built a compile-time plugin system for the Angular portals using Angular DevKit.",
-            "Worked on Java & .NET services of the field-agent platform.",
+            "Built a compile-time plugin system for the Angular portals using Angular DevKit, cutting build configuration from 2 days to 2 hours.",
+            "Maintained the Java and .NET services behind the field-agent platform.",
           ],
         },
       ],
@@ -153,8 +166,8 @@ export const starterTemplates: StarterTemplate[] = [
           degree: "Secondary School Diploma",
           institution: "Lakeside College, Colombo, Sri Lanka",
           field: "Secondary Education",
-          startDate: "2012",
-          endDate: "",
+          startDate: "01/2012",
+          endDate: "12/2014",
           gpa: "1A 1C 2S",
           description: "",
         },
@@ -163,8 +176,8 @@ export const starterTemplates: StarterTemplate[] = [
           degree: "Secondary School Certificate",
           institution: "Lakeside College, Colombo, Sri Lanka",
           field: "Secondary Education",
-          startDate: "2009",
-          endDate: "",
+          startDate: "01/2009",
+          endDate: "12/2011",
           gpa: "5A 1B C3",
           description: "",
         },
@@ -213,13 +226,17 @@ export const starterTemplates: StarterTemplate[] = [
         },
       ],
       socialLinks: [
-        { id: "sl-1", platform: "GitHub", url: "www.github.com/aydansilva" },
-        { id: "sl-2", platform: "Portfolio", url: "www.aydansilva.dev" },
-        { id: "sl-3", platform: "LinkedIn", url: "www.linkedin.com/in/aydansilva" },
-        { id: "sl-4", platform: "Medium", url: "www.medium.com/@aydansilva" },
-        { id: "sl-5", platform: "ResearchGate", url: "www.researchgate.net/profile/Aydan-Silva" },
+        { id: "sl-1", platform: "GitHub", url: "https://www.github.com/aydansilva" },
+        { id: "sl-2", platform: "Portfolio", url: "https://www.aydansilva.dev" },
+        { id: "sl-3", platform: "LinkedIn", url: "https://www.linkedin.com/in/aydansilva" },
+        { id: "sl-4", platform: "Medium", url: "https://www.medium.com/@aydansilva" },
+        { id: "sl-5", platform: "ResearchGate", url: "https://www.researchgate.net/profile/Aydan-Silva" },
       ],
-      languages: [],
+      languages: [
+        { name: "English", proficiency: 5 },
+        { name: "Sinhala", proficiency: 5 },
+        { name: "Tamil", proficiency: 3 },
+      ],
       projects: [],
       certifications: [],
       references: [
@@ -275,7 +292,7 @@ export const starterTemplates: StarterTemplate[] = [
         email: "email@example.com",
         phone: "+1 (555) 123-4567",
         location: "City, Country",
-        website: "www.example.com",
+        website: "https://www.example.com",
         summary: "Brief professional summary goes here. Use <strong>bold</strong> for emphasis and <em>italic</em> for subtle highlights.",
       },
     },
@@ -294,7 +311,7 @@ export const starterTemplates: StarterTemplate[] = [
         email: "alex.johnson@email.com",
         phone: "+1 (555) 987-6543",
         location: "San Francisco, CA",
-        website: "alexjohnson.dev",
+        website: "https://alexjohnson.dev",
         summary:
           "Full-stack software engineer with <strong>7+ years of experience</strong> building web applications at scale. Expertise in <em>React, Node.js</em>, and cloud infrastructure. Passionate about clean architecture, developer experience, and mentoring teams.",
       },
@@ -355,10 +372,31 @@ export const starterTemplates: StarterTemplate[] = [
         { id: "se-s-11", name: "Git" },
         { id: "se-s-12", name: "CI/CD" },
       ],
+      awards: [
+        {
+          id: "se-aw-1",
+          title: "AWS Certified Solutions Architect, Associate",
+          issuer: "Amazon Web Services",
+          date: "03/2023",
+          description: "Valid through 03/2026.",
+        },
+        {
+          id: "se-aw-2",
+          title: "Engineering Excellence Award",
+          issuer: "TechCorp",
+          date: "12/2022",
+          description: "Awarded for cutting median API response time by 60% across the checkout service.",
+        },
+      ],
+      socialLinks: [
+        { id: "se-sl-1", platform: "LinkedIn", url: "https://www.linkedin.com/in/alexjohnson" },
+        { id: "se-sl-2", platform: "GitHub", url: "https://github.com/alexjohnson" },
+      ],
       languages: [
         { name: "English", proficiency: 5 },
         { name: "Spanish", proficiency: 3 },
       ],
+      sectionOrder: hiding("publications", "references"),
     },
   },
   {
@@ -375,7 +413,7 @@ export const starterTemplates: StarterTemplate[] = [
         email: "sam.rivera@email.com",
         phone: "+1 (555) 234-5678",
         location: "New York, NY",
-        website: "samrivera.design",
+        website: "https://samrivera.design",
         summary:
           "Creative UX/UI designer with <strong>5+ years of experience</strong> crafting intuitive digital experiences. Skilled in <em>user research, prototyping</em>, and design systems. Passionate about <strong>accessible and inclusive design</strong> that delights users.",
       },
@@ -434,10 +472,30 @@ export const starterTemplates: StarterTemplate[] = [
         { id: "d-s-9", name: "Accessibility" },
         { id: "d-s-10", name: "Motion Design" },
       ],
+      awards: [
+        {
+          id: "d-aw-1",
+          title: "Certified Professional in Accessibility Core Competencies (CPACC)",
+          issuer: "International Association of Accessibility Professionals",
+          date: "06/2022",
+        },
+        {
+          id: "d-aw-2",
+          title: "Best Product Design, Interaction Awards",
+          issuer: "Interaction Design Association",
+          date: "02/2023",
+          description: "Shortlisted for the flagship product redesign.",
+        },
+      ],
+      socialLinks: [
+        { id: "d-sl-1", platform: "LinkedIn", url: "https://www.linkedin.com/in/samrivera" },
+        { id: "d-sl-2", platform: "Portfolio", url: "https://samrivera.design" },
+      ],
       languages: [
         { name: "English", proficiency: 5 },
         { name: "Portuguese", proficiency: 4 },
       ],
+      sectionOrder: hiding("publications", "references"),
     },
   },
 ];

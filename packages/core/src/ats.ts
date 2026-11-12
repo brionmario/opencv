@@ -147,6 +147,10 @@ function isParseableDate(value: string): boolean {
   return DATE_SHAPES.some((shape) => shape.test(date));
 }
 
+/** A bare year parses, but it leaves the length of a role ambiguous by up
+ *  to eleven months, which is what makes two adjacent years read as a gap. */
+const YEAR_ONLY = /^\d{4}$/;
+
 /* ── Phrasing ─────────────────────────────────────────────────────────────── */
 
 /**
@@ -170,6 +174,83 @@ const WEAK_OPENERS = [
 
 /** First-person phrasing. Résumé convention drops it, and so should this. */
 const FIRST_PERSON = /\b(i|i'm|i've|my|me|we|our)\b/i;
+
+/**
+ * The objective that says nothing. Every one of these is a stock phrase that
+ * survives being pasted onto any résumé for any role, which is the test: a
+ * summary that would fit someone else's application is not a summary.
+ */
+const GENERIC_OBJECTIVE = [
+  "seeking a challenging position",
+  "seeking a challenging role",
+  "looking for a challenging",
+  "to obtain a position",
+  "to secure a position",
+  "where i can utilize my skills",
+  "utilize my skills and knowledge",
+  "apply my knowledge and skills",
+  "a reputed organization",
+  "a reputable organization",
+  "a well reputed company",
+  "grow with the company",
+  "growth of the organization",
+  "hardworking and dedicated",
+  "hard working and dedicated",
+  "team player with excellent communication",
+];
+
+/**
+ * The document labelling itself. A parser keys the record on the first
+ * strong line it finds, and a heading that reads "Curriculum Vitae" takes
+ * that slot from the name. It is also two lines of a six-second scan spent
+ * telling the reader what they already know they are holding.
+ */
+const SELF_TITLE = /^(curriculum\s*vitae|curriculum|resum[eé]|cv|my\s+cv|my\s+resum[eé])$/i;
+
+/** Said on the page, it spends a line on a convention nobody now expects. */
+const REFERENCES_ON_REQUEST = /references?\s+(are\s+)?(available\s+)?(up)?on\s+request/i;
+
+/**
+ * Headings for the section the deck leaves off its list entirely. Flagged
+ * rather than failed: a hobby that evidences the role is worth the line, and
+ * nothing static can tell that one from a list of television programmes.
+ */
+const INTEREST_HEADINGS = new Set(["interests", "hobbies", "hobbies and interests", "interests and hobbies", "personal interests"]);
+
+/**
+ * Local parts that read as a handle rather than a person. Deliberately
+ * narrow: a name with a birth year after it (silva94) is ordinary and is
+ * not flagged, because a false accusation here is worse than a missed one.
+ */
+const HANDLE_WORD =
+  "x+|cool|hot|sexy|cute|baby|babe|crazy|lazy|killer|savage|gamer|gaming|noob|pro|ninja|rockstar|boss|king|queen|prince|princess|angel|devil|dude|guy|girl|boy|boi|kid|lad|lover|dark|sad|lonely|bad|big|master|legend|silent|broken|sweet|little";
+
+const HANDLE_SEGMENT = new RegExp(`^(?:${HANDLE_WORD})+$`, "i");
+const HANDLE_TILE = new RegExp(`(${HANDLE_WORD})`, "gi");
+
+/**
+ * How much of a local part is built out of handle words.
+ *
+ * One of them on its own proves nothing: `king.charles` and `boss.kumar`
+ * are shaped exactly like a name, and King is a surname. So this counts
+ * only whole dot-separated segments that are made of nothing else, and the
+ * caller requires two before it says anything. That costs the occasional
+ * real handle, which is the trade this check is willing to make: being told
+ * your name looks unprofessional is worse than not being told anything.
+ */
+function handleWordCount(localPart: string): number {
+  let count = 0;
+  for (const segment of localPart.split(/[._-]+/)) {
+    const letters = segment.replace(/\d+/g, "");
+    if (!letters || !HANDLE_SEGMENT.test(letters)) continue;
+    count += (letters.match(HANDLE_TILE) ?? []).length;
+  }
+  return count;
+}
+
+/** Words that only appear in a street address, not in a city or a country. */
+const STREET_WORDS =
+  /\b(street|st\.|road|rd\.|lane|ln\.|avenue|ave\.|mawatha|place|drive|dr\.|court|crescent|terrace|boulevard|blvd\.|apartment|apt\.|flat|floor|suite|no\.)\b/i;
 
 /**
  * Glyphs worth flagging: emoji, dingbats and decorative arrows. Accented
@@ -350,6 +431,73 @@ export function runAtsChecks(data: CVData, options: AtsOptions = {}): AtsReport 
     })
   );
 
+  // The address a screener forwards to the hiring manager. A handle in it
+  // costs nothing mechanically and a great deal on the first impression,
+  // which is the stage this field exists for.
+  const localPart = email.includes("@") ? email.slice(0, email.indexOf("@")) : "";
+  const mostlyDigits = localPart.length > 0 && localPart.replace(/\D/g, "").length / localPart.length > 0.6;
+  const handleLike = Boolean(localPart) && (handleWordCount(localPart) >= 2 || mostlyDigits);
+  checks.push(
+    check({
+      id: "email-tone",
+      group: "contact",
+      label: "Email address reads professionally",
+      weight: email ? 1 : 0,
+      ...(!email
+        ? { severity: "pass" as const, detail: "No address to judge yet." }
+        : handleLike
+          ? {
+              severity: "warn" as const,
+              detail: `“${localPart}” reads as a handle rather than a name.`,
+              fix: "Use something built from your name. This is the address a screener forwards to the hiring manager, and it is read as a choice.",
+            }
+          : { severity: "pass" as const, detail: "Built from a name, as a screener expects." }),
+    })
+  );
+
+  // A city and a country are a filter a pipeline runs. A street and a house
+  // number are neither useful to it nor something to publish on a document
+  // that gets forwarded and stored in systems you will never see.
+  const hasStreet = Boolean(location) && (STREET_WORDS.test(location) || /^\d+[\s,/]/.test(location));
+  checks.push(
+    check({
+      id: "address-detail",
+      group: "contact",
+      label: "Address detail",
+      weight: location ? 1 : 0,
+      ...(!location
+        ? { severity: "pass" as const, detail: "No location to judge yet." }
+        : hasStreet
+          ? {
+              severity: "warn" as const,
+              detail: "The location looks like a full street address.",
+              fix: "Cut it to a city and a country. Nothing matches on the street, and the document gets forwarded and stored well beyond the people you sent it to.",
+            }
+          : { severity: "pass" as const, detail: "A city and country, which is what a location filter reads." }),
+    })
+  );
+
+  // Two numbers in one field is one field a parser cannot place, and a
+  // question for whoever is calling about which of them to try.
+  const phoneRuns = phone.split(/[/,;]|\bor\b/i).filter((part) => part.replace(/\D/g, "").length >= 7);
+  checks.push(
+    check({
+      id: "phone-count",
+      group: "contact",
+      label: "One phone number",
+      weight: phone ? 1 : 0,
+      ...(!phone
+        ? { severity: "pass" as const, detail: "No number to judge yet." }
+        : phoneRuns.length > 1
+          ? {
+              severity: "warn" as const,
+              detail: `${phoneRuns.length} numbers in one field.`,
+              fix: "Keep the one you answer. A parser stores a single value, so it takes whichever it reaches first and the rest become noise in the middle of your contact line.",
+            }
+          : { severity: "pass" as const, detail: "A single number, which is what the field holds." }),
+    })
+  );
+
   /* ── Structure ─────────────────────────────────────────────────────────── */
 
   const experience = data.experience ?? [];
@@ -476,6 +624,56 @@ export function runAtsChecks(data: CVData, options: AtsOptions = {}): AtsReport 
     })
   );
 
+  // Of the four fields a role record needs, the employer is the one with no
+  // fallback: a title with no company behind it cannot be verified, dated
+  // against anything, or matched to an industry.
+  const unnamedEmployers = experience.filter((job) => !job.company?.trim());
+  checks.push(
+    check({
+      id: "company-names",
+      group: "structure",
+      label: "Employer on every role",
+      weight: experience.length === 0 ? 0 : 2,
+      sectionId: "experience",
+      ...(experience.length === 0
+        ? { severity: "pass" as const, detail: "No roles yet." }
+        : unnamedEmployers.length === 0
+          ? { severity: "pass" as const, detail: "Every role names where it was." }
+          : {
+              severity: "fail" as const,
+              detail: `${unnamedEmployers.length} ${unnamedEmployers.length === 1 ? "role has" : "roles have"} no employer, starting with “${unnamedEmployers[0].jobTitle || "an untitled role"}”.`,
+              fix: "Add the organization name. A role record with no employer in it cannot be placed in an industry or checked against anything.",
+            }),
+    })
+  );
+
+  // Achievements are one of the six things a reader looks for in the first
+  // pass, and the only one that distinguishes two people with the same job
+  // title. Awards is where this template puts them; a custom section by a
+  // conventional name counts just as well.
+  const achievementHeadings = new Set(["achievements", "certifications", "certificates", "awards", "accomplishments", "honours", "honors"]);
+  const achievementCustom = (data.customSections ?? []).filter(
+    (s) => isVisible(s.id) && s.items.length > 0 && achievementHeadings.has(s.title.trim().toLowerCase())
+  );
+  const awards = data.awards ?? [];
+  const hasAchievements = (awards.length > 0 && isVisible("awards")) || achievementCustom.length > 0;
+  checks.push(
+    check({
+      id: "achievements-section",
+      group: "structure",
+      label: "Achievements or certifications",
+      weight: 1,
+      sectionId: "awards",
+      ...(hasAchievements
+        ? { severity: "pass" as const, detail: "The résumé evidences something beyond the roles themselves." }
+        : {
+            severity: "warn" as const,
+            detail: "Nothing on the page records an achievement or a certification.",
+            fix: "Add a section for them. It is the part of a first pass that separates two people holding the same job title, and a certification is the one claim on a résumé that can be checked.",
+          }),
+    })
+  );
+
   const oddHeadings = (data.customSections ?? [])
     .filter((s) => isVisible(s.id))
     .filter((s) => !KNOWN_HEADINGS.has(s.title.trim().toLowerCase()));
@@ -552,6 +750,29 @@ export function runAtsChecks(data: CVData, options: AtsOptions = {}): AtsReport 
             severity: "warn" as const,
             detail: `${unparseableDates.length} date${unparseableDates.length === 1 ? "" : "s"} in an unusual format, such as “${unparseableDates[0]}”.`,
             fix: "Use a month and a year (Jul 2021, or 2021-07). Anything freer gets read as text, and a role with no readable span counts for nothing.",
+          }),
+    })
+  );
+
+  // A bare year parses, so `dates-format` passes it. It still leaves the
+  // span of a role ambiguous by up to eleven months, which is how two
+  // adjacent years come out of a parser looking like a gap.
+  const yearOnlyDates = datedEntries
+    .flatMap((entry) => [entry.start, entry.open ? "" : entry.end])
+    .filter((value) => YEAR_ONLY.test(value.trim()));
+  checks.push(
+    check({
+      id: "dates-granularity",
+      group: "content",
+      label: "Month and year",
+      weight: datedEntries.length === 0 ? 0 : 1,
+      sectionId: "experience",
+      ...(yearOnlyDates.length === 0
+        ? { severity: "pass" as const, detail: "Every date carries a month." }
+        : {
+            severity: "warn" as const,
+            detail: `${yearOnlyDates.length} date${yearOnlyDates.length === 1 ? " is" : "s are"} a year on its own, such as “${yearOnlyDates[0]}”.`,
+            fix: "Add the month (Jul 2021). A year on its own leaves the length of the role uncertain by up to eleven months, and two years side by side read as a gap that was never there.",
           }),
     })
   );
@@ -643,6 +864,105 @@ export function runAtsChecks(data: CVData, options: AtsOptions = {}): AtsReport 
     })
   );
 
+  // A summary made of stock phrases is worse than no summary: it occupies
+  // the one position on the page that is read every time, and spends it on
+  // sentences that would sit just as well on anybody else's application.
+  const matchedStock = GENERIC_OBJECTIVE.filter((phrase) => summary.toLowerCase().includes(phrase));
+  checks.push(
+    check({
+      id: "generic-objective",
+      group: "content",
+      label: "Summary says something specific",
+      weight: summaryWords === 0 ? 0 : 2,
+      sectionId: "summary",
+      ...(summaryWords === 0
+        ? { severity: "pass" as const, detail: "Nothing written yet." }
+        : matchedStock.length === 0
+          ? { severity: "pass" as const, detail: "Nothing in it is stock phrasing." }
+          : {
+              severity: "warn" as const,
+              detail: `The summary uses stock phrasing: “${matchedStock[0]}”.`,
+              fix: "Replace it with what you have actually done: your role, your years, and the two or three things you are strongest at. A line that would fit anyone's résumé tells a reader nothing about yours.",
+            }),
+    })
+  );
+
+  // The name field is what a parser keys the record on. A document that
+  // labels itself hands that slot to the word "Resume".
+  const titledSelf = SELF_TITLE.test(name);
+  const selfTitledHeadings = (data.customSections ?? [])
+    .filter((s) => isVisible(s.id))
+    .filter((s) => SELF_TITLE.test(s.title.trim()));
+  checks.push(
+    check({
+      id: "document-title",
+      group: "content",
+      label: "No “Curriculum Vitae” label",
+      weight: 1,
+      sectionId: selfTitledHeadings[0]?.id,
+      ...(!titledSelf && selfTitledHeadings.length === 0
+        ? { severity: "pass" as const, detail: "The document leads with your name rather than with its own description." }
+        : {
+            severity: "warn" as const,
+            detail: titledSelf
+              ? "The name field reads as a document label rather than a name."
+              : `A heading reads “${selfTitledHeadings[0].title}”.`,
+            fix: "Delete it. Everyone receiving the file knows what it is, and the top of the page is the most-read line you have.",
+          }),
+    })
+  );
+
+  // References on the page spend space on contact details nobody asked for
+  // yet, and expose three other people's numbers to every system the file
+  // passes through.
+  const references = data.references ?? [];
+  const referencesShown = references.length > 0 && isVisible("references");
+  const onRequest = [summary, ...lines, ...(data.customSections ?? []).flatMap((s) => s.items.map((i) => plainText(i.description)))].some(
+    (text) => REFERENCES_ON_REQUEST.test(text)
+  );
+  checks.push(
+    check({
+      id: "references-on-page",
+      group: "content",
+      label: "References held back",
+      weight: 1,
+      sectionId: "references",
+      ...(referencesShown || onRequest
+        ? {
+            severity: "warn" as const,
+            detail: referencesShown
+              ? `${references.length} ${references.length === 1 ? "reference is" : "references are"} printed on the résumé.`
+              : "The résumé says references are available on request.",
+            fix: referencesShown
+              ? "Hide the section and supply them when asked. It is space spent on contact details nobody has requested, and it puts three other people's numbers into every system this file passes through."
+              : "Drop the line. It is assumed, and it costs you a line of a page you are trying to keep to two.",
+          }
+        : { severity: "pass" as const, detail: "No reference details on the page, which is the current convention." }),
+    })
+  );
+
+  // Hobbies are flagged, never failed. One that evidences the role earns its
+  // line; nothing static can tell that one from a list of box sets.
+  const interestSections = (data.customSections ?? [])
+    .filter((s) => isVisible(s.id) && s.items.length > 0)
+    .filter((s) => INTEREST_HEADINGS.has(s.title.trim().toLowerCase()));
+  checks.push(
+    check({
+      id: "interests-section",
+      group: "content",
+      label: "Interests earn their space",
+      weight: interestSections.length === 0 ? 0 : 1,
+      sectionId: interestSections[0]?.id,
+      ...(interestSections.length === 0
+        ? { severity: "pass" as const, detail: "No interests section competing with the rest of the page." }
+        : {
+            severity: "warn" as const,
+            detail: `“${interestSections[0].title}” holds ${interestSections[0].items.length} ${interestSections[0].items.length === 1 ? "entry" : "entries"}.`,
+            fix: "Keep only what says something about the work: a side project, a competition, something you organized. An interest a reader cannot connect to the role is space taken from one that could.",
+          }),
+    })
+  );
+
   /* ── Formatting ────────────────────────────────────────────────────────── */
 
   const layout = options.layout ?? "professional";
@@ -651,8 +971,14 @@ export function runAtsChecks(data: CVData, options: AtsOptions = {}): AtsReport 
     check({
       id: "columns",
       group: "formatting",
+      // Weighted below the other formatting checks on purpose. The usual
+      // two-column disaster is a text layer that interleaves the columns,
+      // and this exporter does not produce one: it writes the left column
+      // out whole, then the right. The residual risk is a parser that does
+      // its own spatial reconstruction, which is real but narrower than the
+      // generic advice assumes, so it costs less than a photo does.
       label: "Column count",
-      weight: 2,
+      weight: 1,
       ...(meta.columns === 1
         ? {
             severity: "pass" as const,
@@ -660,8 +986,8 @@ export function runAtsChecks(data: CVData, options: AtsOptions = {}): AtsReport 
           }
         : {
             severity: "warn" as const,
-            detail: `${meta.name} has two columns.`,
-            fix: "Older parsers read a two-column page straight across and interleave the two. If the posting runs through a system you cannot identify, Classic or Minimal is the safer submission.",
+            detail: `${meta.name} has two columns, though the PDF export writes them in reading order.`,
+            fix: "The export puts the whole left column in the text layer before the right one, so a parser reading the file in order gets clean text, which is the failure this warning usually describes and it does not apply here. What remains is the parser that ignores that order and reconstructs the page from where the words sit. If the posting runs through a system you cannot identify, Classic or Minimal removes the question.",
           }),
     })
   );
